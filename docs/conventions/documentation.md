@@ -31,3 +31,11 @@ Default to no comment. Prefer a better name, smaller function, typed boundary or
 A comment is justified only when the constraint cannot be expressed through code, a competent reader might otherwise break it, and it can be stated briefly.
 
 Do not restate code, narrate steps, mark decorative sections or preserve history already available in git.
+
+## Public API documentation
+
+Document only public surfaces where documentation is consumed by people, generated contracts or another module. Do not add docstrings merely because a member is technically public for framework or template access.
+
+For Angular/TypeScript, JSDoc is reserved for exported contract surfaces, shared adapters, non-obvious invariants or APIs intended for reuse outside their local feature. Internal components, tests, local helpers and obvious methods remain self-documenting by default.
+
+For ASP.NET Core, backend HTTP contract documentation belongs primarily in OpenAPI endpoint metadata: summaries, descriptions, response types, status codes, error codes and examples when useful. Do not require blanket XML comments for application/domain/internal vertical-slice code. Use XML documentation only for shared library surfaces or non-obvious constraints that OpenAPI metadata cannot express.

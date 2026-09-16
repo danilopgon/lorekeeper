@@ -1,0 +1,71 @@
+strict_tdd: true
+context: |
+  Lorekeeper is an AI-assisted campaign memory companion for Game Masters, initially a personal PoC for a single operator managing multiple campaigns.
+  The first implementation slice is campaign creation/selection plus empty campaign workspace shells for Chat and Sources.
+  Campaign data and retrieval are scoped by campaignId; no multiuser/auth scaffolding is part of the first local slice.
+  The stack is Angular 22 with standalone APIs/signals/zoneless and Tailwind, ASP.NET Core/.NET 10 with vertical slices, PostgreSQL 17, EF Core, and OpenAPI-generated TypeScript contracts in later blocks.
+  Product behavior is governed by PRODUCT.md, DESIGN.md, and docs/README.md routing. Do not implement ingestion, AI chat, retrieval, citations, campaign deletion, accounts, teams, or Internet exposure in Block 01.
+rules:
+  proposal:
+    require_problem_statement: true
+  spec:
+    require_acceptance_criteria: true
+  design:
+    require_tradeoffs: true
+  tasks:
+    protect_review_workload: true
+  apply:
+    test_command: "pnpm run test && pnpm run build && dotnet test services/api/Lorekeeper.slnx --no-build --configuration Release"
+  verify:
+    test_command: "pnpm run lint && pnpm run test && pnpm run build && pnpm run e2e && dotnet format services/api/Lorekeeper.slnx --verify-no-changes && dotnet build services/api/Lorekeeper.slnx --no-restore --configuration Release && dotnet test services/api/Lorekeeper.slnx --no-build --configuration Release"
+testing:
+  detected: "2026-09-16"
+  runner:
+    command: "pnpm run test && pnpm run build && dotnet test services/api/Lorekeeper.slnx --no-build --configuration Release"
+    framework: "Vitest, Playwright, xUnit"
+  layers:
+    unit: "Vitest, xUnit"
+    integration: "ASP.NET Core integration tests, EF Core/PostgreSQL where required"
+    e2e: "Playwright"
+  commands:
+    unit:
+      - scope: "frontend"
+        command: "pnpm run test"
+        framework: "Vitest"
+      - scope: "backend"
+        command: "dotnet test services/api/Lorekeeper.slnx --no-build --configuration Release"
+        framework: "xUnit"
+    integration:
+      - scope: "backend"
+        command: "dotnet test services/api/Lorekeeper.slnx --no-build --configuration Release"
+        framework: "xUnit + WebApplicationFactory/Testcontainers when applicable"
+    e2e:
+      - scope: "frontend"
+        command: "pnpm run e2e"
+        framework: "Playwright"
+  coverage:
+    command: ""
+    commands:
+      []
+quality:
+  lint: "pnpm run lint"
+  lint_commands:
+    - scope: "frontend"
+      command: "pnpm run lint"
+      framework: "Angular ESLint"
+  typecheck: "pnpm run build && dotnet build services/api/Lorekeeper.slnx --no-restore --configuration Release"
+  typecheck_commands:
+    - scope: "frontend"
+      command: "pnpm run build"
+      framework: "Angular build/typecheck"
+    - scope: "backend"
+      command: "dotnet build services/api/Lorekeeper.slnx --no-restore --configuration Release"
+      framework: ".NET analyzers/build"
+  format: "pnpm run format:check && dotnet format services/api/Lorekeeper.slnx --verify-no-changes"
+  format_commands:
+    - scope: "frontend"
+      command: "pnpm run format:check"
+      framework: "Prettier"
+    - scope: "backend"
+      command: "dotnet format services/api/Lorekeeper.slnx --verify-no-changes"
+      framework: "dotnet format"
