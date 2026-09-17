@@ -18,6 +18,6 @@ public static partial class CampaignIdParser
 
     public static string Format(Guid id) => id.ToString("D").ToLowerInvariant();
 
-    [GeneratedRegex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")]
+    [GeneratedRegex("\\A[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\\z")]
     private static partial Regex CanonicalUuidRegex();
 }
