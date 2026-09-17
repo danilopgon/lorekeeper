@@ -158,6 +158,8 @@ For campaign navigation, Chat, Sources, uploads, pasted text, Notion import or s
 
 ## Technical interview preparation
 
-When the user requests interview preparation, a mock interview or a technical walkthrough, follow `docs/conventions/interview-preparation.md`.
+Activate interview mode only when the user explicitly requests interview preparation, a mock interview or a technical walkthrough for interview preparation. In that mode, follow `docs/conventions/interview-preparation.md`.
+
+For ordinary code explanations or technical walkthroughs, explain the implementation directly without activating interview mode or requiring the user to answer questions.
 
 Use actual repository code to rehearse implementation reasoning, architectural trade-offs, debugging and requirement changes across Angular and .NET. Keep this mode optional and separate from normal delivery.
