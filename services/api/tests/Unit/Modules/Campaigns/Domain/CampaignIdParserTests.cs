@@ -19,6 +19,9 @@ public class CampaignIdParserTests
     [InlineData("")]
     [InlineData("not-a-guid")]
     [InlineData("8f5f5b5b7b4b4b86a7a259457e82dc11")]
+    [InlineData("8f5f5b5b-7b4b-4b86-a7a2-59457e82dc11\n")]
+    [InlineData(" 8f5f5b5b-7b4b-4b86-a7a2-59457e82dc11")]
+    [InlineData("8f5f5b5b-7b4b-4b86-a7a2-59457e82dc11 ")]
     public void ParseRejectsMalformedUuidValues(string? input)
     {
         var result = CampaignIdParser.Parse(input);
