@@ -155,3 +155,9 @@ Command tables must reflect verified scaffold commands. A placeholder never coun
 ## Workspace and ingestion routing
 
 For campaign navigation, Chat, Sources, uploads, pasted text, Notion import or source lifecycle, read `docs/12-workspace-and-ingestion-ux.md` alongside PRODUCT.md and the relevant contracts/domain/roadmap routes. It is an accepted first approach with unresolved detailed decisions, not a waiver of SDD readiness gates.
+
+## Technical interview preparation
+
+When the user requests interview preparation, a mock interview or a technical walkthrough, follow `docs/conventions/interview-preparation.md`.
+
+Use actual repository code to rehearse implementation reasoning, architectural trade-offs, debugging and requirement changes across Angular and .NET. Keep this mode optional and separate from normal delivery.
