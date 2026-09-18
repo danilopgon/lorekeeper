@@ -23,7 +23,8 @@ public sealed class CampaignsPersistenceTests : IAsyncLifetime
     [Fact]
     public async Task CampaignsStartEmpty()
     {
-        await using var context = CreateContext();
+        await using var scope = CreateScope();
+        var context = GetContext(scope);
 
         var campaigns = await context.Campaigns.ToListAsync();
 
@@ -33,7 +34,8 @@ public sealed class CampaignsPersistenceTests : IAsyncLifetime
     [Fact]
     public async Task CampaignInsertPersistsTrimmedNameAndUtcTimestamps()
     {
-        await using var context = CreateContext();
+        await using var scope = CreateScope();
+        var context = GetContext(scope);
         var name = CampaignName.Create("  Ash Crown  ").Value!;
         var now = new DateTimeOffset(2026, 9, 15, 12, 0, 0, TimeSpan.FromHours(2));
 
@@ -49,7 +51,8 @@ public sealed class CampaignsPersistenceTests : IAsyncLifetime
     [Fact]
     public async Task DatabaseCheckConstraintsRejectUntrimmedOrInvalidNames()
     {
-        await using var context = CreateContext();
+        await using var scope = CreateScope();
+        var context = GetContext(scope);
 
         var act = () => context.Database.ExecuteSqlRawAsync(
             """
@@ -59,14 +62,15 @@ public sealed class CampaignsPersistenceTests : IAsyncLifetime
             Guid.NewGuid(),
             " Ash Crown ");
 
-        var exception = await act.Should().ThrowAsync<DbUpdateException>();
+        var exception = await act.Should().ThrowAsync<PostgresException>();
         CampaignPersistenceErrors.From(exception.Which).Should().Be(CampaignPersistenceError.InvalidName);
     }
 
     [Fact]
     public async Task DuplicateCampaignNamesAreRejectedCaseInsensitively()
     {
-        await using var context = CreateContext();
+        await using var scope = CreateScope();
+        var context = GetContext(scope);
         context.Campaigns.Add(Campaign.Create(CampaignName.Create("Ash Crown").Value!, DateTimeOffset.UtcNow));
         await context.SaveChangesAsync();
 
@@ -88,7 +92,8 @@ public sealed class CampaignsPersistenceTests : IAsyncLifetime
         outcomes.Should().ContainSingle(static outcome => outcome == null);
         outcomes.OfType<DbUpdateException>()
             .Should().ContainSingle(exception => CampaignPersistenceErrors.From(exception) == CampaignPersistenceError.NameConflict);
-        await using var context = CreateContext();
+        await using var scope = CreateScope();
+        var context = GetContext(scope);
         (await context.Campaigns.CountAsync()).Should().Be(1);
     }
 
@@ -97,7 +102,8 @@ public sealed class CampaignsPersistenceTests : IAsyncLifetime
         await _postgres.StartAsync();
         _factory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder => builder.UseSetting("ConnectionStrings:Campaigns", _postgres.GetConnectionString()));
-        await using var context = CreateContext();
+        await using var scope = CreateScope();
+        var context = GetContext(scope);
         await context.Database.EnsureDeletedAsync();
         await context.Database.EnsureCreatedAsync();
     }
@@ -108,11 +114,15 @@ public sealed class CampaignsPersistenceTests : IAsyncLifetime
         await _postgres.DisposeAsync();
     }
 
-    private CampaignsDbContext CreateContext() => _factory.Services.GetRequiredService<CampaignsDbContext>();
+    private AsyncServiceScope CreateScope() => _factory.Services.CreateAsyncScope();
+
+    private static CampaignsDbContext GetContext(AsyncServiceScope scope) =>
+        scope.ServiceProvider.GetRequiredService<CampaignsDbContext>();
 
     private async Task InsertCampaign(string name)
     {
-        await using var context = CreateContext();
+        await using var scope = CreateScope();
+        var context = GetContext(scope);
         context.Campaigns.Add(Campaign.Create(CampaignName.Create(name).Value!, DateTimeOffset.UtcNow));
         await context.SaveChangesAsync();
     }

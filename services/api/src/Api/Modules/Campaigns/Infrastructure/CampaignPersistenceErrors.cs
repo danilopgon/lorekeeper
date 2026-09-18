@@ -12,9 +12,11 @@ public enum CampaignPersistenceError
 
 public static class CampaignPersistenceErrors
 {
-    public static CampaignPersistenceError From(DbUpdateException exception)
+    public static CampaignPersistenceError From(DbUpdateException exception) => From(exception.GetBaseException());
+
+    public static CampaignPersistenceError From(Exception exception)
     {
-        return exception.GetBaseException() switch
+        return exception switch
         {
             PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } => CampaignPersistenceError.NameConflict,
             PostgresException { SqlState: PostgresErrorCodes.CheckViolation } => CampaignPersistenceError.InvalidName,
