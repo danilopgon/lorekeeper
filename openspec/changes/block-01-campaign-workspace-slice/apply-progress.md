@@ -93,3 +93,142 @@ Frontend Work Units 4–7 and documentation/full-verification Work Unit 8 remain
 ## Rollback boundary
 
 Remove the seven new domain/test files listed above and revert the four Work Unit 1 checkbox updates in `tasks.md`. No migrations, packages, configuration, persistence, endpoints, frontend code, or runtime data were introduced.
+
+---
+
+## Apply update — backend persistence slice (Work Unit 2)
+
+### Structured status consumed
+
+- Native status schema: `gentle-ai.sdd-status` v2
+- Change: `block-01-campaign-workspace-slice`
+- Apply state on entry: `ready`
+- Next recommended on entry: `apply`
+- Artifact store used by this executor: `openspec`
+- Action context: repo-local workspace `C:\Users\TONBO\Dev\lorekeeper`; allowed edit root `C:\Users\TONBO\Dev\lorekeeper`
+- Parent-acquired attempt token used for this phase: `sha256:c5043560d08a671b78c1aa4f0baa4e782526fa5a8f49608353a6840bf3b748dd`
+- ActionContext warnings: none; edits stayed inside the authoritative workspace and backend scope.
+
+### Workload / PR boundary
+
+- Delivery strategy: `auto-chain`
+- Chain strategy: feature-branch chain; current branch `feat/block-01-persistence-api` targets `feat/block-01-domain`.
+- Attempt changed-line budget: 500 lines.
+- Completed slice in this update: Work Unit 2 — backend PostgreSQL persistence and duplicate protection.
+- Revised PR boundary: stop before Work Unit 3. The persistence slice adds EF/Npgsql dependencies, DbContext mapping, migration files, configuration, and Testcontainers integration tests; adding endpoint handlers/tests in the same attempt would risk exceeding the 500-line budget and would be a separate cohesive HTTP API review unit.
+
+Dependency diagram:
+
+```text
+main
+└─ block-01-tracker
+   └─ feat/block-01-domain
+      └─ feat/block-01-persistence-api 📍 (current: PostgreSQL persistence only)
+         └─ feat/block-01-campaign-api (recommended next backend child slice)
+            └─ block-01-frontend
+               └─ block-01-e2e-docs
+```
+
+### Completed tasks and persisted checkboxes
+
+- [x] RED: add failing integration tests in `services/api/tests/Integration/Modules/Campaigns/CampaignsPersistenceTests.cs` using WebApplicationFactory/Testcontainers PostgreSQL for empty list, trimmed insert, database check constraints, duplicate casing conflict, and concurrent duplicate protection.
+- [x] GREEN: add EF/Npgsql package references in `services/api/src/Api/Api.csproj` and Testcontainers/Npgsql test references in `services/api/tests/Integration/Integration.csproj`.
+- [x] GREEN: implement `services/api/src/Api/Modules/Campaigns/Infrastructure/CampaignsDbContext.cs` and `CampaignEntityTypeConfiguration.cs` with snake_case columns, `uuid`, `varchar(120)`, `timestamptz`, generated `name_normalized`, check constraints, and unique index.
+- [x] GREEN: add the EF migration under `services/api/src/Api/Modules/Campaigns/Infrastructure/Migrations/` creating only the Block 01 `campaigns` table and indexes.
+- [x] GREEN: register `CampaignsDbContext` and PostgreSQL configuration in `services/api/src/Api/Program.cs`, `appsettings.json`, and `appsettings.Development.json` without adding production secrets.
+- [x] TRIANGULATE: add an integration assertion that database unique/check violations are mapped without leaking constraint names or provider exception messages.
+- [x] REFACTOR: keep EF Core as the persistence boundary for campaign slices and remove any speculative abstractions introduced during GREEN.
+
+The corresponding Work Unit 2 checkboxes were updated in `openspec/changes/block-01-campaign-workspace-slice/tasks.md`.
+
+### TDD Cycle Evidence
+
+| Work unit | RED evidence | GREEN evidence | TRIANGULATE evidence | REFACTOR evidence |
+| --- | --- | --- | --- | --- |
+| Work Unit 2 — Backend PostgreSQL persistence and duplicate protection | Added `CampaignsPersistenceTests` first; `dotnet test services/api/Lorekeeper.slnx --configuration Release --filter FullyQualifiedName~CampaignsPersistence` failed with missing `Infrastructure`, EF Core, Npgsql, Testcontainers, and `CampaignsDbContext` types. | Added EF/Npgsql/Testcontainers package references, `CampaignsDbContext`, entity configuration, migration files, connection-string configuration, and service registration. `dotnet build services/api/Lorekeeper.slnx --configuration Release` passed. | Added assertions for PostgreSQL check-constraint mapping and case-insensitive unique-violation mapping through `CampaignPersistenceErrors` without exposing constraint names or provider messages. Focused integration execution compiled but could not run because Docker was unavailable at `npipe://./pipe/docker_engine`. | EF Core remains the direct persistence boundary; no repository, MediatR, base handler, endpoint, source/chat, ingestion, auth, account, team, deletion, or AI abstractions were introduced. |
+
+### Files changed in this update
+
+- `services/api/src/Api/Api.csproj`
+- `services/api/src/Api/Modules/Campaigns/Domain/Campaign.cs`
+- `services/api/src/Api/Modules/Campaigns/Infrastructure/CampaignsDbContext.cs`
+- `services/api/src/Api/Modules/Campaigns/Infrastructure/CampaignEntityTypeConfiguration.cs`
+- `services/api/src/Api/Modules/Campaigns/Infrastructure/CampaignPersistenceErrors.cs`
+- `services/api/src/Api/Modules/Campaigns/Infrastructure/Migrations/20260918000000_InitialCampaigns.cs`
+- `services/api/src/Api/Modules/Campaigns/Infrastructure/Migrations/CampaignsDbContextModelSnapshot.cs`
+- `services/api/src/Api/Program.cs`
+- `services/api/src/Api/appsettings.json`
+- `services/api/src/Api/appsettings.Development.json`
+- `services/api/tests/Integration/Integration.csproj`
+- `services/api/tests/Integration/Modules/Campaigns/CampaignsPersistenceTests.cs`
+- `openspec/changes/block-01-campaign-workspace-slice/tasks.md`
+- `openspec/changes/block-01-campaign-workspace-slice/apply-progress.md`
+
+### Test commands run in this update
+
+1. `dotnet test services/api/Lorekeeper.slnx --configuration Release --filter FullyQualifiedName~CampaignsPersistence`
+   - RED result: failed as expected because infrastructure and package types were missing.
+2. `dotnet test services/api/Lorekeeper.slnx --configuration Release --filter FullyQualifiedName~CampaignsPersistence`
+   - GREEN/TRIANGULATE result: build/restore reached test execution, but Testcontainers could not connect to Docker at `npipe://./pipe/docker_engine`; all focused persistence tests were blocked by unavailable Docker.
+3. `dotnet build services/api/Lorekeeper.slnx --configuration Release`
+   - Result: passed with NU1903 warnings from transitive `SSH.NET` vulnerabilities introduced via Testcontainers dependencies.
+4. `dotnet test services/api/Lorekeeper.slnx --configuration Release --filter FullyQualifiedName~CampaignName`
+   - Result: unit campaign-name tests passed, but the broad filter also matched persistence duplicate-name integration tests and those were blocked by unavailable Docker.
+
+### Deviations from design
+
+- No product or API behavior was changed.
+- Work Unit 3 was intentionally deferred to keep the current PR boundary to PostgreSQL persistence and avoid spilling past the 500-line attempt budget.
+- `dotnet ef` was not available in the environment, so the initial migration files were authored manually to match the EF model.
+
+### Remaining tasks
+
+Exact unchecked implementation-owned backend task lines remaining for the next slice:
+
+- [ ] RED: add failing endpoint tests in `services/api/tests/Integration/Modules/Campaigns/CampaignEndpointsTests.cs` for `GET /api/campaigns`, `POST /api/campaigns`, `GET /api/campaigns/{campaignId}`, invalid name, duplicate name, malformed ID, unknown ID, `Location`, UTC ISO timestamps, and no implicit active campaign. <!-- sdd-owner: implementation -->
+- [ ] GREEN: implement application slices under `services/api/src/Api/Modules/Campaigns/Application/CreateCampaign/`, `ListCampaigns/`, and `GetCampaign/` using direct `CampaignsDbContext` dependencies. <!-- sdd-owner: implementation -->
+- [ ] GREEN: implement DTOs/problem mapping in `services/api/src/Api/Modules/Campaigns/CampaignEndpoints.cs` and map endpoints from `services/api/src/Api/Program.cs`. <!-- sdd-owner: implementation -->
+- [ ] GREEN: return RFC 7807 Problem Details with stable `code` values `campaign_name_invalid`, `campaign_name_conflict`, `campaign_id_invalid`, and `campaign_not_found`, plus field-level `name` information for name failures. <!-- sdd-owner: implementation -->
+- [ ] TRIANGULATE: add tests proving delete, source, ingestion, chat, retrieval, citation, account, team, and implicit-active campaign endpoints are not introduced by this slice. <!-- sdd-owner: implementation -->
+- [ ] REFACTOR: ensure OpenAPI metadata names and response descriptions stay narrow to the three Block 01 campaign endpoints. <!-- sdd-owner: implementation -->
+
+Frontend Work Units 4–7 and documentation/full-verification Work Unit 8 remain intentionally untouched in this backend slice.
+
+### Rollback boundary
+
+Remove the EF/Npgsql/Testcontainers package references, `CampaignsDbContext`, campaign EF configuration, persistence error mapper, migration files, connection-string registration/configuration, the EF-compatible `Campaign` property setters/constructor changes, and `CampaignsPersistenceTests`. Revert the seven Work Unit 2 checkbox updates in `tasks.md`. No HTTP endpoints, frontend code, ingestion, source lifecycle, AI, auth, account, team, or deletion behavior was introduced.
+
+### Exact remaining unchecked implementation-owned task lines
+
+- [ ] RED: add failing endpoint tests in `services/api/tests/Integration/Modules/Campaigns/CampaignEndpointsTests.cs` for `GET /api/campaigns`, `POST /api/campaigns`, `GET /api/campaigns/{campaignId}`, invalid name, duplicate name, malformed ID, unknown ID, `Location`, UTC ISO timestamps, and no implicit active campaign. <!-- sdd-owner: implementation -->
+- [ ] GREEN: implement application slices under `services/api/src/Api/Modules/Campaigns/Application/CreateCampaign/`, `ListCampaigns/`, and `GetCampaign/` using direct `CampaignsDbContext` dependencies. <!-- sdd-owner: implementation -->
+- [ ] GREEN: implement DTOs/problem mapping in `services/api/src/Api/Modules/Campaigns/CampaignEndpoints.cs` and map endpoints from `services/api/src/Api/Program.cs`. <!-- sdd-owner: implementation -->
+- [ ] GREEN: return RFC 7807 Problem Details with stable `code` values `campaign_name_invalid`, `campaign_name_conflict`, `campaign_id_invalid`, and `campaign_not_found`, plus field-level `name` information for name failures. <!-- sdd-owner: implementation -->
+- [ ] TRIANGULATE: add tests proving delete, source, ingestion, chat, retrieval, citation, account, team, and implicit-active campaign endpoints are not introduced by this slice. <!-- sdd-owner: implementation -->
+- [ ] REFACTOR: ensure OpenAPI metadata names and response descriptions stay narrow to the three Block 01 campaign endpoints. <!-- sdd-owner: implementation -->
+- [ ] RED: add failing Vitest tests under `apps/web/src/app/features/campaigns/api/campaigns-api.service.spec.ts` and `apps/web/src/app/features/campaigns/campaign-id.spec.ts` for list/create/get success, Problem Details code mapping, network/recoverable errors, and malformed UUID detection. <!-- sdd-owner: implementation -->
+- [ ] GREEN: implement `apps/web/src/app/features/campaigns/models/campaign.model.ts`, `state/problem-details.ts`, `campaign-id.ts`, and `api/campaigns-api.service.ts` with only `listCampaigns`, `createCampaign`, and `getCampaign`. <!-- sdd-owner: implementation -->
+- [ ] TRIANGULATE: add adapter tests for `campaign_name_invalid`, `campaign_name_conflict`, `campaign_id_invalid`, `campaign_not_found`, and unexpected error payloads. <!-- sdd-owner: implementation -->
+- [ ] REFACTOR: keep the handwritten adapter colocated under `apps/web/src/app/features/campaigns/` and document in code/tests that generated-client automation remains out of Block 01. <!-- sdd-owner: implementation -->
+- [ ] RED: add failing route/component tests in `apps/web/src/app/features/campaigns/campaign-selection.page.spec.ts` for loading, empty, list success, creation loading, creation success, field-level invalid/conflict errors, recoverable retry, and explicit Chat/Sources links. <!-- sdd-owner: implementation -->
+- [ ] GREEN: register `/campaigns` in `apps/web/src/app/app.routes.ts` and implement `apps/web/src/app/features/campaigns/campaign-selection.page.ts` using Angular standalone APIs/signals. <!-- sdd-owner: implementation -->
+- [ ] GREEN: update shared shell entry points in `apps/web/src/app/app.component.html`, `app.component.ts`, and `app.component.css` only as needed to host routed campaign pages and preserve existing scaffold behavior. <!-- sdd-owner: implementation -->
+- [ ] GREEN: style the selection UI in `apps/web/src/styles.css` or component styles with Codex Lithographica tokens from `DESIGN.md`, English visible copy, semantic headings, visible focus, and responsive normal-flow links. <!-- sdd-owner: implementation -->
+- [ ] TRIANGULATE: add tests proving `/campaigns` never silently enters Chat or Sources and no stored active-campaign preference overrides URL selection. <!-- sdd-owner: implementation -->
+- [ ] REFACTOR: remove any disabled-looking future actions, placeholder ingestion controls, or hidden defaults introduced while building the selection page. <!-- sdd-owner: implementation -->
+- [ ] RED: add failing route/component tests in `apps/web/src/app/features/campaigns/chat-shell.page.spec.ts`, `sources-shell.page.spec.ts`, and `campaign-workspace-shell.component.spec.ts` for route loading, valid campaign context, malformed ID state, unknown ID state, and no previous-campaign fallback. <!-- sdd-owner: implementation -->
+- [ ] GREEN: add `/campaigns/:campaignId/chat` and `/campaigns/:campaignId/sources` to `apps/web/src/app/app.routes.ts` and implement `chat-shell.page.ts`, `sources-shell.page.ts`, and `campaign-workspace-shell.component.ts`. <!-- sdd-owner: implementation -->
+- [ ] GREEN: render English Chat shell copy stating AI chat, source-backed querying, retrieval, citations, conversation history, streaming, and draft persistence are unavailable in this slice. <!-- sdd-owner: implementation -->
+- [ ] GREEN: render English Sources shell copy stating ingestion, upload, paste, Notion import, update, removal, indexing, retry, progress, and source lifecycle actions are unavailable in this slice. <!-- sdd-owner: implementation -->
+- [ ] TRIANGULATE: add negative assertions that no query form, submit button, upload/paste/import controls, citation affordances, source-management actions, retry/progress widgets, or disabled future controls are present. <!-- sdd-owner: implementation -->
+- [ ] REFACTOR: keep campaign route loading isolated so old route data cannot display while a new `campaignId` is resolving. <!-- sdd-owner: implementation -->
+- [ ] RED: add a failing Playwright spec in `apps/web/e2e/campaign-workspace.spec.ts` that opens `/campaigns`, creates `Ash Crown`, sees it listed, navigates to Chat, and navigates to Sources. <!-- sdd-owner: implementation -->
+- [ ] GREEN: add only necessary E2E setup/configuration in `apps/web/e2e/playwright.config.ts` or existing test bootstrap to point at the local API/database without adding mock-only product behavior. <!-- sdd-owner: implementation -->
+- [ ] TRIANGULATE: assert English unavailable Chat and Sources copy in the smoke test and verify no ingestion or AI controls appear. <!-- sdd-owner: implementation -->
+- [ ] REFACTOR: keep the E2E flow focused on Block 01 and move detailed validation/error coverage back to component or integration tests. <!-- sdd-owner: implementation -->
+- [ ] RED: identify any implementation-discovered spec gap in `openspec/changes/block-01-campaign-workspace-slice/proposal.md`, `specs/campaigns/spec.md`, `specs/workspace/spec.md`, or `design.md` before changing behavior. <!-- sdd-owner: implementation -->
+- [ ] GREEN: update `docs/10-roadmap.md` Block 01 readiness/exit evidence and any affected command/status notes only after behavior and tests exist. <!-- sdd-owner: implementation -->
+- [ ] GREEN: update `docs/06-api-contracts.md`, `docs/03-domain-model.md`, or `docs/12-workspace-and-ingestion-ux.md` only if implementation reveals a documented Block 01 gap, keeping PRODUCT.md behavior unchanged unless the spec is explicitly changed first. <!-- sdd-owner: implementation -->
+- [ ] TRIANGULATE: run `pnpm run test`, `pnpm run build`, `dotnet build services/api/Lorekeeper.slnx --configuration Release`, and `dotnet test services/api/Lorekeeper.slnx --no-build --configuration Release` as the apply gate and record any deviations. <!-- sdd-owner: implementation -->
+- [ ] TRIANGULATE: run `pnpm run lint`, `pnpm run test`, `pnpm run build`, `pnpm run e2e`, `dotnet format services/api/Lorekeeper.slnx --verify-no-changes`, `dotnet build services/api/Lorekeeper.slnx --no-restore --configuration Release`, and `dotnet test services/api/Lorekeeper.slnx --no-build --configuration Release` as the verify gate. <!-- sdd-owner: implementation -->
+- [ ] REFACTOR: remove dead code, unused test helpers, unverified placeholders, generated artifacts not required for Block 01, and any accidental out-of-scope affordances before review. <!-- sdd-owner: implementation -->
