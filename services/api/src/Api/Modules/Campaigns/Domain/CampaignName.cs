@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace Api.Modules.Campaigns.Domain;
 
 public sealed record CampaignName
@@ -13,11 +15,23 @@ public sealed record CampaignName
     {
         var trimmed = value?.Trim();
 
-        if (string.IsNullOrEmpty(trimmed) || trimmed.Length > MaxLength)
+        if (string.IsNullOrEmpty(trimmed) || CountUnicodeScalars(trimmed) > MaxLength)
         {
             return DomainResult<CampaignName>.Failure(InvalidCode);
         }
 
         return DomainResult<CampaignName>.Success(new CampaignName(trimmed));
+    }
+
+    private static int CountUnicodeScalars(string value)
+    {
+        var count = 0;
+
+        foreach (var _ in value.EnumerateRunes())
+        {
+            count++;
+        }
+
+        return count;
     }
 }
