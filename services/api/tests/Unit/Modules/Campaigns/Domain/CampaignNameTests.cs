@@ -38,9 +38,26 @@ public class CampaignNameTests
     }
 
     [Fact]
+    public void CreateCountsUnicodeScalarsAtMaximumLength()
+    {
+        var result = CampaignName.Create(string.Concat(Enumerable.Repeat("🏰", CampaignName.MaxLength)));
+
+        result.IsSuccess.Should().BeTrue();
+    }
+
+    [Fact]
     public void CreateRejectsNamesOverMaximumLengthAfterTrimming()
     {
         var result = CampaignName.Create($" {new string('A', CampaignName.MaxLength + 1)} ");
+
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorCode.Should().Be(CampaignName.InvalidCode);
+    }
+
+    [Fact]
+    public void CreateRejectsUnicodeScalarNamesOverMaximumLength()
+    {
+        var result = CampaignName.Create(string.Concat(Enumerable.Repeat("🏰", CampaignName.MaxLength + 1)));
 
         result.IsSuccess.Should().BeFalse();
         result.ErrorCode.Should().Be(CampaignName.InvalidCode);

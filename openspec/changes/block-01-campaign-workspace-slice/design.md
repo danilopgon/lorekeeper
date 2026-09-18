@@ -39,10 +39,10 @@ Use a generated normalized column plus unique index instead of `citext`:
 CREATE TABLE campaigns (
   id uuid PRIMARY KEY,
   name varchar(120) NOT NULL,
-  name_normalized varchar(120) GENERATED ALWAYS AS (lower(name)) STORED,
+  name_normalized varchar(120) GENERATED ALWAYS AS (lower(btrim(name, E' \t\n\r\f\v'))) STORED,
   created_at timestamptz NOT NULL,
   updated_at timestamptz NOT NULL,
-  CONSTRAINT ck_campaigns_name_trimmed CHECK (name = btrim(name)),
+  CONSTRAINT ck_campaigns_name_trimmed CHECK (name = btrim(name, E' \t\n\r\f\v')),
   CONSTRAINT ck_campaigns_name_length CHECK (char_length(name) BETWEEN 1 AND 120)
 );
 
@@ -110,8 +110,8 @@ Add EF Core and Npgsql packages to `Api.csproj`; add Testcontainers/Npgsql EF de
 - `CampaignsDbContext` registered in `Program.cs`.
 - `Campaign` mapped to table `campaigns` with snake_case columns.
 - `id` as `uuid`, `name` as `varchar(120)`, timestamps as `timestamptz`.
-- Generated `name_normalized` and unique index through migration SQL or EF computed column mapping.
-- Check constraints for trimmed/non-empty/length safeguards.
+- Generated `name_normalized` and unique index through migration SQL or EF computed column mapping. The generated expression must trim the same ASCII/control whitespace guarded by the database trim check before lowercasing.
+- Check constraints for trimmed/non-empty/length safeguards. The application remains authoritative for .NET `string.Trim()` Unicode-whitespace handling; the database constraint is a persistence-boundary guard against common direct writes using spaces, tabs, and line breaks.
 
 The application, not the database, sets timestamps so API tests can assert UTC ISO output deterministically where needed. Store and return UTC.
 
