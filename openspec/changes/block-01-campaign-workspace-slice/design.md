@@ -39,10 +39,10 @@ Use a generated normalized column plus unique index instead of `citext`:
 CREATE TABLE campaigns (
   id uuid PRIMARY KEY,
   name varchar(120) NOT NULL,
-  name_normalized varchar(120) GENERATED ALWAYS AS (lower(btrim(name, E' \t\n\r\f\v'))) STORED,
+  name_normalized varchar(120) GENERATED ALWAYS AS (lower(btrim(name, E' \t\n\r\f\013'))) STORED,
   created_at timestamptz NOT NULL,
   updated_at timestamptz NOT NULL,
-  CONSTRAINT ck_campaigns_name_trimmed CHECK (name = btrim(name, E' \t\n\r\f\v')),
+  CONSTRAINT ck_campaigns_name_trimmed CHECK (name = btrim(name, E' \t\n\r\f\013')),
   CONSTRAINT ck_campaigns_name_length CHECK (char_length(name) BETWEEN 1 AND 120)
 );
 
