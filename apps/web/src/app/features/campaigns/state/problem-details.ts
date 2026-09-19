@@ -1,3 +1,4 @@
+/** Stable Problem Details codes returned by the campaign HTTP API. */
 export type CampaignProblemCode =
   | 'campaign_name_invalid'
   | 'campaign_name_conflict'
@@ -5,6 +6,7 @@ export type CampaignProblemCode =
   | 'campaign_not_found'
   | 'unexpected_error';
 
+/** RFC 7807 payload shape with Lorekeeper campaign extensions. */
 export interface ProblemDetails {
   type?: string;
   title?: string;
@@ -15,6 +17,7 @@ export interface ProblemDetails {
   errors?: Record<string, string[]>;
 }
 
+/** Typed UI-facing error states produced by the campaign API adapter. */
 export type CampaignApiError =
   | {
       kind: 'fieldError';
@@ -30,6 +33,7 @@ export type CampaignApiError =
       details?: ProblemDetails;
     };
 
+/** Maps RFC 7807 campaign codes into UI-facing adapter errors. */
 export function mapProblemDetails(details: ProblemDetails | null | undefined): CampaignApiError {
   switch (details?.code) {
     case 'campaign_name_invalid':
