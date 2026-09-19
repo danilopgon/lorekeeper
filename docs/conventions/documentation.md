@@ -17,6 +17,7 @@
 - Update conventions in the same change that introduces or enforces the practice; do not rely on chat context or commit history as the only source of truth.
 - If a convention is planned but not yet enforced, state the enforcement point and avoid claiming it is verified.
 - Frontend Angular async conventions live in `docs/conventions/frontend.md`.
+- Visible UI changes must run the frontend design review gate in `docs/conventions/frontend-design-review.md`.
 
 ## Commit conventions
 
