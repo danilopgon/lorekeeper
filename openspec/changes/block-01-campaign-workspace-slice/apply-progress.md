@@ -266,3 +266,35 @@ Implemented the backend-only HTTP API slice on `feat/block-01-http-api`. Fronten
 ### Remaining tasks
 
 Frontend Work Units 4–7 and documentation/full-verification Work Unit 8 remain intentionally untouched. Docker-backed endpoint tests must run in CI or another environment with Docker available before this slice is considered fully verified.
+
+## Work Unit 4 apply — Frontend campaign API adapter and typed state
+
+### Scope
+
+Implemented the frontend-only handwritten campaign API adapter slice on `feat/block-01-frontend-adapter`. Campaign selection UI, workspace routes, Chat/Sources shells, E2E, and docs remain out of scope.
+
+### Completed tasks and persisted checkboxes
+
+- [x] RED: add failing Vitest tests under `apps/web/src/app/features/campaigns/api/campaigns-api.service.spec.ts` and `apps/web/src/app/features/campaigns/campaign-id.spec.ts` for list/create/get success, Problem Details code mapping, network/recoverable errors, and malformed UUID detection.
+- [x] GREEN: implement `apps/web/src/app/features/campaigns/models/campaign.model.ts`, `state/problem-details.ts`, `campaign-id.ts`, and `api/campaigns-api.service.ts` with only `listCampaigns`, `createCampaign`, and `getCampaign`.
+- [x] TRIANGULATE: add adapter tests for `campaign_name_invalid`, `campaign_name_conflict`, `campaign_id_invalid`, `campaign_not_found`, and unexpected error payloads.
+- [x] REFACTOR: keep the handwritten adapter colocated under `apps/web/src/app/features/campaigns/` and document in code/tests that generated-client automation remains out of Block 01.
+
+### Evidence
+
+1. `pnpm --filter web test -- --run campaigns`
+   - Result: blocked by Angular builder argument schema handling: `Option '--' has been specified multiple times` and `Data path "" must NOT have additional properties()`.
+2. `pnpm --filter web test`
+   - Result: passed, 3 files and 11 tests.
+3. `pnpm --filter web lint`
+   - Result: passed.
+4. `pnpm --filter web build`
+   - Result: passed.
+
+### Deviations
+
+- The planned focused command did not work with the current Angular unit-test builder invocation. The full frontend test suite was run instead and passed.
+
+### Remaining tasks
+
+Frontend route/page Work Units 5–6, E2E Work Unit 7, and docs/full-verification Work Unit 8 remain intentionally untouched.
