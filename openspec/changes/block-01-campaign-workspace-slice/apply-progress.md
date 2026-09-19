@@ -232,3 +232,37 @@ Remove the EF/Npgsql/Testcontainers package references, `CampaignsDbContext`, ca
 - [ ] TRIANGULATE: run `pnpm run test`, `pnpm run build`, `dotnet build services/api/Lorekeeper.slnx --configuration Release`, and `dotnet test services/api/Lorekeeper.slnx --no-build --configuration Release` as the apply gate and record any deviations. <!-- sdd-owner: implementation -->
 - [ ] TRIANGULATE: run `pnpm run lint`, `pnpm run test`, `pnpm run build`, `pnpm run e2e`, `dotnet format services/api/Lorekeeper.slnx --verify-no-changes`, `dotnet build services/api/Lorekeeper.slnx --no-restore --configuration Release`, and `dotnet test services/api/Lorekeeper.slnx --no-build --configuration Release` as the verify gate. <!-- sdd-owner: implementation -->
 - [ ] REFACTOR: remove dead code, unused test helpers, unverified placeholders, generated artifacts not required for Block 01, and any accidental out-of-scope affordances before review. <!-- sdd-owner: implementation -->
+
+## Work Unit 3 apply — Backend campaign HTTP API
+
+### Scope
+
+Implemented the backend-only HTTP API slice on `feat/block-01-http-api`. Frontend, E2E, ingestion, source lifecycle, AI, auth, accounts, teams, and deletion remain out of scope.
+
+### Completed tasks and persisted checkboxes
+
+- [x] RED: add failing endpoint tests in `services/api/tests/Integration/Modules/Campaigns/CampaignEndpointsTests.cs` for `GET /api/campaigns`, `POST /api/campaigns`, `GET /api/campaigns/{campaignId}`, invalid name, duplicate name, malformed ID, unknown ID, `Location`, UTC ISO timestamps, and no implicit active campaign.
+- [x] GREEN: implement application slices under `services/api/src/Api/Modules/Campaigns/Application/CreateCampaign/`, `ListCampaigns/`, and `GetCampaign/` using direct `CampaignsDbContext` dependencies.
+- [x] GREEN: implement DTOs/problem mapping in `services/api/src/Api/Modules/Campaigns/CampaignEndpoints.cs` and map endpoints from `services/api/src/Api/Program.cs`.
+- [x] GREEN: return RFC 7807 Problem Details with stable `code` values `campaign_name_invalid`, `campaign_name_conflict`, `campaign_id_invalid`, and `campaign_not_found`, plus field-level `name` information for name failures.
+- [x] TRIANGULATE: add tests proving delete, source, ingestion, chat, retrieval, citation, account, team, and implicit-active campaign endpoints are not introduced by this slice.
+- [x] REFACTOR: ensure OpenAPI metadata names and response descriptions stay narrow to the three Block 01 campaign endpoints.
+
+### Evidence
+
+1. `dotnet build services/api/Lorekeeper.slnx --configuration Release`
+   - Result: passed with NU1903 warnings from transitive `SSH.NET` vulnerabilities introduced via Testcontainers dependencies.
+2. `dotnet format services/api/Lorekeeper.slnx --verify-no-changes`
+   - Result: passed with workspace-load warnings.
+3. `dotnet test services/api/tests/Unit/Unit.csproj --no-build --configuration Release --filter FullyQualifiedName~Campaign`
+   - Result: passed, 18 tests.
+4. `dotnet test services/api/Lorekeeper.slnx --no-build --configuration Release --filter FullyQualifiedName~CampaignEndpoints`
+   - Result: focused endpoint tests were discovered, but execution is blocked locally because Testcontainers cannot connect to Docker at `npipe://./pipe/docker_engine`.
+
+### Architecture note
+
+`Program.cs` remains a thin composition root. Campaign service registration and endpoint mapping are routed through `CampaignsModule` (`AddCampaignsModule` / `MapCampaignsModule`) so domain, application, infrastructure, and HTTP adapter concerns remain separated without adding MediatR, repositories, or framework ceremony.
+
+### Remaining tasks
+
+Frontend Work Units 4–7 and documentation/full-verification Work Unit 8 remain intentionally untouched. Docker-backed endpoint tests must run in CI or another environment with Docker available before this slice is considered fully verified.
