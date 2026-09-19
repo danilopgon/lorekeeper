@@ -1,0 +1,72 @@
+<main class="campaign-page" aria-labelledby="campaigns-heading">
+  <section class="campaign-hero">
+    <p class="campaign-kicker">Lorekeeper · Campaign register</p>
+    <h1 id="campaigns-heading">Choose your campaign chronicle</h1>
+    <p>
+      Campaign context is required before future notes, questions, Chat, or Sources can be opened.
+      Nothing is selected implicitly.
+    </p>
+  </section>
+
+  <section class="campaign-panel" aria-labelledby="create-campaign-heading">
+    <h2 id="create-campaign-heading">Create a campaign</h2>
+    <form (ngSubmit)="createCampaign()" novalidate>
+      <label for="campaign-name">Campaign name</label>
+      <div class="campaign-form-row">
+        <input
+          id="campaign-name"
+          name="campaignName"
+          type="text"
+          [(ngModel)]="campaignName"
+          [attr.aria-describedby]="nameError() ? 'campaign-name-error' : null"
+          [attr.aria-invalid]="nameError() ? 'true' : null"
+        />
+        <button type="submit" [disabled]="creating()">
+          {{ creating() ? 'Creating…' : 'Create campaign' }}
+        </button>
+      </div>
+      @if (nameError(); as error) {
+        <p id="campaign-name-error" class="campaign-error">{{ fieldErrorMessage(error) }}</p>
+      }
+      @if (createRecoverableError()) {
+        <p class="campaign-error">Campaign creation failed. Check the connection and retry.</p>
+      }
+    </form>
+  </section>
+
+  <section class="campaign-panel" aria-labelledby="campaign-list-heading">
+    <div class="campaign-list-header">
+      <h2 id="campaign-list-heading">Campaigns</h2>
+      @if (campaigns.error()) {
+        <button type="button" class="campaign-secondary-action" (click)="campaigns.reload()">
+          Retry
+        </button>
+      }
+    </div>
+
+    @if (campaigns.isLoading()) {
+      <p class="campaign-muted">Loading campaigns…</p>
+    } @else if (campaigns.error()) {
+      <p class="campaign-error">Campaigns could not be loaded. Retry when the API is available.</p>
+    } @else if (campaigns.value()?.length === 0) {
+      <p class="campaign-muted">No campaigns yet. Create one to start a chronicle.</p>
+    } @else {
+      <ul class="campaign-list" aria-label="Available campaigns">
+        @for (campaign of campaigns.value(); track campaign.id) {
+          <li>
+            <article class="campaign-card">
+              <div>
+                <h3>{{ campaign.name }}</h3>
+                <p>Created {{ campaign.createdAt }}</p>
+              </div>
+              <nav [attr.aria-label]="campaign.name + ' workspace links'">
+                <a [routerLink]="['/campaigns', campaign.id, 'chat']">Open Chat</a>
+                <a [routerLink]="['/campaigns', campaign.id, 'sources']">Open Sources</a>
+              </nav>
+            </article>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+</main>
