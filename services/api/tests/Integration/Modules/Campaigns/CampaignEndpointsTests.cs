@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Api.Modules.Campaigns.Infrastructure;
@@ -55,14 +56,14 @@ public sealed class CampaignEndpointsTests : IAsyncLifetime
     [Fact]
     public async Task ListCampaignsReturnsCreatedCampaignDtos()
     {
-        await CreateCampaign("Ash Crown");
         await CreateCampaign("Bright Coast");
+        await CreateCampaign("Ash Crown");
 
         using var response = await _client.GetAsync("/api/campaigns");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var campaigns = await ReadJsonArray(response);
-        campaigns.Select(node => node!["name"]!.GetValue<string>()).Should().Equal("Ash Crown", "Bright Coast");
+        campaigns.Select(node => node!["name"]!.GetValue<string>()).Should().Equal("Bright Coast", "Ash Crown");
     }
 
     [Fact]
@@ -89,8 +90,27 @@ public sealed class CampaignEndpointsTests : IAsyncLifetime
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         var problem = await ReadJsonObject(response);
-        problem["code"]!.GetValue<string>().Should().Be("campaign_name_invalid");
-        problem["errors"]!["name"]!.AsArray().Select(node => node!.GetValue<string>()).Should().Contain("campaign_name_invalid");
+        AssertNameInvalidProblem(problem);
+    }
+
+    [Fact]
+    public async Task CreateCampaignRejectsAbsentBodyAsInvalidName()
+    {
+        using var response = await _client.PostAsync("/api/campaigns", content: null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var problem = await ReadJsonObject(response);
+        AssertNameInvalidProblem(problem);
+    }
+
+    [Fact]
+    public async Task CreateCampaignRejectsNullBodyAsInvalidName()
+    {
+        using var response = await _client.PostAsync("/api/campaigns", new StringContent("null", Encoding.UTF8, "application/json"));
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var problem = await ReadJsonObject(response);
+        AssertNameInvalidProblem(problem);
     }
 
     [Fact]
@@ -176,6 +196,12 @@ public sealed class CampaignEndpointsTests : IAsyncLifetime
         using var response = await _client.PostAsJsonAsync("/api/campaigns", new { name });
         response.EnsureSuccessStatusCode();
         return await ReadJsonObject(response);
+    }
+
+    private static void AssertNameInvalidProblem(JsonObject problem)
+    {
+        problem["code"]!.GetValue<string>().Should().Be("campaign_name_invalid");
+        problem["errors"]!["name"]!.AsArray().Select(node => node!.GetValue<string>()).Should().Contain("campaign_name_invalid");
     }
 
     private static async Task<JsonObject> ReadJsonObject(HttpResponseMessage response)
