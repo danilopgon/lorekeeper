@@ -6,6 +6,9 @@
   "type": "module",
   "scripts": {
     "prepare": "husky",
+    "start": "pnpm --filter web start",
+    "web:start": "pnpm --filter web start",
+    "api:start": "dotnet run --project services/api/src/Api/Api.csproj",
     "format": "pnpm --filter web format",
     "format:check": "pnpm --filter web format:check",
     "lint": "pnpm --filter web lint",
