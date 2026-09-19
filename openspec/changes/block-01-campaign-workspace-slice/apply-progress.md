@@ -298,3 +298,41 @@ Implemented the frontend-only handwritten campaign API adapter slice on `feat/bl
 ### Remaining tasks
 
 Frontend route/page Work Units 5–6, E2E Work Unit 7, and docs/full-verification Work Unit 8 remain intentionally untouched.
+
+## Work Unit 5 apply — Frontend campaign selection page
+
+### Scope
+
+Implemented the `/campaigns` route and campaign selection/creation page on `feat/block-01-frontend-ui`. Chat and Sources workspace shells, E2E, docs, and final verification remain out of scope.
+
+### Completed tasks and persisted checkboxes
+
+- [x] RED: add failing route/component tests in `apps/web/src/app/features/campaigns/pages/campaign-selection/campaign-selection.page.spec.ts` for loading, empty, list success, creation loading, creation success, field-level invalid/conflict errors, recoverable retry, and explicit Chat/Sources links.
+- [x] GREEN: register `/campaigns` in `apps/web/src/app/app.routes.ts` and implement `apps/web/src/app/features/campaigns/pages/campaign-selection/campaign-selection.page.ts` using Angular standalone APIs/signals.
+- [x] GREEN: update shared shell entry points in `apps/web/src/app/app.component.html`, `app.component.ts`, and `app.component.css` only as needed to host routed campaign pages and preserve existing scaffold behavior.
+- [x] GREEN: style the selection UI in component styles with Codex Lithographica tokens from `DESIGN.md`, English visible copy, semantic headings, visible focus, and responsive normal-flow links.
+- [x] TRIANGULATE: add tests proving `/campaigns` never silently enters Chat or Sources and no stored active-campaign preference overrides URL selection.
+- [x] REFACTOR: remove any disabled-looking future actions, placeholder ingestion controls, or hidden defaults introduced while building the selection page.
+
+### Evidence
+
+Design review: pass
+Checked against: `DESIGN.md`, `docs/conventions/frontend-design-review.md`
+Notes: no blockers; follow-ups may tighten canonical font stacks, aria-live announcements, and date formatting.
+
+1. `pnpm --filter web format:check`
+   - Result: passed.
+2. `pnpm --filter web lint`
+   - Result: passed.
+3. `pnpm --filter web build`
+   - Result: passed.
+4. `pnpm --filter web test`
+   - Result: passed, 4 files and 16 tests.
+
+### Architecture note
+
+The campaign feature is now organized by responsibility: `api/`, `models/`, `routing/`, `state/`, and `pages/campaign-selection/`. API adapters remain Promise-based; page reads use Angular `resource`; UI commands wrap adapter promises with RxJS `from(...)`, `finalize(...)`, and `takeUntilDestroyed(...)`.
+
+### Remaining tasks
+
+Frontend workspace shell Work Unit 6, E2E Work Unit 7, and docs/full-verification Work Unit 8 remain intentionally untouched.

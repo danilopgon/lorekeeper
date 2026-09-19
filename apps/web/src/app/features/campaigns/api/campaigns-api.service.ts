@@ -1,6 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 import { Campaign, CampaignDto } from '../models/campaign.model';
 import { CampaignApiError, mapProblemDetails, ProblemDetails } from '../state/problem-details';
 
@@ -12,11 +13,12 @@ import { CampaignApiError, mapProblemDetails, ProblemDetails } from '../state/pr
 @Injectable({ providedIn: 'root' })
 export class CampaignsApiService {
   private readonly http = inject(HttpClient);
+  private readonly campaignsUrl = `${environment.apiBaseUrl}/api/campaigns`;
 
   /** Lists campaigns from the backend contract. */
   async listCampaigns(): Promise<Campaign[]> {
     try {
-      const campaigns = await firstValueFrom(this.http.get<unknown>('/api/campaigns'));
+      const campaigns = await firstValueFrom(this.http.get<unknown>(this.campaignsUrl));
       return parseCampaignArray(campaigns);
     } catch (error) {
       throw toCampaignApiError(error);
@@ -26,7 +28,7 @@ export class CampaignsApiService {
   /** Creates one campaign by name. */
   async createCampaign(name: string): Promise<Campaign> {
     try {
-      const campaign = await firstValueFrom(this.http.post<unknown>('/api/campaigns', { name }));
+      const campaign = await firstValueFrom(this.http.post<unknown>(this.campaignsUrl, { name }));
       return parseCampaign(campaign);
     } catch (error) {
       throw toCampaignApiError(error);
@@ -37,7 +39,7 @@ export class CampaignsApiService {
   async getCampaign(id: string): Promise<Campaign> {
     try {
       const campaign = await firstValueFrom(
-        this.http.get<unknown>(`/api/campaigns/${encodeURIComponent(id)}`),
+        this.http.get<unknown>(`${this.campaignsUrl}/${encodeURIComponent(id)}`),
       );
       return parseCampaign(campaign);
     } catch (error) {

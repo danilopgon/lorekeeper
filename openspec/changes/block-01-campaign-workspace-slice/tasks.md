@@ -80,12 +80,12 @@ Start: backend contract shape is known. Finish: Angular has a narrow handwritten
 
 Start: adapter tests pass. Finish: `/campaigns` supports loading, empty, list, creation, validation, conflict, recoverable error, and explicit navigation states. Verification: `pnpm run test -- --run campaigns` and `pnpm run lint`. Rollback: remove campaign route entries, page component, styles, and tests.
 
-- [ ] RED: add failing route/component tests in `apps/web/src/app/features/campaigns/campaign-selection.page.spec.ts` for loading, empty, list success, creation loading, creation success, field-level invalid/conflict errors, recoverable retry, and explicit Chat/Sources links. <!-- sdd-owner: implementation -->
-- [ ] GREEN: register `/campaigns` in `apps/web/src/app/app.routes.ts` and implement `apps/web/src/app/features/campaigns/campaign-selection.page.ts` using Angular standalone APIs/signals. <!-- sdd-owner: implementation -->
-- [ ] GREEN: update shared shell entry points in `apps/web/src/app/app.component.html`, `app.component.ts`, and `app.component.css` only as needed to host routed campaign pages and preserve existing scaffold behavior. <!-- sdd-owner: implementation -->
-- [ ] GREEN: style the selection UI in `apps/web/src/styles.css` or component styles with Codex Lithographica tokens from `DESIGN.md`, English visible copy, semantic headings, visible focus, and responsive normal-flow links. <!-- sdd-owner: implementation -->
-- [ ] TRIANGULATE: add tests proving `/campaigns` never silently enters Chat or Sources and no stored active-campaign preference overrides URL selection. <!-- sdd-owner: implementation -->
-- [ ] REFACTOR: remove any disabled-looking future actions, placeholder ingestion controls, or hidden defaults introduced while building the selection page. <!-- sdd-owner: implementation -->
+- [x] RED: add failing route/component tests in `apps/web/src/app/features/campaigns/campaign-selection.page.spec.ts` for loading, empty, list success, creation loading, creation success, field-level invalid/conflict errors, recoverable retry, and explicit Chat/Sources links. <!-- sdd-owner: implementation -->
+- [x] GREEN: register `/campaigns` in `apps/web/src/app/app.routes.ts` and implement `apps/web/src/app/features/campaigns/campaign-selection.page.ts` using Angular standalone APIs/signals. <!-- sdd-owner: implementation -->
+- [x] GREEN: update shared shell entry points in `apps/web/src/app/app.component.html`, `app.component.ts`, and `app.component.css` only as needed to host routed campaign pages and preserve existing scaffold behavior. <!-- sdd-owner: implementation -->
+- [x] GREEN: style the selection UI in `apps/web/src/styles.css` or component styles with Codex Lithographica tokens from `DESIGN.md`, English visible copy, semantic headings, visible focus, and responsive normal-flow links. <!-- sdd-owner: implementation -->
+- [x] TRIANGULATE: add tests proving `/campaigns` never silently enters Chat or Sources and no stored active-campaign preference overrides URL selection. <!-- sdd-owner: implementation -->
+- [x] REFACTOR: remove any disabled-looking future actions, placeholder ingestion controls, or hidden defaults introduced while building the selection page. <!-- sdd-owner: implementation -->
 
 ## Work Unit 6 — Frontend Chat and Sources workspace shells
 
