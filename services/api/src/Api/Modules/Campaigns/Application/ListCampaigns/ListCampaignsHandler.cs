@@ -12,7 +12,8 @@ public sealed class ListCampaignsHandler(CampaignsDbContext dbContext)
             .ToListAsync(cancellationToken);
 
         return campaigns
-            .OrderBy(campaign => campaign.Name.Value, StringComparer.Ordinal)
+            .OrderBy(campaign => campaign.CreatedAt)
+            .ThenBy(campaign => campaign.Name.Value, StringComparer.Ordinal)
             .Select(campaign => new CampaignDto(
                 campaign.Id.ToString("D"),
                 campaign.Name.Value,

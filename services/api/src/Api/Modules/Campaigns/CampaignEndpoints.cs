@@ -54,11 +54,11 @@ public static class CampaignEndpoints
     }
 
     private static async Task<Results<Created<CampaignDto>, ProblemHttpResult>> CreateCampaign(
-        CreateCampaignRequest request,
+        [FromBody] CreateCampaignRequest? request,
         CreateCampaignHandler handler,
         CancellationToken cancellationToken)
     {
-        var result = await handler.Handle(request, cancellationToken);
+        var result = await handler.Handle(request ?? new CreateCampaignRequest(null), cancellationToken);
 
         return result.Status switch
         {
