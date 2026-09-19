@@ -18,6 +18,7 @@
           name="campaignName"
           type="text"
           [(ngModel)]="campaignName"
+          [disabled]="creating()"
           [attr.aria-describedby]="nameError() ? 'campaign-name-error' : null"
           [attr.aria-invalid]="nameError() ? 'true' : null"
         />
@@ -26,10 +27,14 @@
         </button>
       </div>
       @if (nameError(); as error) {
-        <p id="campaign-name-error" class="campaign-error">{{ fieldErrorMessage(error) }}</p>
+        <p id="campaign-name-error" class="campaign-error" role="alert">
+          {{ fieldErrorMessage(error) }}
+        </p>
       }
       @if (createRecoverableError()) {
-        <p class="campaign-error">Campaign creation failed. Check the connection and retry.</p>
+        <p class="campaign-error" role="alert">
+          Campaign creation failed. Check the connection and retry.
+        </p>
       }
     </form>
   </section>
@@ -45,11 +50,13 @@
     </div>
 
     @if (campaigns.isLoading()) {
-      <p class="campaign-muted">Loading campaigns…</p>
+      <p class="campaign-muted" role="status">Loading campaigns…</p>
     } @else if (campaigns.error()) {
-      <p class="campaign-error">Campaigns could not be loaded. Retry when the API is available.</p>
+      <p class="campaign-error" role="alert">
+        Campaigns could not be loaded. Retry when the API is available.
+      </p>
     } @else if (campaigns.value()?.length === 0) {
-      <p class="campaign-muted">No campaigns yet. Create one to start a chronicle.</p>
+      <p class="campaign-muted" role="status">No campaigns yet. Create one to start a chronicle.</p>
     } @else {
       <ul class="campaign-list" aria-label="Available campaigns">
         @for (campaign of campaigns.value(); track campaign.id) {

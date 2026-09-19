@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, resource, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, resource, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -17,6 +17,7 @@ import { CampaignApiError } from '../../state/problem-details';
 export class CampaignSelectionPage {
   private readonly campaignsApi = inject(CampaignsApiService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly refreshAfterActiveLoad = signal(false);
 
   protected campaignName = '';
   protected readonly creating = signal(false);
@@ -27,6 +28,15 @@ export class CampaignSelectionPage {
   protected readonly campaigns = resource<Campaign[], unknown>({
     loader: () => this.campaignsApi.listCampaigns(),
   });
+
+  constructor() {
+    effect(() => {
+      if (this.refreshAfterActiveLoad() && !this.campaigns.isLoading()) {
+        this.refreshAfterActiveLoad.set(false);
+        this.campaigns.reload();
+      }
+    });
+  }
 
   /** Creates a campaign without selecting or navigating to it implicitly. */
   protected createCampaign(): void {
@@ -63,6 +73,12 @@ export class CampaignSelectionPage {
 
   private handleCreateSuccess(): void {
     this.campaignName = '';
+
+    if (this.campaigns.isLoading()) {
+      this.refreshAfterActiveLoad.set(true);
+      return;
+    }
+
     this.campaigns.reload();
   }
 
