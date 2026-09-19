@@ -70,7 +70,7 @@
 .campaign-form-row button,
 .campaign-secondary-action {
   border: 1px solid var(--color-pimenton-deep);
-  background: var(--color-pimenton);
+  background: var(--color-pimenton-deep);
   color: white;
   cursor: pointer;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
@@ -126,8 +126,10 @@
 }
 
 .campaign-card a {
-  color: var(--text-accent);
+  color: var(--color-pimenton-deep);
   font-weight: 700;
+  text-decoration-thickness: 0.12em;
+  text-underline-offset: 0.2em;
 }
 
 .campaign-error {
