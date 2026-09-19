@@ -99,6 +99,27 @@ describe('CampaignsApiService', () => {
     await expect(missing).rejects.toMatchObject({ kind: 'notFound', code: 'campaign_not_found' });
   });
 
+  it('rejects malformed successful campaign payloads as recoverable errors', async () => {
+    const malformedList = service.listCampaigns();
+    http.expectOne('/api/campaigns').flush([{ id: 123, name: 'Ash Crown' }]);
+    await expect(malformedList).rejects.toMatchObject({
+      kind: 'recoverableError',
+      code: 'unknown_error',
+    });
+
+    const malformedItem = service.getCampaign('123e4567-e89b-12d3-a456-426614174000');
+    http.expectOne('/api/campaigns/123e4567-e89b-12d3-a456-426614174000').flush({
+      id: '123e4567-e89b-12d3-a456-426614174000',
+      name: null,
+      createdAt: '2026-09-15T10:00:00Z',
+      updatedAt: '2026-09-15T10:00:00Z',
+    });
+    await expect(malformedItem).rejects.toMatchObject({
+      kind: 'recoverableError',
+      code: 'unknown_error',
+    });
+  });
+
   it('maps unexpected problem payloads and network errors as recoverable', async () => {
     const unexpected = service.listCampaigns();
     http

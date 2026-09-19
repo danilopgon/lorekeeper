@@ -15,8 +15,12 @@ describe('parseCampaignId', () => {
     });
   });
 
-  it('rejects malformed UUIDs', () => {
+  it('rejects malformed UUIDs and whitespace-wrapped route values', () => {
     expect(parseCampaignId('not-a-guid')).toEqual({ valid: false, code: 'campaign_id_invalid' });
+    expect(parseCampaignId(' 123e4567-e89b-12d3-a456-426614174000 ')).toEqual({
+      valid: false,
+      code: 'campaign_id_invalid',
+    });
     expect(parseCampaignId(null)).toEqual({ valid: false, code: 'campaign_id_invalid' });
   });
 });
