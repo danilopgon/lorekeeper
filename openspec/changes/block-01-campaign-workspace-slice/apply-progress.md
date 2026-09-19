@@ -316,6 +316,10 @@ Implemented the `/campaigns` route and campaign selection/creation page on `feat
 
 ### Evidence
 
+Design review: pass
+Checked against: `DESIGN.md`, `docs/conventions/frontend-design-review.md`
+Notes: no blockers; follow-ups may tighten canonical font stacks, aria-live announcements, and date formatting.
+
 1. `pnpm --filter web format:check`
    - Result: passed.
 2. `pnpm --filter web lint`
