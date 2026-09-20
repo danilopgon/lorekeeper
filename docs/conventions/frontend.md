@@ -10,6 +10,13 @@
 
 This keeps transport mapping simple while allowing command handlers to use familiar RxJS orchestration in UI code.
 
+## Styling
+
+- Use Tailwind utility classes for feature UI by default.
+- Keep durable visual decisions in `DESIGN.md` and shared frontend conventions, not in one-off component CSS.
+- Component CSS is an exception for genuinely reusable selectors, browser quirks, or styles that cannot be expressed clearly with Tailwind utilities. Document the reason near the component or in the relevant convention when introducing it.
+- Routable UI still keeps templates in separate `.html` files; using Tailwind in those templates is preferred over page-local CSS selectors.
+
 ## API origins and environments
 
 - Frontend API adapters build URLs from `environment.apiBaseUrl`.

@@ -1,0 +1,85 @@
+<main class="min-h-dvh px-4 py-16 sm:px-8 lg:px-16" aria-labelledby="workspace-heading">
+  <section class="mx-auto max-w-6xl py-12 text-center">
+    <p class="font-mono text-xs tracking-[0.22em] text-[var(--text-accent)] uppercase">
+      {{ kicker() }}
+    </p>
+    <h1
+      id="workspace-heading"
+      class="mx-auto my-4 max-w-4xl font-serif text-4xl leading-none sm:text-6xl lg:text-7xl"
+    >
+      {{ title() }}
+    </h1>
+    <p class="mx-auto max-w-2xl font-serif text-xl text-[var(--text-secondary)]">
+      Campaign context is loaded from the route before this shell renders any workspace content.
+    </p>
+  </section>
+
+  <section
+    class="mx-auto my-6 max-w-6xl border border-[var(--border-muted)] bg-[var(--surface-raised)] p-5 shadow-[0_4px_20px_-2px_rgba(25,28,27,0.05)] sm:p-8"
+    aria-labelledby="workspace-state-heading"
+  >
+    @if (errorKind() === 'invalid') {
+      <h2 id="workspace-state-heading" class="mb-4 font-serif text-3xl">
+        Campaign route is invalid
+      </h2>
+      <p class="font-bold text-[var(--color-pimenton-deep)]" role="alert">
+        This campaign URL is malformed. Return to the campaign register and choose a campaign.
+      </p>
+      <a
+        class="mt-4 inline-block border border-[var(--color-pimenton-deep)] bg-[var(--color-pimenton-deep)] px-4 py-3 font-mono tracking-[0.08em] text-white uppercase no-underline"
+        routerLink="/campaigns"
+      >
+        Back to campaigns
+      </a>
+    } @else if (campaign.isLoading() || !currentCampaign()) {
+      @if (errorKind() === 'notFound') {
+        <h2 id="workspace-state-heading" class="mb-4 font-serif text-3xl">
+          Campaign was not found
+        </h2>
+        <p class="font-bold text-[var(--color-pimenton-deep)]" role="alert">
+          This campaign does not exist or is no longer available.
+        </p>
+        <a
+          class="mt-4 inline-block border border-[var(--color-pimenton-deep)] bg-[var(--color-pimenton-deep)] px-4 py-3 font-mono tracking-[0.08em] text-white uppercase no-underline"
+          routerLink="/campaigns"
+        >
+          Back to campaigns
+        </a>
+      } @else if (errorKind() === 'recoverable') {
+        <h2 id="workspace-state-heading" class="mb-4 font-serif text-3xl">
+          Campaign could not be loaded
+        </h2>
+        <p class="font-bold text-[var(--color-pimenton-deep)]" role="alert">
+          Check the connection and retry when the API is available.
+        </p>
+        <button
+          class="mt-4 cursor-pointer border border-[var(--color-pimenton-deep)] bg-[var(--color-pimenton-deep)] px-4 py-3 font-mono tracking-[0.08em] text-white uppercase"
+          type="button"
+          (click)="campaign.reload()"
+        >
+          Retry
+        </button>
+      } @else {
+        <h2 id="workspace-state-heading" class="mb-4 font-serif text-3xl">Loading campaign…</h2>
+        <p class="text-[var(--text-muted)]" role="status">
+          Resolving campaign context from the URL.
+        </p>
+      }
+    } @else {
+      <h2 id="workspace-state-heading" class="mb-4 font-serif text-3xl">
+        {{ currentCampaign()?.name }}
+      </h2>
+      <p class="text-[var(--text-muted)]">Campaign ID: {{ currentCampaign()?.id }}</p>
+      <p>{{ unavailableCopy() }}</p>
+      <p class="text-[var(--text-muted)]">
+        This shell confirms the route boundary only. No future controls are exposed in this slice.
+      </p>
+      <a
+        class="mt-4 inline-block border border-[var(--color-pimenton-deep)] bg-[var(--color-pimenton-deep)] px-4 py-3 font-mono tracking-[0.08em] text-white uppercase no-underline"
+        routerLink="/campaigns"
+      >
+        Back to campaigns
+      </a>
+    }
+  </section>
+</main>

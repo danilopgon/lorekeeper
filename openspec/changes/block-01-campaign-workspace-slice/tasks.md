@@ -91,12 +91,12 @@ Start: adapter tests pass. Finish: `/campaigns` supports loading, empty, list, c
 
 Start: `/campaigns` route works. Finish: `/campaigns/:campaignId/chat` and `/campaigns/:campaignId/sources` resolve campaign context from the URL and render unavailable-capability shells. Verification: `pnpm run test -- --run campaigns` and `pnpm run build`. Rollback: remove workspace route entries, shell components, and tests.
 
-- [ ] RED: add failing route/component tests in `apps/web/src/app/features/campaigns/chat-shell.page.spec.ts`, `sources-shell.page.spec.ts`, and `campaign-workspace-shell.component.spec.ts` for route loading, valid campaign context, malformed ID state, unknown ID state, and no previous-campaign fallback. <!-- sdd-owner: implementation -->
-- [ ] GREEN: add `/campaigns/:campaignId/chat` and `/campaigns/:campaignId/sources` to `apps/web/src/app/app.routes.ts` and implement `chat-shell.page.ts`, `sources-shell.page.ts`, and `campaign-workspace-shell.component.ts`. <!-- sdd-owner: implementation -->
-- [ ] GREEN: render English Chat shell copy stating AI chat, source-backed querying, retrieval, citations, conversation history, streaming, and draft persistence are unavailable in this slice. <!-- sdd-owner: implementation -->
-- [ ] GREEN: render English Sources shell copy stating ingestion, upload, paste, Notion import, update, removal, indexing, retry, progress, and source lifecycle actions are unavailable in this slice. <!-- sdd-owner: implementation -->
-- [ ] TRIANGULATE: add negative assertions that no query form, submit button, upload/paste/import controls, citation affordances, source-management actions, retry/progress widgets, or disabled future controls are present. <!-- sdd-owner: implementation -->
-- [ ] REFACTOR: keep campaign route loading isolated so old route data cannot display while a new `campaignId` is resolving. <!-- sdd-owner: implementation -->
+- [x] RED: add failing route/component tests in `apps/web/src/app/features/campaigns/chat-shell.page.spec.ts`, `sources-shell.page.spec.ts`, and `campaign-workspace-shell.component.spec.ts` for route loading, valid campaign context, malformed ID state, unknown ID state, and no previous-campaign fallback. <!-- sdd-owner: implementation -->
+- [x] GREEN: add `/campaigns/:campaignId/chat` and `/campaigns/:campaignId/sources` to `apps/web/src/app/app.routes.ts` and implement `chat-shell.page.ts`, `sources-shell.page.ts`, and `campaign-workspace-shell.component.ts`. <!-- sdd-owner: implementation -->
+- [x] GREEN: render English Chat shell copy stating AI chat, source-backed querying, retrieval, citations, conversation history, streaming, and draft persistence are unavailable in this slice. <!-- sdd-owner: implementation -->
+- [x] GREEN: render English Sources shell copy stating ingestion, upload, paste, Notion import, update, removal, indexing, retry, progress, and source lifecycle actions are unavailable in this slice. <!-- sdd-owner: implementation -->
+- [x] TRIANGULATE: add negative assertions that no query form, submit button, upload/paste/import controls, citation affordances, source-management actions, retry/progress widgets, or disabled future controls are present. <!-- sdd-owner: implementation -->
+- [x] REFACTOR: keep campaign route loading isolated so old route data cannot display while a new `campaignId` is resolving. <!-- sdd-owner: implementation -->
 
 ## Work Unit 7 — Focused E2E smoke flow
 
