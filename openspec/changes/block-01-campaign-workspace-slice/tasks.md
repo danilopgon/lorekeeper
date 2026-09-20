@@ -111,9 +111,16 @@ Start: backend and frontend route behavior pass lower-level tests. Finish: one P
 
 Start: implementation behavior is complete in tests. Finish: status and documentation reflect the implemented Block 01 slice and all applicable checks are recorded. Verification: full apply/verify command set from `openspec/config.yaml`. Rollback: revert documentation/status updates separately from code if they misrepresent behavior.
 
-- [ ] RED: identify any implementation-discovered spec gap in `openspec/changes/block-01-campaign-workspace-slice/proposal.md`, `specs/campaigns/spec.md`, `specs/workspace/spec.md`, or `design.md` before changing behavior. <!-- sdd-owner: implementation -->
-- [ ] GREEN: update `docs/10-roadmap.md` Block 01 readiness/exit evidence and any affected command/status notes only after behavior and tests exist. <!-- sdd-owner: implementation -->
-- [ ] GREEN: update `docs/06-api-contracts.md`, `docs/03-domain-model.md`, or `docs/12-workspace-and-ingestion-ux.md` only if implementation reveals a documented Block 01 gap, keeping PRODUCT.md behavior unchanged unless the spec is explicitly changed first. <!-- sdd-owner: implementation -->
-- [ ] TRIANGULATE: run `pnpm run test`, `pnpm run build`, `dotnet build services/api/Lorekeeper.slnx --configuration Release`, and `dotnet test services/api/Lorekeeper.slnx --no-build --configuration Release` as the apply gate and record any deviations. <!-- sdd-owner: implementation -->
-- [ ] TRIANGULATE: run `pnpm run lint`, `pnpm run test`, `pnpm run build`, `pnpm run e2e`, `dotnet format services/api/Lorekeeper.slnx --verify-no-changes`, `dotnet build services/api/Lorekeeper.slnx --no-restore --configuration Release`, and `dotnet test services/api/Lorekeeper.slnx --no-build --configuration Release` as the verify gate. <!-- sdd-owner: implementation -->
-- [ ] REFACTOR: remove dead code, unused test helpers, unverified placeholders, generated artifacts not required for Block 01, and any accidental out-of-scope affordances before review. <!-- sdd-owner: implementation -->
+- [x] RED: identify any implementation-discovered spec gap in `openspec/changes/block-01-campaign-workspace-slice/proposal.md`, `specs/campaigns/spec.md`, `specs/workspace/spec.md`, or `design.md` before changing behavior. <!-- sdd-owner: implementation -->
+- [x] GREEN: update `docs/10-roadmap.md` Block 01 readiness/exit evidence and any affected command/status notes only after behavior and tests exist. <!-- sdd-owner: implementation -->
+- [x] GREEN: update `docs/06-api-contracts.md`, `docs/03-domain-model.md`, or `docs/12-workspace-and-ingestion-ux.md` only if implementation reveals a documented Block 01 gap, keeping PRODUCT.md behavior unchanged unless the spec is explicitly changed first. <!-- sdd-owner: implementation -->
+- [x] TRIANGULATE: run `pnpm run test`, `pnpm run build`, `dotnet build services/api/Lorekeeper.slnx --configuration Release`, and `dotnet test services/api/Lorekeeper.slnx --no-build --configuration Release` as the apply gate and record any deviations. <!-- sdd-owner: implementation -->
+- [x] TRIANGULATE: run `pnpm run lint`, `pnpm run test`, `pnpm run build`, `pnpm run e2e`, `dotnet format services/api/Lorekeeper.slnx --verify-no-changes`, `dotnet build services/api/Lorekeeper.slnx --no-restore --configuration Release`, and `dotnet test services/api/Lorekeeper.slnx --no-build --configuration Release` as the verify gate. <!-- sdd-owner: implementation -->
+- [x] REFACTOR: remove dead code, unused test helpers, unverified placeholders, generated artifacts not required for Block 01, and any accidental out-of-scope affordances before review. <!-- sdd-owner: implementation -->
+
+### Work Unit 8 final evidence
+
+- Documentation comparison identified and corrected implementation-backed gaps in the roadmap, campaign domain, API-contract, and workspace UX documents. No product behavior or next-roadmap feature was changed.
+- Cleanup found no safe accidental Block 01 artifact to remove. `.codegraph/`, `bash.exe.stackdump`, Lazy Lands, external PostgreSQL, and non-Block-01 OpenSpec directories were left untouched.
+- The exact apply and verify command sets passed. The final retry started Docker Desktop locally, waited for its Linux engine, started only `lorekeeper-postgres` with its existing named volume, confirmed migrations were current, and passed Playwright E2E plus all 28 backend tests.
+- All Work Unit 8 checkboxes are complete. Docker Desktop is stopped after the final gates.

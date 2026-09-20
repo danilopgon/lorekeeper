@@ -656,3 +656,131 @@ This final status supersedes the earlier blocked Work Unit 7 attempts above. Lor
 | Work Unit 7 — Focused E2E smoke flow | The Playwright smoke and an explicit port-5433 configuration assertion failed before the local-default repair. | The compose/API defaults were changed to `5433`, the container was healthy, migrations applied, and the browser smoke passed. | The smoke now asserts the exact English unavailable copy for Chat and Sources; Chat has no textbox or button and Sources has no file input or button. | No production refactor was necessary; the smoke remains focused and detailed error coverage stays below E2E. |
 
 All four Work Unit 7 checkboxes are `[x]`; Work Unit 8 remains unchanged.
+
+---
+
+## Work Unit 7 runtime evidence revalidation — blocked after local chain rebase
+
+### Scope
+
+Revalidated only the previously checked Work Unit 7 runtime boundary on `feat/block-01-e2e-docs` after the local chain rebase. No source, migration, Compose configuration, database data, Work Unit 8, or unrelated files were changed.
+
+### Work Unit Evidence
+
+| Evidence | Observed result |
+| --- | --- |
+| Docker Linux engine and `lorekeeper-postgres` boundary probe | `docker version --format "server_os={{.Server.Os}} server_version={{.Server.Version}}"` printed `server_os=` and then failed before container inspection: `failed to connect to the docker API at npipe:////./pipe/dockerDesktopLinuxEngine; check if the path is correct and if the daemon is running: open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified.` `docker compose ps`, container health inspection, PostgreSQL authentication, migrations, Playwright, and frontend checks were not run because the Docker Linux engine is unavailable. |
+| Focused test command and exact result | Not run. `corepack pnpm@12.4.1 --filter web exec playwright test e2e/campaign-workspace.spec.ts --config e2e/playwright.config.ts` requires the real API/PostgreSQL boundary, which cannot be established while Docker Desktop's Linux engine pipe is absent. |
+| Runtime harness command/scenario and exact result | Blocked before the harness could verify `lorekeeper-postgres`, apply `20260918000000_InitialCampaigns` if needed, or run the browser flow. No migration was attempted. |
+| Rollback boundary | Revert the four Work Unit 7 checkbox changes in `tasks.md` and this revalidation section in `apply-progress.md`. No product behavior, schema, database state, or Work Unit 8 content changed. |
+
+### Strict TDD evidence
+
+No implementation was authored during this revalidation. Historical Work Unit 7 RED, GREEN, TRIANGULATE, and REFACTOR evidence remains recorded above, but its runtime proof is no longer current after the rebase and must be re-established before the work unit can be checked complete.
+
+### Task state
+
+All four Work Unit 7 subtasks were reopened. Current task progress is 33/43 complete. Work Unit 8 remains untouched.
+
+### Blocker
+
+Start Docker Desktop's Linux engine so `npipe:////./pipe/dockerDesktopLinuxEngine` is available. Then verify `lorekeeper-postgres` health and credentials, apply only pending campaign migrations, and rerun the focused Playwright plus relevant frontend checks before rechecking Work Unit 7.
+
+---
+
+## Work Unit 7 runtime evidence revalidation — passed after Docker Desktop startup
+
+### Scope
+
+Revalidated only the existing Work Unit 7 runtime evidence on `feat/block-01-e2e-docs`. Docker Desktop was started locally with `docker desktop start`; only `lorekeeper-postgres` was started through Compose. Its existing named volume was retained. The known `Ash Crown` E2E fixture row was deleted and recreated to prove fresh campaign creation. No Lazy Lands service, external PostgreSQL service, source code, migration, Compose configuration, or Work Unit 8 content changed.
+
+### Work Unit Evidence
+
+| Evidence | Observed result |
+| --- | --- |
+| Docker Linux engine | `docker desktop status` initially returned `Could not retrieve status. Is Docker Desktop running?`; `docker desktop start` returned `✓ Starting Docker Desktop`; subsequent `docker desktop status` reported `Status running`, and `docker info --format "ostype={{.OSType}} server={{.ServerVersion}}"` reported `ostype=linux server=29.5.3`. |
+| `lorekeeper-postgres` runtime boundary | The image and named volume existed before startup. `docker compose up -d --no-deps postgres` started only `lorekeeper-postgres`; `docker compose ps postgres` reported it healthy with `0.0.0.0:5433->5432/tcp`, and `docker volume inspect lorekeeper_postgres-data --format "volume={{.Name}}"` returned `volume=lorekeeper_postgres-data`. |
+| Pending migrations | `dotnet tool run dotnet-ef migrations list --project services/api/src/Api/Api.csproj --startup-project services/api/src/Api/Api.csproj` listed `20260918000000_InitialCampaigns`. `corepack pnpm@12.4.1 run api:migrate` built successfully and reported `No migrations were applied. The database is already up to date.` |
+| Focused Playwright | `corepack pnpm@12.4.1 --filter web exec playwright test e2e/campaign-workspace.spec.ts --config e2e/playwright.config.ts` first passed: `1 passed (14.4s)`. After `DELETE FROM campaigns WHERE name = 'Ash Crown';` returned `DELETE 1`, the same focused command passed again: `1 passed (11.0s)`. |
+| API-to-container proof | After the fixture cleanup and second passing smoke flow, `docker exec -e PGPASSWORD=lorekeeper_dev_password lorekeeper-postgres psql -U lorekeeper -d lorekeeper -tAc "SELECT name FROM campaigns WHERE name = 'Ash Crown';"` returned `Ash Crown`, proving fresh creation reached `lorekeeper-postgres`. |
+| Required frontend checks | Targeted Prettier check passed; `corepack pnpm@12.4.1 --filter web lint` passed; `corepack pnpm@12.4.1 --filter web build` passed; `corepack pnpm@12.4.1 --filter web test` passed with 7 test files and 23 tests. |
+| Rollback boundary | Revert the four Work Unit 7 checkbox changes and the two revalidation sections in `tasks.md` and `apply-progress.md`. The local Docker Desktop process can be stopped independently; the test-only `Ash Crown` row can be removed from `lorekeeper-postgres` without changing schema or the named volume. No product behavior or Work Unit 8 content changed in this retry. |
+
+### Strict TDD evidence
+
+No implementation was authored during this retry. Historical Work Unit 7 RED, GREEN, TRIANGULATE, and REFACTOR evidence remains valid, and its real runtime proof was re-established by the passing focused Playwright flow and frontend checks.
+
+### Task state
+
+All four Work Unit 7 subtasks are restored to complete. Current task progress is 37/43 complete. Work Unit 8 remains untouched.
+
+---
+
+## Work Unit 8 apply — documentation, full verification, and cleanup (partial)
+
+### Scope
+
+Executed only Work Unit 8. The documentation comparison found implementation-backed gaps in the Block 01 status and in the descriptions of the handwritten Angular adapter, canonical UUID campaign IDs, and the empty workspace-shell boundary. No product behavior, next-roadmap feature, Lazy Lands service, external PostgreSQL service, `.codegraph/`, or `bash.exe.stackdump` was changed. The final verification rerun naturally re-exercised the E2E command but did not separately revalidate Work Unit 7 beyond that command.
+
+### Documentation and cleanup
+
+- Updated `docs/10-roadmap.md` with the implemented Block 01 scope and the honest remaining Docker-backed verification limitation; Block 01 remains **In progress**.
+- Updated `docs/06-api-contracts.md` to describe the temporary Block 01 handwritten campaign adapter and lowercase canonical UUID response format while preserving Block 02 ownership of generated-client automation.
+- Updated `docs/03-domain-model.md` with the resolved Block 01 UUID, timestamp, and invalid/not-found route behavior.
+- Updated `docs/12-workspace-and-ingestion-ux.md` with a clear Block 01 shell boundary; future ingestion and chat behavior remains assigned to Blocks 04A–06.
+- Cleanup found no accidental or dead Block 01 artifact that was safe to remove. Protected/unrelated paths were not touched.
+
+### Work Unit Evidence
+
+| Evidence | Observed result |
+| --- | --- |
+| Focused test command and exact result | `pnpm run test` passed on both apply and verify gates. `pnpm run build` passed on both gates. `dotnet build services/api/Lorekeeper.slnx --configuration Release` passed on the apply gate, and `dotnet build services/api/Lorekeeper.slnx --no-restore --configuration Release` passed on the verify gate. `dotnet format services/api/Lorekeeper.slnx --verify-no-changes` passed. |
+| Runtime harness command/scenario and exact result | `pnpm run e2e` ran and failed before the browser scenario could establish its PostgreSQL-backed API boundary because Testcontainers could not connect to `npipe://./pipe/docker_engine`. `dotnet test services/api/Lorekeeper.slnx --no-build --configuration Release` ran on both gates: Unit reported 1 passing test; all 27 integration tests failed for the same unavailable Docker endpoint. |
+| Rollback boundary | Revert the four documentation files above, this Work Unit 8 section, and the current-evidence note in `tasks.md`. No application behavior, migrations, runtime data, or protected external resource was changed. |
+
+### TDD Cycle Evidence
+
+| Work unit | RED | GREEN | TRIANGULATE | REFACTOR |
+| --- | --- | --- | --- | --- |
+| Work Unit 8 — Documentation, status, and full verification | Compared implementation and prior authoritative Work Unit 7 evidence against OpenSpec and docs; found stale Block 01 status, generated-client wording, and missing shell-boundary documentation. | Updated only evidence-backed documentation; no production behavior was written. | Ran every exact apply and verify command listed in Work Unit 8. Frontend and static backend checks passed; Docker-dependent runtime checks were unavailable. | No safe accidental Block 01 artifact was found. Protected and unrelated paths were preserved. |
+
+### Verification results
+
+1. Apply gate: `pnpm run test` — passed; `pnpm run build` — passed; `dotnet build services/api/Lorekeeper.slnx --configuration Release` — passed; `dotnet test services/api/Lorekeeper.slnx --no-build --configuration Release` — failed only because Testcontainers could not connect to Docker (`27` integration failures, `1` unit pass).
+2. Verify gate: `pnpm run lint` — passed; `pnpm run test` — passed; `pnpm run build` — passed; `pnpm run e2e` — failed at the Docker-backed runtime boundary; `dotnet format services/api/Lorekeeper.slnx --verify-no-changes` — passed; `dotnet build services/api/Lorekeeper.slnx --no-restore --configuration Release` — passed; `dotnet test services/api/Lorekeeper.slnx --no-build --configuration Release` — failed only because Testcontainers could not connect to Docker (`27` integration failures, `1` unit pass).
+
+### Task state
+
+All six Work Unit 8 checkboxes remain unchecked. The required runtime verification is unavailable, so Work Unit 8 is partial and no local commit was created.
+
+---
+
+## Work Unit 8 gatekeeper retry #1 — completed
+
+### Authorized runtime boundary
+
+The user authorized Docker Desktop only for final gates and shutdown afterward. `docker desktop start` reported that Docker Desktop was already running; `docker desktop status` reported `Status running`, and `docker info` confirmed the Linux engine. Only `lorekeeper-postgres` was started with `docker compose up -d --no-deps postgres`; it became healthy on host port `5433`, and `lorekeeper_postgres-data` was preserved. `corepack pnpm@12.4.1 run api:migrate` completed with no pending migration.
+
+### Final verification
+
+1. `pnpm run e2e` — passed: 2 Playwright tests passed, including campaign creation and navigation to both unavailable workspace shells.
+2. `dotnet test services/api/Lorekeeper.slnx --no-build --configuration Release` — passed: 19 unit tests and 28 PostgreSQL/Testcontainers integration tests.
+3. The earlier exact apply and verify command results remain valid for unchanged source bytes: frontend lint/test/build, backend builds, and `dotnet format services/api/Lorekeeper.slnx --verify-no-changes` passed.
+
+### Work Unit Evidence
+
+| Evidence | Result |
+| --- | --- |
+| Focused test command and exact result | `pnpm run e2e` passed: 2 tests passed in 35 seconds. |
+| Runtime harness command/scenario and exact result | Docker Linux engine was running; only `lorekeeper-postgres` was started and healthy with the existing named volume. The backend suite passed 19 unit and 28 integration tests using Testcontainers. |
+| Rollback boundary | Revert the four documentation updates and Work Unit 8 OpenSpec evidence; no application behavior, migration, protected service, or external database was changed. |
+
+### TDD Cycle Evidence
+
+| Work unit | RED | GREEN | TRIANGULATE | REFACTOR |
+| --- | --- | --- | --- | --- |
+| Work Unit 8 | Documentation comparison found status and boundary gaps before documentation changed. | Evidence-backed docs were updated without product behavior changes. | The exact final E2E and backend runtime gates passed after Docker was available. | No safe accidental Block 01 artifact required removal. |
+
+### Task state
+
+All six Work Unit 8 subtasks are complete. The next action is a local Conventional Commit after final readback and Docker shutdown.

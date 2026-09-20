@@ -10,11 +10,11 @@
 
 ## Source of truth and client generation
 
-ASP.NET endpoint contracts generate OpenAPI. Angular consumes a generated TypeScript client behind a small application adapter.
+ASP.NET endpoint contracts generate OpenAPI. Block 01 uses a narrow handwritten Angular campaign adapter behind the feature boundary; Block 02 owns generated TypeScript client automation and its contract-diff workflow.
 
-- Never hand-edit generated files.
+- Never hand-edit generated files when generation is introduced.
 - Commit generated output only if the repository chooses that strategy consistently.
-- CI regenerates and fails on unexpected diff.
+- Block 02 must make CI regeneration and unexpected-diff handling executable.
 - Breaking changes require an explicit migration or versioning decision.
 
 ## Campaign DTOs
@@ -44,7 +44,7 @@ Rules:
 - The server trims `name` before validation and persistence.
 - Trimmed `name` length is 1–120 characters.
 - Trimmed `name` is unique case-insensitively across campaigns.
-- Clients must treat `id`, `createdAt` and `updatedAt` as server-owned.
+- Clients must treat `id`, `createdAt` and `updatedAt` as server-owned. Block 01 IDs are lowercase canonical UUID strings, while consumers must continue to treat them as opaque selectors.
 
 ## `GET /api/campaigns`
 
