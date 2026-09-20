@@ -1,12 +1,19 @@
 import { expect, test } from '@playwright/test';
 
 test('creates a campaign and opens its unavailable workspace shells', async ({ page }) => {
+  const campaignName = `Ash Crown ${crypto.randomUUID()}`;
+
   await page.goto('/campaigns');
 
-  await page.getByLabel('Campaign name').fill('Ash Crown');
+  await page.getByLabel('Campaign name').fill(campaignName);
+  const createCampaign = page.waitForResponse(
+    (response) =>
+      response.url().endsWith('/api/campaigns') && response.request().method() === 'POST',
+  );
   await page.getByRole('button', { name: 'Create campaign' }).click();
+  await expect((await createCampaign).status()).toBe(201);
 
-  const campaign = page.getByRole('listitem').filter({ hasText: 'Ash Crown' });
+  const campaign = page.getByRole('listitem').filter({ hasText: campaignName });
   await expect(campaign).toBeVisible();
 
   await campaign.getByRole('link', { name: 'Open Chat' }).click();

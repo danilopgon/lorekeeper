@@ -58,6 +58,7 @@ jobs:
       - run: pnpm run lint
       - run: pnpm run test
       - run: pnpm run build
+      - run: pnpm run api:restore
       - run: pnpm run tools:restore
       - run: pnpm run api:migrate
         env:
