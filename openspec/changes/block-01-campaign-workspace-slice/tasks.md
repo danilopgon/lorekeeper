@@ -102,10 +102,10 @@ Start: `/campaigns` route works. Finish: `/campaigns/:campaignId/chat` and `/cam
 
 Start: backend and frontend route behavior pass lower-level tests. Finish: one Playwright smoke proves the first operator flow across the real app boundary. Verification: `pnpm run e2e`. Rollback: remove the new E2E spec and any test-only setup added for it.
 
-- [ ] RED: add a failing Playwright spec in `apps/web/e2e/campaign-workspace.spec.ts` that opens `/campaigns`, creates `Ash Crown`, sees it listed, navigates to Chat, and navigates to Sources. <!-- sdd-owner: implementation -->
-- [ ] GREEN: add only necessary E2E setup/configuration in `apps/web/e2e/playwright.config.ts` or existing test bootstrap to point at the local API/database without adding mock-only product behavior. <!-- sdd-owner: implementation -->
-- [ ] TRIANGULATE: assert English unavailable Chat and Sources copy in the smoke test and verify no ingestion or AI controls appear. <!-- sdd-owner: implementation -->
-- [ ] REFACTOR: keep the E2E flow focused on Block 01 and move detailed validation/error coverage back to component or integration tests. <!-- sdd-owner: implementation -->
+- [x] RED: add a failing Playwright spec in `apps/web/e2e/campaign-workspace.spec.ts` that opens `/campaigns`, creates `Ash Crown`, sees it listed, navigates to Chat, and navigates to Sources. <!-- sdd-owner: implementation -->
+- [x] GREEN: add only necessary E2E setup/configuration in `apps/web/e2e/playwright.config.ts` or existing test bootstrap to point at the local API/database without adding mock-only product behavior. <!-- sdd-owner: implementation -->
+- [x] TRIANGULATE: assert English unavailable Chat and Sources copy in the smoke test and verify no ingestion or AI controls appear. <!-- sdd-owner: implementation -->
+- [x] REFACTOR: keep the E2E flow focused on Block 01 and move detailed validation/error coverage back to component or integration tests. <!-- sdd-owner: implementation -->
 
 ## Work Unit 8 — Documentation, status, and full verification
 
