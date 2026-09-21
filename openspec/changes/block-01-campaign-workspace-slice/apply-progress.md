@@ -298,3 +298,111 @@ Implemented the frontend-only handwritten campaign API adapter slice on `feat/bl
 ### Remaining tasks
 
 Frontend route/page Work Units 5–6, E2E Work Unit 7, and docs/full-verification Work Unit 8 remain intentionally untouched.
+
+## Work Unit 5 apply — Frontend campaign selection page
+
+### Scope
+
+Implemented the `/campaigns` route and campaign selection/creation page on `feat/block-01-frontend-ui`. Chat and Sources workspace shells, E2E, docs, and final verification remain out of scope.
+
+### Completed tasks and persisted checkboxes
+
+- [x] RED: add failing route/component tests in `apps/web/src/app/features/campaigns/pages/campaign-selection/campaign-selection.page.spec.ts` for loading, empty, list success, creation loading, creation success, field-level invalid/conflict errors, recoverable retry, and explicit Chat/Sources links.
+- [x] GREEN: register `/campaigns` in `apps/web/src/app/app.routes.ts` and implement `apps/web/src/app/features/campaigns/pages/campaign-selection/campaign-selection.page.ts` using Angular standalone APIs/signals.
+- [x] GREEN: update shared shell entry points in `apps/web/src/app/app.component.html`, `app.component.ts`, and `app.component.css` only as needed to host routed campaign pages and preserve existing scaffold behavior.
+- [x] GREEN: style the selection UI in component styles with Codex Lithographica tokens from `DESIGN.md`, English visible copy, semantic headings, visible focus, and responsive normal-flow links.
+- [x] TRIANGULATE: add tests proving `/campaigns` never silently enters Chat or Sources and no stored active-campaign preference overrides URL selection.
+- [x] REFACTOR: remove any disabled-looking future actions, placeholder ingestion controls, or hidden defaults introduced while building the selection page.
+
+### Evidence
+
+Design review: pass
+Checked against: `DESIGN.md`, `docs/conventions/frontend-design-review.md`
+Notes: no blockers; follow-ups may tighten canonical font stacks, aria-live announcements, and date formatting.
+
+1. `pnpm --filter web format:check`
+   - Result: passed.
+2. `pnpm --filter web lint`
+   - Result: passed.
+3. `pnpm --filter web build`
+   - Result: passed.
+4. `pnpm --filter web test`
+   - Result: passed, 4 files and 16 tests.
+
+### Architecture note
+
+The campaign feature is now organized by responsibility: `api/`, `models/`, `routing/`, `state/`, and `pages/campaign-selection/`. API adapters remain Promise-based; page reads use Angular `resource`; UI commands wrap adapter promises with RxJS `from(...)`, `finalize(...)`, and `takeUntilDestroyed(...)`.
+
+### Remaining tasks
+
+Frontend workspace shell Work Unit 6, E2E Work Unit 7, and docs/full-verification Work Unit 8 remain intentionally untouched.
+
+---
+
+## Work Unit 6 apply — Frontend Chat and Sources workspace shells
+
+### Scope
+
+Implemented the frontend-only workspace route shell slice on `feat/block-01-workspace-shells`. The routes `/campaigns/:campaignId/chat` and `/campaigns/:campaignId/sources` now resolve campaign context from the URL, validate malformed IDs before API calls, and render unavailable-capability shells. AI chat, source-backed querying, ingestion, source lifecycle, retrieval, citations, history, streaming, draft persistence, auth, accounts, teams, and deletion remain out of scope.
+
+### Completed tasks and persisted checkboxes
+
+- [x] RED: add failing route/component tests in `apps/web/src/app/features/campaigns/chat-shell.page.spec.ts`, `sources-shell.page.spec.ts`, and `campaign-workspace-shell.component.spec.ts` for route loading, valid campaign context, malformed ID state, unknown ID state, and no previous-campaign fallback.
+- [x] GREEN: add `/campaigns/:campaignId/chat` and `/campaigns/:campaignId/sources` to `apps/web/src/app/app.routes.ts` and implement `chat-shell.page.ts`, `sources-shell.page.ts`, and `campaign-workspace-shell.component.ts`.
+- [x] GREEN: render English Chat shell copy stating AI chat, source-backed querying, retrieval, citations, conversation history, streaming, and draft persistence are unavailable in this slice.
+- [x] GREEN: render English Sources shell copy stating ingestion, upload, paste, Notion import, update, removal, indexing, retry, progress, and source lifecycle actions are unavailable in this slice.
+- [x] TRIANGULATE: add negative assertions that no query form, submit button, upload/paste/import controls, citation affordances, source-management actions, retry/progress widgets, or disabled future controls are present.
+- [x] REFACTOR: keep campaign route loading isolated so old route data cannot display while a new `campaignId` is resolving.
+
+### TDD Cycle Evidence
+
+| Work unit | RED evidence | GREEN evidence | TRIANGULATE evidence | REFACTOR evidence |
+| --- | --- | --- | --- | --- |
+| Work Unit 6 — Frontend Chat and Sources workspace shells | Added route/page/component tests for Chat, Sources, malformed route IDs, unknown/recoverable campaign states, valid campaign context loading, and previous-campaign fallback prevention before final shell implementation. | Added `ChatShellPage`, `SourcesShellPage`, `CampaignWorkspaceShellComponent`, and route entries for `/campaigns/:campaignId/chat` and `/campaigns/:campaignId/sources`. | Tests assert unavailable Chat and Sources copy and verify no query form, submit action, upload/paste/import controls, citation affordances, or disabled future controls appear. | Campaign display is guarded by matching the loaded campaign ID to the current route ID, preventing old campaign data from showing while a new `campaignId` is resolving. New shell styling uses Tailwind utilities instead of page-local CSS. |
+
+### Files changed in this update
+
+- `apps/web/src/app/app.routes.ts`
+- `apps/web/src/app/features/campaigns/pages/campaign-workspace-shell/campaign-workspace-shell.component.html`
+- `apps/web/src/app/features/campaigns/pages/campaign-workspace-shell/campaign-workspace-shell.component.spec.ts`
+- `apps/web/src/app/features/campaigns/pages/campaign-workspace-shell/campaign-workspace-shell.component.ts`
+- `apps/web/src/app/features/campaigns/pages/chat-shell/chat-shell.page.html`
+- `apps/web/src/app/features/campaigns/pages/chat-shell/chat-shell.page.spec.ts`
+- `apps/web/src/app/features/campaigns/pages/chat-shell/chat-shell.page.ts`
+- `apps/web/src/app/features/campaigns/pages/sources-shell/sources-shell.page.html`
+- `apps/web/src/app/features/campaigns/pages/sources-shell/sources-shell.page.spec.ts`
+- `apps/web/src/app/features/campaigns/pages/sources-shell/sources-shell.page.ts`
+- `docs/conventions/frontend.md`
+- `openspec/changes/block-01-campaign-workspace-slice/tasks.md`
+- `openspec/changes/block-01-campaign-workspace-slice/apply-progress.md`
+
+### Test commands run in this update
+
+1. `pnpm --filter web test`
+   - Result: passed; 7 test files / 23 tests.
+2. `pnpm --filter web format:check`
+   - Result: passed.
+3. `pnpm --filter web lint`
+   - Result: passed.
+4. `pnpm --filter web build`
+   - Result: passed.
+
+### Deviations from design
+
+- Design review gate: pass for this slice boundary. The shells use existing Codex Lithographica tokens through Tailwind utilities, semantic headings, visible status/error states, and normal-flow navigation back to campaigns.
+- No product behavior was expanded beyond unavailable workspace shells.
+- The temporary `workspace-unavailable` route placeholder from the previous review fix was removed and replaced with the real Work Unit 6 route shells.
+- A frontend convention was added to make Tailwind the default for feature UI styling; broader reusable component/design-system repairs are intentionally tracked in issue #8 and not solved in this work unit.
+
+### Remaining tasks
+
+Exact unchecked implementation-owned task lines remaining for the next slice:
+
+- [ ] RED: add a failing Playwright spec in `apps/web/e2e/campaign-workspace.spec.ts` that opens `/campaigns`, creates `Ash Crown`, sees it listed, navigates to Chat, and navigates to Sources. <!-- sdd-owner: implementation -->
+- [ ] GREEN: add only necessary E2E setup/configuration in `apps/web/e2e/playwright.config.ts` or existing test bootstrap to point at the local API/database without adding mock-only product behavior. <!-- sdd-owner: implementation -->
+- [ ] TRIANGULATE: assert English unavailable Chat and Sources copy in the smoke test and verify no ingestion or AI controls appear. <!-- sdd-owner: implementation -->
+- [ ] REFACTOR: keep the E2E flow focused on Block 01 and move detailed validation/error coverage back to component or integration tests. <!-- sdd-owner: implementation -->
+
+### Rollback boundary
+
+Remove the Chat/Sources route entries, `chat-shell`, `sources-shell`, and `campaign-workspace-shell` page/component/test files, and restore or remove the previous temporary workspace placeholder as needed. Revert the six Work Unit 6 checkbox updates in `tasks.md` and this Work Unit 6 section in `apply-progress.md`.
