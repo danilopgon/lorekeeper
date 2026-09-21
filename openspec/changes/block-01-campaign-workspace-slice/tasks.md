@@ -48,13 +48,13 @@ Start: no campaign domain model exists. Finish: domain invariants and identifier
 
 Start: domain unit tests pass. Finish: EF Core maps the `campaigns` table with PostgreSQL-enforced case-insensitive uniqueness and integration tests prove persistence boundaries. Verification: `dotnet test services/api/Lorekeeper.slnx --configuration Release --filter FullyQualifiedName~CampaignsPersistence`. Rollback: remove EF package references, DbContext, migration, and persistence tests.
 
-- [ ] RED: add failing integration tests in `services/api/tests/Integration/Modules/Campaigns/CampaignsPersistenceTests.cs` using WebApplicationFactory/Testcontainers PostgreSQL for empty list, trimmed insert, database check constraints, duplicate casing conflict, and concurrent duplicate protection. <!-- sdd-owner: implementation -->
-- [ ] GREEN: add EF/Npgsql package references in `services/api/src/Api/Api.csproj` and Testcontainers/Npgsql test references in `services/api/tests/Integration/Integration.csproj`. <!-- sdd-owner: implementation -->
-- [ ] GREEN: implement `services/api/src/Api/Modules/Campaigns/Infrastructure/CampaignsDbContext.cs` and `CampaignEntityTypeConfiguration.cs` with snake_case columns, `uuid`, `varchar(120)`, `timestamptz`, generated `name_normalized`, check constraints, and unique index. <!-- sdd-owner: implementation -->
-- [ ] GREEN: add the EF migration under `services/api/src/Api/Modules/Campaigns/Infrastructure/Migrations/` creating only the Block 01 `campaigns` table and indexes. <!-- sdd-owner: implementation -->
-- [ ] GREEN: register `CampaignsDbContext` and PostgreSQL configuration in `services/api/src/Api/Program.cs`, `appsettings.json`, and `appsettings.Development.json` without adding production secrets. <!-- sdd-owner: implementation -->
-- [ ] TRIANGULATE: add an integration assertion that database unique/check violations are mapped without leaking constraint names or provider exception messages. <!-- sdd-owner: implementation -->
-- [ ] REFACTOR: keep EF Core as the persistence boundary for campaign slices and remove any speculative abstractions introduced during GREEN. <!-- sdd-owner: implementation -->
+- [x] RED: add failing integration tests in `services/api/tests/Integration/Modules/Campaigns/CampaignsPersistenceTests.cs` using WebApplicationFactory/Testcontainers PostgreSQL for empty list, trimmed insert, database check constraints, duplicate casing conflict, and concurrent duplicate protection. <!-- sdd-owner: implementation -->
+- [x] GREEN: add EF/Npgsql package references in `services/api/src/Api/Api.csproj` and Testcontainers/Npgsql test references in `services/api/tests/Integration/Integration.csproj`. <!-- sdd-owner: implementation -->
+- [x] GREEN: implement `services/api/src/Api/Modules/Campaigns/Infrastructure/CampaignsDbContext.cs` and `CampaignEntityTypeConfiguration.cs` with snake_case columns, `uuid`, `varchar(120)`, `timestamptz`, generated `name_normalized`, check constraints, and unique index. <!-- sdd-owner: implementation -->
+- [x] GREEN: add the EF migration under `services/api/src/Api/Modules/Campaigns/Infrastructure/Migrations/` creating only the Block 01 `campaigns` table and indexes. <!-- sdd-owner: implementation -->
+- [x] GREEN: register `CampaignsDbContext` and PostgreSQL configuration in `services/api/src/Api/Program.cs`, `appsettings.json`, and `appsettings.Development.json` without adding production secrets. <!-- sdd-owner: implementation -->
+- [x] TRIANGULATE: add an integration assertion that database unique/check violations are mapped without leaking constraint names or provider exception messages. <!-- sdd-owner: implementation -->
+- [x] REFACTOR: keep EF Core as the persistence boundary for campaign slices and remove any speculative abstractions introduced during GREEN. <!-- sdd-owner: implementation -->
 
 ## Work Unit 3 — Backend campaign HTTP API
 
