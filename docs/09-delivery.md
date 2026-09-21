@@ -10,7 +10,7 @@
 
 ## Configuration
 
-Block 00 local development choices are pnpm, Node 24.15+, .NET 10 and Docker Compose PostgreSQL 17. The local application remains local-only with no application login; Internet exposure is blocked until the access gate below is resolved. Python is not part of the block 00 runtime or delivery baseline.
+Block 00 local development choices are pnpm, Node 24.15+, .NET 10 and Docker Compose PostgreSQL 17. The local application remains local-only with no application login. [ADR-002](decisions/ADR-002-cloudflare-access-personal-deployment.md) selects Cloudflare Access for remote access, but Internet exposure stays blocked until that boundary is configured and verified. Python is not part of the block 00 runtime or delivery baseline.
 
 Document variable names and purpose in `.env.example` or platform configuration. Never commit real values.
 
@@ -20,7 +20,7 @@ Document variable names and purpose in `.env.example` or platform configuration.
 
 ## Deployment shape
 
-Baseline:
+Baseline application shape:
 
 ```text
 Angular static/SSR host
@@ -31,6 +31,21 @@ PostgreSQL + pgvector
         ↓ outbound only
 AI and external providers
 ```
+
+Initial remote-access boundary when deployment is enabled:
+
+```text
+Internet
+   ↓
+Cloudflare Access
+(explicit email allowlist + OTP)
+   ↓
+Cloudflare Tunnel / protected origin
+   ├─ Angular web
+   └─ ASP.NET Core API
+```
+
+Cloudflare Tunnel is the preferred origin path so the deployment does not require a publicly reachable origin. If an origin can be reached outside the protected route, it must validate the Access token and reject bypass traffic. See ADR-002.
 
 A separate Python/model service is not part of the baseline. Add one only when a measured local inference requirement cannot be served cleanly inside the existing deployment and the extra operational boundary is justified by an ADR.
 
@@ -100,6 +115,16 @@ For AI changes, rollback must include model/provider configuration and any reran
 
 ## Initial personal deployment and readiness
 
-The initial installation serves one operator and several campaigns. Local-only development is permitted without application login. Block 00 does not scaffold accounts, teams, invitations or a Python runtime. Hosting and application-auth versus external private-access enforcement remain **Open**; they must be settled before Internet exposure, even if a preview is attempted before block 08.
+The initial installation serves one operator and several campaigns. Local-only development is permitted without application login. Block 00 does not scaffold accounts, teams, invitations or a Python runtime.
 
-Record chosen host, network/origin restrictions, access mechanism, secrets, storage/backups and authorised/unauthorised smoke evidence here and in an ADR. Protect both frontend and API, including direct-origin paths. Until verified, keep the deployment local-only. This deployment gate does not block local product development.
+The access mechanism is **decided but not yet deployed**: ADR-002 selects Cloudflare Access with explicit allowed emails and One-Time PIN authentication. Hosting, concrete hostnames, tunnel/origin configuration, backups, operational limits and rollback remain deployment-time decisions.
+
+Before any Internet exposure:
+
+- configure Access for both frontend and API;
+- prefer Cloudflare Tunnel and prevent direct-origin bypass;
+- verify an allowed email can use the complete flow;
+- verify a non-allowed email, direct API call and direct-origin request are denied;
+- record host, network/origin restrictions, secrets handling, storage/backups and smoke evidence here.
+
+Until that evidence exists, keep the deployment local-only. This deployment gate does not block local product development.
