@@ -14,7 +14,7 @@ Apply the blocking Definition of Ready in `08-quality-strategy.md` before every 
 
 Definition remains Done: personal single-operator use, multiple isolated campaigns, no multiuser scaffolding, access control required before Internet exposure. First slice: campaign creation/selection plus empty campaign workspace shell with Chat and Sources routes, without ingestion or AI. Minimal campaign fields are `id`, `name`, `createdAt` and `updatedAt`; `name` is required, trimmed, 1–120 characters and unique case-insensitively. Active campaign is represented in the URL: `/campaigns`, `/campaigns/{campaignId}/chat`, `/campaigns/{campaignId}/sources`. Campaign deletion is excluded from the first slice.
 
-Block 00 readiness decisions are recorded in `04`, `08` and `09`: pnpm, Node 24.15+, .NET 10, Angular 22, Tailwind aligned to `DESIGN.md`, GitHub Actions, Docker Compose PostgreSQL 17, Playwright E2E in `apps/web/e2e`, and Conventional Commits enforced through CI plus local hooks. Python/AI evaluation workbench remains planned for later and is not an active block 00 dependency or check.
+Block 00 readiness decisions are recorded in `04`, `08` and `09`: pnpm, Node 24.15+, .NET 10, Angular 22, Tailwind aligned to `DESIGN.md`, GitHub Actions, Docker Compose PostgreSQL 17, Playwright E2E in `apps/web/e2e`, and Conventional Commits enforced through CI plus local hooks. Python/AI evaluation workbench remains planned for later and is not an active block 00 dependency or check. ADR-002 now selects Cloudflare Access for the future personal remote-access boundary; implementation and verification remain deferred to the deployment gate.
 
 Block 00 exit evidence: pnpm workspace, Angular 22/Tailwind frontend, Playwright in `apps/web/e2e`, .NET 10 API/test solution, Docker Compose PostgreSQL 17, GitHub Actions and Conventional Commit hooks are scaffolded. Local checks have passed for frontend format/lint/test/build/E2E, backend restore/format/build/test and commitlint.
 
@@ -34,7 +34,7 @@ Block 01 entry decisions are confirmed against `02`, `03`, `06`, `DESIGN.md` and
 | 05 | FTS + vector retrieval / 04B | FTS language, vector/index configuration and candidate limits; initial eval dataset exists; decide whether offline Python experiments add value for embedding/retrieval comparisons | Separate lexical/vector baselines recorded; no campaign leakage; any experimental comparison is reproducible from committed inputs |
 | 06 | Fusion and grounded answer / 05 | RRF settings, reranker decision, budgets, citations, contradictions, insufficient evidence, transport and generation criteria in 02/05/06; compare no-reranker/provider/local candidates before promoting runtime complexity | Answers trace to campaign evidence; comparison against baselines recorded; any promoted reranker has measured quality/latency/resource evidence |
 | 07 | Regression gates / 06 | Measured thresholds/tolerances, frozen versus live eval execution in 08; decide whether Langfuse or equivalent adds material value beyond OpenTelemetry | Repeatable gates with documented baseline and cost/variance policy; AI observability choice and privacy policy recorded |
-| 08 | Complete flow and deployment / 07 | Hosting, auth or private-access layer, backups, limits and rollback in 07/09; any local-model runtime must have artefact/version/fallback/runbook decisions | Critical flow passes; any remote exposure passes access gate and smoke verification; promoted AI runtime dependencies are operationally reproducible |
+| 08 | Complete flow and deployment / 07 | Hosting, Cloudflare Access/Tunnel deployment details, backups, limits and rollback in 07/09 and ADR-002; any local-model runtime must have artefact/version/fallback/runbook decisions | Critical flow passes; any remote exposure passes Access/origin-bypass smoke verification; promoted AI runtime dependencies are operationally reproducible |
 
 Block 00 is **Done**. Block 01 is **In progress**. Blocks 02–08 are **Not started**. Mark a block **Blocked** when readiness assessment identifies an unresolved required decision; document the exact condition below.
 
@@ -74,7 +74,7 @@ OpenTelemetry remains the default system-wide observability stack. Langfuse or a
 
 ## Cross-cutting gates
 
-- Any Internet exposure, including an early preview, requires verified control of both UI and API plus prevention of direct-origin bypass. Resolve authentication or external private access then, not necessarily during scaffold work.
+- Any Internet exposure, including an early preview, uses the Cloudflare Access boundary selected by ADR-002 and requires verified control of both UI and API plus prevention of direct-origin bypass. Selection alone does not unblock exposure.
 - Campaign boundaries are enforced from the first persistence slice onward.
 - Preparation, actual events and player knowledge must be modelled before ingestion; a DM note is not proof of player discovery.
 - Evaluation starts before retrieval implementation; block 07 formalises gates.
