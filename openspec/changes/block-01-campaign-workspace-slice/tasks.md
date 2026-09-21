@@ -60,12 +60,12 @@ Start: domain unit tests pass. Finish: EF Core maps the `campaigns` table with P
 
 Start: persistence integration tests pass. Finish: `/api/campaigns` endpoints return DTOs and RFC 7807 errors with stable `code` extensions. Verification: `dotnet test services/api/Lorekeeper.slnx --configuration Release --filter FullyQualifiedName~CampaignEndpoints`. Rollback: remove endpoint mapping, application handlers, DTOs, and endpoint tests.
 
-- [ ] RED: add failing endpoint tests in `services/api/tests/Integration/Modules/Campaigns/CampaignEndpointsTests.cs` for `GET /api/campaigns`, `POST /api/campaigns`, `GET /api/campaigns/{campaignId}`, invalid name, duplicate name, malformed ID, unknown ID, `Location`, UTC ISO timestamps, and no implicit active campaign. <!-- sdd-owner: implementation -->
-- [ ] GREEN: implement application slices under `services/api/src/Api/Modules/Campaigns/Application/CreateCampaign/`, `ListCampaigns/`, and `GetCampaign/` using direct `CampaignsDbContext` dependencies. <!-- sdd-owner: implementation -->
-- [ ] GREEN: implement DTOs/problem mapping in `services/api/src/Api/Modules/Campaigns/CampaignEndpoints.cs` and map endpoints from `services/api/src/Api/Program.cs`. <!-- sdd-owner: implementation -->
-- [ ] GREEN: return RFC 7807 Problem Details with stable `code` values `campaign_name_invalid`, `campaign_name_conflict`, `campaign_id_invalid`, and `campaign_not_found`, plus field-level `name` information for name failures. <!-- sdd-owner: implementation -->
-- [ ] TRIANGULATE: add tests proving delete, source, ingestion, chat, retrieval, citation, account, team, and implicit-active campaign endpoints are not introduced by this slice. <!-- sdd-owner: implementation -->
-- [ ] REFACTOR: ensure OpenAPI metadata names and response descriptions stay narrow to the three Block 01 campaign endpoints. <!-- sdd-owner: implementation -->
+- [x] RED: add failing endpoint tests in `services/api/tests/Integration/Modules/Campaigns/CampaignEndpointsTests.cs` for `GET /api/campaigns`, `POST /api/campaigns`, `GET /api/campaigns/{campaignId}`, invalid name, duplicate name, malformed ID, unknown ID, `Location`, UTC ISO timestamps, and no implicit active campaign. <!-- sdd-owner: implementation -->
+- [x] GREEN: implement application slices under `services/api/src/Api/Modules/Campaigns/Application/CreateCampaign/`, `ListCampaigns/`, and `GetCampaign/` using direct `CampaignsDbContext` dependencies. <!-- sdd-owner: implementation -->
+- [x] GREEN: implement DTOs/problem mapping in `services/api/src/Api/Modules/Campaigns/CampaignEndpoints.cs` and map endpoints from `services/api/src/Api/Program.cs`. <!-- sdd-owner: implementation -->
+- [x] GREEN: return RFC 7807 Problem Details with stable `code` values `campaign_name_invalid`, `campaign_name_conflict`, `campaign_id_invalid`, and `campaign_not_found`, plus field-level `name` information for name failures. <!-- sdd-owner: implementation -->
+- [x] TRIANGULATE: add tests proving delete, source, ingestion, chat, retrieval, citation, account, team, and implicit-active campaign endpoints are not introduced by this slice. <!-- sdd-owner: implementation -->
+- [x] REFACTOR: ensure OpenAPI metadata names and response descriptions stay narrow to the three Block 01 campaign endpoints. <!-- sdd-owner: implementation -->
 
 ## Work Unit 4 — Frontend campaign API adapter and typed state
 
