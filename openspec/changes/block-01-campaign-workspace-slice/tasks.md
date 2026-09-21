@@ -71,10 +71,10 @@ Start: persistence integration tests pass. Finish: `/api/campaigns` endpoints re
 
 Start: backend contract shape is known. Finish: Angular has a narrow handwritten campaign adapter and route-safe state types covered by tests. Verification: `pnpm run test -- --run campaigns`. Rollback: remove campaign feature adapter/model files and tests.
 
-- [ ] RED: add failing Vitest tests under `apps/web/src/app/features/campaigns/api/campaigns-api.service.spec.ts` and `apps/web/src/app/features/campaigns/campaign-id.spec.ts` for list/create/get success, Problem Details code mapping, network/recoverable errors, and malformed UUID detection. <!-- sdd-owner: implementation -->
-- [ ] GREEN: implement `apps/web/src/app/features/campaigns/models/campaign.model.ts`, `state/problem-details.ts`, `campaign-id.ts`, and `api/campaigns-api.service.ts` with only `listCampaigns`, `createCampaign`, and `getCampaign`. <!-- sdd-owner: implementation -->
-- [ ] TRIANGULATE: add adapter tests for `campaign_name_invalid`, `campaign_name_conflict`, `campaign_id_invalid`, `campaign_not_found`, and unexpected error payloads. <!-- sdd-owner: implementation -->
-- [ ] REFACTOR: keep the handwritten adapter colocated under `apps/web/src/app/features/campaigns/` and document in code/tests that generated-client automation remains out of Block 01. <!-- sdd-owner: implementation -->
+- [x] RED: add failing Vitest tests under `apps/web/src/app/features/campaigns/api/campaigns-api.service.spec.ts` and `apps/web/src/app/features/campaigns/campaign-id.spec.ts` for list/create/get success, Problem Details code mapping, network/recoverable errors, and malformed UUID detection. <!-- sdd-owner: implementation -->
+- [x] GREEN: implement `apps/web/src/app/features/campaigns/models/campaign.model.ts`, `state/problem-details.ts`, `campaign-id.ts`, and `api/campaigns-api.service.ts` with only `listCampaigns`, `createCampaign`, and `getCampaign`. <!-- sdd-owner: implementation -->
+- [x] TRIANGULATE: add adapter tests for `campaign_name_invalid`, `campaign_name_conflict`, `campaign_id_invalid`, `campaign_not_found`, and unexpected error payloads. <!-- sdd-owner: implementation -->
+- [x] REFACTOR: keep the handwritten adapter colocated under `apps/web/src/app/features/campaigns/` and document in code/tests that generated-client automation remains out of Block 01. <!-- sdd-owner: implementation -->
 
 ## Work Unit 5 — Frontend routes and campaign selection page
 
