@@ -9,6 +9,10 @@ This defines the initial product flow, not a final visual design or an executabl
 
 A persistent campaign selector, with minimal campaign creation, scopes two sections: **Chat** and **Sources**. On smaller screens the selector remains accessible through navigation. Switching campaigns changes sources and conversation context; late responses from the previous campaign must never appear in the newly selected campaign. Conversation persistence, history and handling unsent drafts remain explicit pre-chat decisions.
 
+### Block 01 implementation boundary
+
+Block 01 delivers campaign creation/selection and URL-scoped Chat and Sources shells only. The shells resolve the campaign from `/campaigns/{campaignId}/chat` or `/campaigns/{campaignId}/sources`, show explicit loading, invalid-ID and not-found states, and state that their future capabilities are unavailable. They do not render query, upload, paste, import, source-management, retry or progress controls. The workflow below remains the accepted approach for Blocks 04A–06; it is not available in the Block 01 shells.
+
 - **Chat:** ask questions, read source-backed answers and open the cited source fragment.
 - **Sources:** add content, inspect processing state, update and remove sources.
 - No campaigns: offer campaign creation.

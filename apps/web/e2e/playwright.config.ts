@@ -11,11 +11,24 @@ export default defineConfig({
     baseURL: 'http://127.0.0.1:4200',
     trace: 'on-first-retry',
   },
-  webServer: {
-    command: 'pnpm run start --host 127.0.0.1',
-    url: 'http://127.0.0.1:4200',
-    reuseExistingServer: !process.env.CI,
-  },
+  webServer: [
+    {
+      command: 'dotnet run --project services/api/src/Api/Api.csproj',
+      cwd: '../../..',
+      url: 'http://127.0.0.1:5044/health',
+      reuseExistingServer: !process.env.CI,
+      env: {
+        ASPNETCORE_ENVIRONMENT: 'Development',
+        ASPNETCORE_URLS: 'http://127.0.0.1:5044',
+      },
+    },
+    {
+      command: 'pnpm run start --host 127.0.0.1',
+      cwd: '..',
+      url: 'http://127.0.0.1:4200',
+      reuseExistingServer: !process.env.CI,
+    },
+  ],
   projects: [
     {
       name: 'chromium',

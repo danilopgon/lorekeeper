@@ -49,7 +49,7 @@ Campaign
 
 ## Open domain decisions
 
-Before block 01 implementation: final persistence schema details for Campaign IDs/timestamps, route not-found behaviour and minimal UI state wording must align with `02`, `06` and `DESIGN.md`. Before block 04A: source/document/chunk schema, source IDs, source lifecycle and update/removal semantics. Before block 04/06: how preparation, actual events and player knowledge are represented, including unknown status. Never infer player discovery merely from a DM note. Before block 06: handling contradictory evidence and temporal questions.
+Block 01 resolves campaign persistence and route identity: campaigns use server-generated UUIDs exposed as lowercase canonical strings, timestamps are server-owned UTC values, and malformed or unknown route IDs show explicit invalid/not-found states without fallback. The first-slice workspace shells remain deliberately unavailable for ingestion and AI behavior. Before block 04A: source/document/chunk schema, source IDs, source lifecycle and update/removal semantics. Before block 04/06: how preparation, actual events and player knowledge are represented, including unknown status. Never infer player discovery merely from a DM note. Before block 06: handling contradictory evidence and temporal questions.
 
 ## Initial workspace/ingestion approach
 

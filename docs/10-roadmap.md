@@ -9,7 +9,7 @@ Apply the blocking Definition of Ready in `08-quality-strategy.md` before every 
 ## Current block
 
 **Block:** 01 — Angular → .NET → PostgreSQL slice
-**Status:** In progress
+**Status:** Done
 **Outcome:** campaign creation/selection plus empty campaign workspace shells, delivered through chained review slices.
 
 Definition remains Done: personal single-operator use, multiple isolated campaigns, no multiuser scaffolding, access control required before Internet exposure. First slice: campaign creation/selection plus empty campaign workspace shell with Chat and Sources routes, without ingestion or AI. Minimal campaign fields are `id`, `name`, `createdAt` and `updatedAt`; `name` is required, trimmed, 1–120 characters and unique case-insensitively. Active campaign is represented in the URL: `/campaigns`, `/campaigns/{campaignId}/chat`, `/campaigns/{campaignId}/sources`. Campaign deletion is excluded from the first slice.
@@ -18,7 +18,7 @@ Block 00 readiness decisions are recorded in `04`, `08` and `09`: pnpm, Node 24.
 
 Block 00 exit evidence: pnpm workspace, Angular 22/Tailwind frontend, Playwright in `apps/web/e2e`, .NET 10 API/test solution, Docker Compose PostgreSQL 17, GitHub Actions and Conventional Commit hooks are scaffolded. Local checks have passed for frontend format/lint/test/build/E2E, backend restore/format/build/test and commitlint.
 
-Block 01 entry decisions are confirmed against `02`, `03`, `06`, `DESIGN.md` and the SDD change `openspec/changes/block-01-campaign-workspace-slice`. Implementation is in progress through chained review slices.
+Block 01 entry decisions are confirmed against `02`, `03`, `06`, `DESIGN.md` and the SDD change `openspec/changes/block-01-campaign-workspace-slice`. Implementation completed through chained review slices.
 
 ## Blocks and gates
 
@@ -36,7 +36,7 @@ Block 01 entry decisions are confirmed against `02`, `03`, `06`, `DESIGN.md` and
 | 07 | Regression gates / 06 | Measured thresholds/tolerances, frozen versus live eval execution in 08; decide whether Langfuse or equivalent adds material value beyond OpenTelemetry | Repeatable gates with documented baseline and cost/variance policy; AI observability choice and privacy policy recorded |
 | 08 | Complete flow and deployment / 07 | Hosting, Cloudflare Access/Tunnel deployment details, backups, limits and rollback in 07/09 and ADR-002; any local-model runtime must have artefact/version/fallback/runbook decisions | Critical flow passes; any remote exposure passes Access/origin-bypass smoke verification; promoted AI runtime dependencies are operationally reproducible |
 
-Block 00 is **Done**. Block 01 is **In progress**. Blocks 02–08 are **Not started**. Mark a block **Blocked** when readiness assessment identifies an unresolved required decision; document the exact condition below.
+Block 00 is **Done**. Block 01 is **Done**. Blocks 02–08 are **Not started**. Mark a block **Blocked** when readiness assessment identifies an unresolved required decision; document the exact condition below.
 
 ## AI engineering extension rule
 
@@ -66,11 +66,11 @@ OpenTelemetry remains the default system-wide observability stack. Langfuse or a
 - Acceptance criteria and verification plan: scaffold creates real frontend/backend/local database/CI command surfaces; AGENTS commands are executable; applicable checks run locally.
 - Exit evidence and remaining limitations: `pnpm install`; `pnpm run format:check`; `pnpm run lint`; `pnpm run test`; `pnpm run build`; `pnpm run e2e`; `dotnet restore services/api/Lorekeeper.slnx`; `dotnet format services/api/Lorekeeper.slnx --verify-no-changes`; `dotnet build services/api/Lorekeeper.slnx --no-restore --configuration Release`; `dotnet test services/api/Lorekeeper.slnx --no-build --configuration Release`; commitlint smoke check. CI is configured but not observed remotely in this local evidence.
 
-- Block and status: 01 — In progress.
+- Block and status: 01 — Done.
 - Entry decisions and links to resolved specifications: campaign schema, invariants and exclusions are defined in `02`, `03` and `06`; UI visual direction and English visible copy are defined in `DESIGN.md` and `openspec/changes/block-01-campaign-workspace-slice`; SDD proposal/spec/design/tasks are present for the Block 01 campaign workspace slice.
-- Remaining blocker, target document and unblock condition: none for readiness. Internet exposure remains gated by `07`/`09` and is out of scope. Implementation remains incomplete until persistence/API, frontend workspace shells, E2E and final verification slices are delivered.
+- Remaining blocker, target document and unblock condition: none for Block 01. Internet exposure remains gated by `07`/`09` and is out of scope.
 - Acceptance criteria and verification plan: US-01 plus the OpenSpec `campaigns` and `workspace` specs define campaign creation/selection, validation, explicit URL campaign context, empty Chat/Sources shells, excluded behaviours and accessible states; verification covers backend unit/integration tests, frontend route/component tests, focused E2E and full quality gates.
-- Progress evidence and remaining limitations: first chained PR slice implements campaign domain/name/ID validation only, with focused campaign unit tests passing. PostgreSQL persistence, HTTP endpoints, Angular routes/UI, E2E and Block 01 exit evidence remain pending.
+- Exit evidence and remaining limitations: chained slices implement campaign UUID/name/timestamp invariants, PostgreSQL persistence and case-insensitive uniqueness, the three campaign API endpoints and RFC 7807 codes, Angular campaign selection plus URL-scoped Chat/Sources unavailable shells, and focused Playwright creation/navigation flows. Full final verification passed: frontend lint/test/build/E2E, backend format/build/unit/integration tests. Docker Desktop was used only for the final local PostgreSQL/Testcontainers gates and is stopped afterward. No ingestion, AI, retrieval, citations, deletion, auth, accounts, teams, or Internet exposure is included.
 
 ## Cross-cutting gates
 
