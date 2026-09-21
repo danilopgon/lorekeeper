@@ -15,6 +15,8 @@ Use per-block Definition of Ready and entry/exit evidence. Missing required deci
 
 Defer the choice between application authentication and external private access until deployment design. Local-only work may proceed without login; Internet exposure is blocked until access to UI and API is enforced and verified, including direct-origin paths.
 
+**Resolution:** [ADR-002](ADR-002-cloudflare-access-personal-deployment.md) later selects Cloudflare Access as that external private-access layer. The enforcement and verification gate remains unchanged.
+
 ## Alternatives and consequences
 
 A single hardcoded campaign would undermine isolation testing; a multiuser product would add unrequested scope. The selected boundary enables personal experimentation while leaving future multiuser ownership as an explicit redesign decision.
