@@ -123,9 +123,9 @@ Only implement behavior explicitly described by the current scope, requirements 
 
 Do not silently replace architecture, providers, public contracts or ownership boundaries. Create or supersede an ADR.
 
-### CQRS is a boundary, not a ceremony generator
+### CQRS and Campaign dispatch stay focused
 
-Separate commands from queries and give each use case a clear handler. Do not add MediatR, repositories, base handlers or wrapper interfaces unless they solve a demonstrated boundary.
+Separate commands from queries and give each use case a clear handler. Campaign use cases use MediatR through `IRequest<TResponse>`, `IRequestHandler<TRequest, TResponse>` and endpoint-injected `ISender` as recorded in ADR-003. Keep their HTTP adapters in use-case-oriented `Presentation/` files, with route-group composition limited to shared metadata and mapping. Do not add repositories, base handlers, pipeline behaviors, generic endpoint frameworks or wrapper interfaces unless a demonstrated boundary and ADR justify them.
 
 ### AI providers stay behind project-owned ports
 

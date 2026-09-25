@@ -38,6 +38,8 @@ Block 01 entry decisions are confirmed against `02`, `03`, `06`, `DESIGN.md` and
 
 Block 00 is **Done**. Block 01 is **Done**. Blocks 02–08 are **Not started**. Mark a block **Blocked** when readiness assessment identifies an unresolved required decision; document the exact condition below.
 
+ADR-003 records the narrow post-Block-01 Campaign endpoint architecture improvement: create/list/get retain their Minimal API routes, OpenAPI metadata and Problem Details codes while dispatching explicit application messages through MediatR from use-case-oriented `Presentation/` adapters. It does not mark a future block ready or introduce pipeline behaviors, repositories, MVC, or generic endpoint abstractions.
+
 ## AI engineering extension rule
 
 Lorekeeper may use a small Python workbench (`uv`, Pydantic, pytest) and model-ecosystem libraries such as Hugging Face, SentenceTransformers and PyTorch for offline evaluation, reranking or inference experiments. These are not baseline product dependencies.

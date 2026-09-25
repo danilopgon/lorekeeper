@@ -1,11 +1,12 @@
 using Api.Modules.Campaigns.Infrastructure;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace Api.Modules.Campaigns.Application.ListCampaigns;
 
-public sealed class ListCampaignsHandler(CampaignsDbContext dbContext)
+public sealed class ListCampaignsHandler(CampaignsDbContext dbContext) : IRequestHandler<ListCampaignsQuery, IReadOnlyList<CampaignDto>>
 {
-    public async Task<IReadOnlyList<CampaignDto>> Handle(CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<CampaignDto>> Handle(ListCampaignsQuery request, CancellationToken cancellationToken)
     {
         var campaigns = await dbContext.Campaigns
             .AsNoTracking()
@@ -22,3 +23,5 @@ public sealed class ListCampaignsHandler(CampaignsDbContext dbContext)
             .ToList();
     }
 }
+
+public sealed record ListCampaignsQuery : IRequest<IReadOnlyList<CampaignDto>>;

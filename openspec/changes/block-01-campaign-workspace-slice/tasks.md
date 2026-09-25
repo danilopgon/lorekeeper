@@ -1,5 +1,9 @@
 # Tasks — Block 01 Campaign Workspace Slice
 
+## Historical reconciliation (post-Block 01)
+
+This task list preserves the original Block 01 implementation record. Its Work Unit 3 instructions to use direct `CampaignsDbContext` dependencies and a single `CampaignEndpoints.cs` file, together with its no-MediatR guidance, are superseded by accepted [ADR-003](../../../docs/decisions/ADR-003-mediatr-campaign-dispatch.md) and accepted Issue #13. Current Campaign work uses MediatR request/handler dispatch, use-case-oriented `Presentation/` adapters, and `CampaignEndpointComposition`; this notice does not claim that Block 01 originally used that architecture.
+
 ## Review Workload Forecast
 
 | Field | Value |

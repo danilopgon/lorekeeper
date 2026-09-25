@@ -1,14 +1,15 @@
 using Api.Modules.Campaigns.Domain;
 using Api.Modules.Campaigns.Infrastructure;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace Api.Modules.Campaigns.Application.GetCampaign;
 
-public sealed class GetCampaignHandler(CampaignsDbContext dbContext)
+public sealed class GetCampaignHandler(CampaignsDbContext dbContext) : IRequestHandler<GetCampaignQuery, GetCampaignResult>
 {
-    public async Task<GetCampaignResult> Handle(string campaignId, CancellationToken cancellationToken)
+    public async Task<GetCampaignResult> Handle(GetCampaignQuery request, CancellationToken cancellationToken)
     {
-        var parsed = CampaignIdParser.Parse(campaignId);
+        var parsed = CampaignIdParser.Parse(request.CampaignId);
         if (!parsed.IsSuccess)
         {
             return GetCampaignResult.InvalidId();
@@ -27,6 +28,8 @@ public sealed class GetCampaignHandler(CampaignsDbContext dbContext)
                 campaign.UpdatedAt));
     }
 }
+
+public sealed record GetCampaignQuery(string CampaignId) : IRequest<GetCampaignResult>;
 
 public sealed record GetCampaignResult(GetCampaignStatus Status, CampaignDto? Campaign)
 {

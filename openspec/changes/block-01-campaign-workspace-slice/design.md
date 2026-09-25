@@ -4,6 +4,10 @@
 
 Ready for implementation planning. This design covers the first campaign workspace slice only: campaign creation/selection, persisted campaign metadata, campaign API endpoints, Angular routes, and empty Chat/Sources workspace shells.
 
+## Historical reconciliation (post-Block 01)
+
+This is the original Block 01 design record. Its statements that MediatR is out of scope and that the Campaign HTTP adapter is a single `CampaignEndpoints.cs` file record the architecture used and planned for Block 01; they are not descriptions of the current Campaign architecture. Those statements are superseded by accepted [ADR-003](../../../docs/decisions/ADR-003-mediatr-campaign-dispatch.md) and accepted Issue #13, which adopt MediatR request/handler dispatch plus use-case-oriented `Presentation/` adapters and `CampaignEndpointComposition`. This reconciliation does not rewrite Block 01 history or change its product/API behavior.
+
 ## Scope and non-goals
 
 In scope:
