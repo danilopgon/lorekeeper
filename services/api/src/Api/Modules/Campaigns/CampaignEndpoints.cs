@@ -2,6 +2,7 @@ using Api.Modules.Campaigns.Application;
 using Api.Modules.Campaigns.Application.CreateCampaign;
 using Api.Modules.Campaigns.Application.GetCampaign;
 using Api.Modules.Campaigns.Application.ListCampaigns;
+using MediatR;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
@@ -46,19 +47,19 @@ public static class CampaignEndpoints
     }
 
     private static async Task<Ok<IReadOnlyList<CampaignDto>>> ListCampaigns(
-        ListCampaignsHandler handler,
+        ISender sender,
         CancellationToken cancellationToken)
     {
-        var campaigns = await handler.Handle(cancellationToken);
+        var campaigns = await sender.Send(new ListCampaignsQuery(), cancellationToken);
         return TypedResults.Ok(campaigns);
     }
 
     private static async Task<Results<Created<CampaignDto>, ProblemHttpResult>> CreateCampaign(
-        [FromBody] CreateCampaignRequest? request,
-        CreateCampaignHandler handler,
+        [FromBody] CreateCampaignHttpRequest? request,
+        ISender sender,
         CancellationToken cancellationToken)
     {
-        var result = await handler.Handle(request ?? new CreateCampaignRequest(null), cancellationToken);
+        var result = await sender.Send(new CreateCampaignCommand(request?.Name), cancellationToken);
 
         return result.Status switch
         {
@@ -71,10 +72,10 @@ public static class CampaignEndpoints
 
     private static async Task<Results<Ok<CampaignDto>, ProblemHttpResult>> GetCampaign(
         string campaignId,
-        GetCampaignHandler handler,
+        ISender sender,
         CancellationToken cancellationToken)
     {
-        var result = await handler.Handle(campaignId, cancellationToken);
+        var result = await sender.Send(new GetCampaignQuery(campaignId), cancellationToken);
 
         return result.Status switch
         {
@@ -102,4 +103,6 @@ public static class CampaignEndpoints
         problem.ProblemDetails.Extensions["code"] = code;
         return problem;
     }
+
+    private sealed record CreateCampaignHttpRequest(string? Name);
 }

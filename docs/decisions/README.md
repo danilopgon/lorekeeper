@@ -14,3 +14,4 @@ Create ADRs for provider/stack choices, architectural boundaries, public contrac
 
 - [ADR-001 — Personal multicampaign PoC and SDD readiness](ADR-001-personal-multicampaign-and-readiness.md)
 - [ADR-002 — Cloudflare Access for personal remote access](ADR-002-cloudflare-access-personal-deployment.md)
+- [ADR-003 — MediatR dispatch for Campaign use cases](ADR-003-mediatr-campaign-dispatch.md)

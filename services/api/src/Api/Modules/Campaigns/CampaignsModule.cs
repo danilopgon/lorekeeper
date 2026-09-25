@@ -1,7 +1,6 @@
 using Api.Modules.Campaigns.Application.CreateCampaign;
-using Api.Modules.Campaigns.Application.GetCampaign;
-using Api.Modules.Campaigns.Application.ListCampaigns;
 using Api.Modules.Campaigns.Infrastructure;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,9 +17,7 @@ public static class CampaignsModule
             options.UseNpgsql(connectionString);
         });
 
-        services.AddScoped<CreateCampaignHandler>();
-        services.AddScoped<ListCampaignsHandler>();
-        services.AddScoped<GetCampaignHandler>();
+        services.AddMediatR(configuration => configuration.RegisterServicesFromAssemblyContaining<CreateCampaignHandler>());
 
         return services;
     }

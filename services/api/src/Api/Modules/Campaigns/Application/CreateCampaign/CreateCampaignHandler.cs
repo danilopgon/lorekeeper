@@ -1,12 +1,13 @@
 using Api.Modules.Campaigns.Domain;
 using Api.Modules.Campaigns.Infrastructure;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace Api.Modules.Campaigns.Application.CreateCampaign;
 
-public sealed class CreateCampaignHandler(CampaignsDbContext dbContext)
+public sealed class CreateCampaignHandler(CampaignsDbContext dbContext) : IRequestHandler<CreateCampaignCommand, CreateCampaignResult>
 {
-    public async Task<CreateCampaignResult> Handle(CreateCampaignRequest request, CancellationToken cancellationToken)
+    public async Task<CreateCampaignResult> Handle(CreateCampaignCommand request, CancellationToken cancellationToken)
     {
         var name = CampaignName.Create(request.Name);
         if (!name.IsSuccess)
@@ -34,7 +35,7 @@ public sealed class CreateCampaignHandler(CampaignsDbContext dbContext)
     }
 }
 
-public sealed record CreateCampaignRequest(string? Name);
+public sealed record CreateCampaignCommand(string? Name) : IRequest<CreateCampaignResult>;
 
 public sealed record CreateCampaignResult(CreateCampaignStatus Status, CampaignDto? Campaign)
 {
