@@ -20,7 +20,7 @@ internal static class CreateCampaignEndpoint
     }
 
     private static async Task<Results<Created<CampaignDto>, ProblemHttpResult>> CreateCampaign(
-        [FromBody] CreateCampaignHttpRequest? request,
+        [FromBody] CreateCampaignRequest? request,
         ISender sender,
         CancellationToken cancellationToken)
     {
@@ -35,5 +35,5 @@ internal static class CreateCampaignEndpoint
         };
     }
 
-    private sealed record CreateCampaignHttpRequest(string? Name);
+    private sealed record CreateCampaignRequest(string? Name);
 }

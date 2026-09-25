@@ -5,6 +5,7 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using System.Reflection;
 
 namespace Unit.Modules.Campaigns.Presentation;
 
@@ -28,6 +29,20 @@ public sealed class CampaignEndpointCompositionTests
         app.MapCampaignsModule();
 
         AssertCampaignRoutes(GetRouteEndpoints(app));
+    }
+
+    [Fact]
+    public void CreateCampaignUsesTheEstablishedOpenApiRequestSchemaName()
+    {
+        using var app = CreateApplication();
+
+        CampaignEndpointComposition.MapCampaignEndpoints(app);
+
+        var createEndpoint = GetRouteEndpoints(app)["CreateCampaign"];
+        var handler = createEndpoint.Metadata.OfType<MethodInfo>().Single();
+        var requestParameter = handler.GetParameters().Single(parameter => parameter.GetCustomAttribute<Microsoft.AspNetCore.Mvc.FromBodyAttribute>() is not null);
+
+        requestParameter.ParameterType.Name.Should().Be("CreateCampaignRequest");
     }
 
     private static WebApplication CreateApplication()
