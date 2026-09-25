@@ -34,7 +34,8 @@ Use MediatR for the Campaign create command and list/get queries. Register handl
 ## Proposed design
 
 - Each Campaign feature folder owns an explicit `IRequest<TResponse>` message and its `IRequestHandler<TRequest, TResponse>` implementation.
-- `CampaignEndpoints` remains the single Campaign route mapper because the three routes share the same group and Problem Details helpers; its delegates remain use-case-specific adapters.
+- `Presentation/` contains one use-case-oriented adapter file for Campaign create, list and get. Each adapter owns its route metadata, request binding, `ISender` dispatch and HTTP result mapping.
+- `CampaignEndpointComposition` owns only `/api/campaigns` route-group composition and shared `Campaigns` tag metadata. A small Campaign-specific Problem Details helper remains in `Presentation/` because create and get genuinely share its exact mapping behavior.
 - The HTTP body DTO stays private to the endpoint adapter. Application messages are not bound directly from HTTP.
 - No pipeline behaviors, repositories, generic base handlers, custom endpoint framework or MVC migration are introduced.
 
@@ -44,7 +45,7 @@ Use MediatR for the Campaign create command and list/get queries. Register handl
 
 - New Campaign HTTP adapters depend on the stable `ISender` boundary rather than concrete handlers.
 - Handler tests can assert request/handler contracts independently of HTTP behavior.
-- Existing OpenAPI metadata and public API contracts remain unchanged.
+- Existing OpenAPI metadata and public API contracts remain unchanged while the physical adapter structure reflects the use cases.
 
 ### Negative / accepted trade-offs
 
@@ -57,7 +58,7 @@ Use MediatR for the Campaign create command and list/get queries. Register handl
 
 ## Success criterion
 
-- Campaign endpoints dispatch all three use cases through `ISender`, handlers implement their matching MediatR contracts, and Campaign API integration tests retain their established responses and Problem Details codes.
+- Campaign endpoints dispatch all three use cases through `ISender`, handlers implement their matching MediatR contracts, `CampaignEndpointComposition` maps the three presentation adapters, and Campaign API integration tests retain their established responses and Problem Details codes.
 
 ## Future review
 

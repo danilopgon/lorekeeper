@@ -1,5 +1,6 @@
 using Api.Modules.Campaigns.Application.CreateCampaign;
 using Api.Modules.Campaigns.Infrastructure;
+using Api.Modules.Campaigns.Presentation;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -51,5 +52,5 @@ public static class CampaignsModule
     }
 
     public static IEndpointRouteBuilder MapCampaignsModule(this IEndpointRouteBuilder endpoints) =>
-        endpoints.MapCampaignEndpoints();
+        CampaignEndpointComposition.MapCampaignEndpoints(endpoints);
 }

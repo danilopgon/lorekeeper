@@ -125,7 +125,7 @@ Do not silently replace architecture, providers, public contracts or ownership b
 
 ### CQRS and Campaign dispatch stay focused
 
-Separate commands from queries and give each use case a clear handler. Campaign use cases use MediatR through `IRequest<TResponse>`, `IRequestHandler<TRequest, TResponse>` and endpoint-injected `ISender` as recorded in ADR-003. Do not add repositories, base handlers, pipeline behaviors or wrapper interfaces unless a demonstrated boundary and ADR justify them.
+Separate commands from queries and give each use case a clear handler. Campaign use cases use MediatR through `IRequest<TResponse>`, `IRequestHandler<TRequest, TResponse>` and endpoint-injected `ISender` as recorded in ADR-003. Keep their HTTP adapters in use-case-oriented `Presentation/` files, with route-group composition limited to shared metadata and mapping. Do not add repositories, base handlers, pipeline behaviors, generic endpoint frameworks or wrapper interfaces unless a demonstrated boundary and ADR justify them.
 
 ### AI providers stay behind project-owned ports
 
