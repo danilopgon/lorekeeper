@@ -56,10 +56,12 @@ Issue #15 identifies unnecessary navigation and registration ceremony in the cur
 - MVC-01/MVC-02 GREEN: `dotnet test services/api/tests/Unit/Unit.csproj --filter "FullyQualifiedName~CampaignsControllerTests" --no-restore` passed 2/2 tests after implementation. It verifies the three named controller actions and the unexpected-error handler's `500`/`unexpected_error` Problem Details contract.
 - MVC-02 focused integration: `dotnet test services/api/tests/Integration/Integration.csproj --filter "FullyQualifiedName~CampaignEndpointsTests" --no-restore` was blocked: all 22 tests failed before execution because Testcontainers could not connect to `npipe://./pipe/docker_engine`. Docker was not started.
 - Final checks: `dotnet restore services/api/Lorekeeper.slnx` succeeded with two existing SSH.NET `NU1903` warnings; `dotnet format services/api/Lorekeeper.slnx --verify-no-changes` succeeded with workspace-load warnings; `dotnet build services/api/Lorekeeper.slnx --no-restore --configuration Release` succeeded with the same two `NU1903` warnings; `dotnet test services/api/Lorekeeper.slnx --no-build --configuration Release` was partial because 27 of 28 integration tests were blocked by the unavailable Docker endpoint. No product assertion failure was observed.
+- Parent spot check: `dotnet test services/api/tests/Unit/Unit.csproj --configuration Release --filter "FullyQualifiedName~CampaignsControllerTests" --no-restore` passed 2/2 tests.
+- Native assessment against `d04b917`: medium risk (`executable_change`); receipt-driven development is disabled by clone-local setting, so no native review was started.
 - Decision: use one `CampaignsController` for list/create/get, retain private-to-Presentation transport mapping through its nested `CreateCampaignRequest`, centralize expected results in `CampaignProblemDetails`, and use ASP.NET Core `IExceptionHandler`/`IProblemDetailsService` for unexpected failures. No generic controller abstraction was added.
 - Rollback boundary: revert the MVC controller, focused Problem Details helper, exception handler, API composition registrations, controller regression test, and ADR/documentation updates together; MediatR messages, handlers, persistence, and public Campaign contracts remain unchanged.
 - Work-unit commit: `398de7b` (`refactor(api): adopt campaign MVC controllers`).
 
 ## Next step
 
-Record the final work-unit commit identity; Docker-backed integration verification remains blocked until Docker is available.
+Run the Docker-backed integration suite when Docker is explicitly available and authorized; no remote delivery has been requested.
