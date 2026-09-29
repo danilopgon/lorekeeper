@@ -34,6 +34,8 @@ apps/web/
 services/api/
 ├── src/
 │   ├── Api/                  # composition root, middleware, endpoints
+│   ├── Common/               # proven cross-module application concerns
+│   │   └── Presentation/     # shared HTTP infrastructure
 │   ├── Modules/
 │   │   └── [Module]/
 │   │       ├── Presentation/        # HTTP-operation-oriented MVC controllers and transport mapping
@@ -78,7 +80,7 @@ The `ai/` workbench is not an application runtime boundary by default and is not
 - Modules communicate through explicit contracts, not another module's EF entities.
 - Domain and Application do not depend on EF Core, ASP.NET or provider SDKs.
 - Infrastructure implements ports defined by the owning module.
-- HTTP adapters live in a module `Presentation/` layer when a module has multiple HTTP operations. Controllers stay cohesive around an HTTP resource, translate HTTP transport DTOs into commands/queries, dispatch through `ISender` where the module adopts MediatR, and map results into public contracts. Register controller and Problem Details infrastructure centrally in the API composition root; avoid generic controller frameworks.
+- HTTP adapters live in a module `Presentation/` layer when a module has multiple HTTP operations. Controllers stay cohesive around an HTTP resource, translate HTTP transport DTOs into commands/queries, dispatch through `ISender` where the module adopts MediatR, and map results into public contracts. Campaign-specific expected-result-to-ProblemDetails mapping stays in Campaign Presentation. Proven cross-module HTTP infrastructure, such as unexpected-exception handling, belongs under `Api/Common/Presentation`; register controller and Problem Details infrastructure centrally in the API composition root. Avoid generic controller frameworks.
 - Use project-owned ports for time, IDs, storage and providers when the boundary matters; do not wrap every framework API by reflex.
 
 ## Pragmatic CQRS
@@ -91,7 +93,7 @@ Query   → Handler → Read model / projection
 - Commands express intent and enforce invariants.
 - Queries can use purpose-built projections and need not hydrate aggregates.
 - A feature folder owns request, result, validation, handler and tests.
-- Campaign create/list/get messages implement `IRequest<TResponse>` and handlers implement `IRequestHandler<TRequest, TResponse>`; `CampaignsController` injects `ISender` and retains HTTP-to-message mapping, while expected application results use its focused Problem Details mapper. ASP.NET Core's centrally registered exception handler owns unexpected `unexpected_error` responses.
+- Campaign create/list/get messages implement `IRequest<TResponse>` and handlers implement `IRequestHandler<TRequest, TResponse>`; Campaign controllers inject `ISender` and retain HTTP-to-message mapping, while expected application results use a focused Campaign Problem Details mapper. ASP.NET Core's centrally registered `Api.Common.Presentation.ExceptionHandling.UnexpectedExceptionHandler` owns unexpected `unexpected_error` responses.
 - Add mediator dispatch to another module only through an ADR with a demonstrated benefit. Do not introduce pipeline behaviors, repositories, generic base handlers or wrapper interfaces without a demonstrated need.
 
 ## Angular rules

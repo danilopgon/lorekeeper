@@ -53,6 +53,12 @@ Issue #15 identifies unnecessary navigation and registration ceremony in the cur
   - Acceptance: GET routes are cohesive in a GET controller, POST is isolated in a create controller, OpenAPI descriptions are preserved, shared error handling has an intentional home, and governing guidance agrees with ADR-004.
   - Checks: observed RED/GREEN focused tests; formatting, build, and Docker-backed integration coverage.
 
+- [x] MVC-05 — Move cross-module HTTP exception handling into `Common/Presentation/ExceptionHandling` rather than an ambiguous API-level core.
+  - Route: delegated direct.
+  - Trigger: namespace, API composition, tests, ADR, and task evidence must move together.
+  - Acceptance: shared HTTP infrastructure has a clear common-module home, while Campaign-specific error translation stays in the Campaign module.
+  - Checks: observed RED/GREEN focused tests; formatting, build, and Docker-backed integration coverage.
+
 ## Progress and evidence
 
 - 2026-09-29: Issue #15 mapped. Current branch: `feat/campaign-mvc-controllers`.
@@ -74,7 +80,13 @@ Issue #15 identifies unnecessary navigation and registration ceremony in the cur
 - MVC-04 focused integration: `dotnet test services/api/tests/Integration/Integration.csproj --filter "FullyQualifiedName~CampaignEndpointsTests" --no-restore` passed 22/22 with Docker-backed PostgreSQL. It emitted two existing SSH.NET `NU1903` warnings.
 - MVC-04 final checks: `dotnet format services/api/Lorekeeper.slnx --verify-no-changes` passed with existing workspace-load warnings; `dotnet build services/api/Lorekeeper.slnx --no-restore --configuration Release` passed with two existing SSH.NET `NU1903` warnings; `dotnet test services/api/Lorekeeper.slnx --no-build --configuration Release` passed 22/22 unit and 28/28 integration tests.
 - MVC-04 work-unit commit: this correction commit (`refactor(api): address Campaign MVC review feedback`).
+- Architecture refinement: the cross-module HTTP layer belongs under `Api/Common/Presentation/ExceptionHandling`, modeled as a shared module beside `Api/Modules`, not under an ambiguous `Api/Presentation/Core` directory.
+- MVC-05 RED: `dotnet test services/api/tests/Unit/Unit.csproj --filter "FullyQualifiedName~CampaignsControllerTests" --no-restore` failed with `CS0234` because `Api.Common.Presentation.ExceptionHandling` did not exist.
+- MVC-05 GREEN: the same focused unit command passed 2/2 after moving `UnexpectedExceptionHandler` to `Api/Common/Presentation/ExceptionHandling` and updating API composition and its focused test namespace.
+- MVC-05 focused integration: `dotnet test services/api/tests/Integration/Integration.csproj --filter "FullyQualifiedName~CampaignEndpointsTests" --no-restore` passed 22/22 with Docker-backed PostgreSQL; it emitted two existing SSH.NET `NU1903` warnings.
+- MVC-05 final checks: `dotnet format services/api/Lorekeeper.slnx --verify-no-changes` passed with existing workspace-load warnings; `dotnet build services/api/Lorekeeper.slnx --no-restore --configuration Release` passed with two existing SSH.NET `NU1903` warnings; `dotnet test services/api/Lorekeeper.slnx --no-build --configuration Release` passed 22/22 unit and 28/28 integration tests.
+- MVC-05 work-unit commit: this commit (`refactor(api): move shared exception handling to common module`).
 
 ## Next step
 
-Map and implement MVC-04 using strict TDD.
+MVC-05 is complete. The handler is shared common HTTP infrastructure; Campaign-specific expected-result-to-ProblemDetails mapping remains in Campaign Presentation.

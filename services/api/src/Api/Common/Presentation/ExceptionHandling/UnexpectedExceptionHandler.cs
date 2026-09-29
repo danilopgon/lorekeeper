@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Api.Presentation.Core;
+namespace Api.Common.Presentation.ExceptionHandling;
 
 public sealed class UnexpectedExceptionHandler(
     ILogger<UnexpectedExceptionHandler> logger,

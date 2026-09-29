@@ -1,5 +1,5 @@
 using Api.Modules.Campaigns.Presentation;
-using Api.Presentation.Core;
+using Api.Common.Presentation.ExceptionHandling;
 using FluentAssertions;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
