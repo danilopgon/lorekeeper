@@ -38,7 +38,7 @@ Block 01 entry decisions are confirmed against `02`, `03`, `06`, `DESIGN.md` and
 
 Block 00 is **Done**. Block 01 is **Done**. Blocks 02–08 are **Not started**. Mark a block **Blocked** when readiness assessment identifies an unresolved required decision; document the exact condition below.
 
-ADR-003 records the narrow post-Block-01 Campaign endpoint architecture improvement: create/list/get retain their Minimal API routes, OpenAPI metadata and Problem Details codes while dispatching explicit application messages through MediatR from use-case-oriented `Presentation/` adapters. It does not mark a future block ready or introduce pipeline behaviors, repositories, MVC, or generic endpoint abstractions.
+ADR-003 records MediatR as the narrow Campaign Application dispatch boundary. ADR-004 refines its HTTP adapter choice: create/list/get retain their routes, OpenAPI metadata and Problem Details codes through a cohesive MVC controller, with central ASP.NET Core Problem Details and exception handling. Neither decision marks a future block ready or introduces pipeline behaviors, repositories, or generic controller abstractions.
 
 ## AI engineering extension rule
 
