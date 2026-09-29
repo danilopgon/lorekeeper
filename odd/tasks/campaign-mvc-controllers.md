@@ -58,7 +58,7 @@ Issue #15 identifies unnecessary navigation and registration ceremony in the cur
 - Final checks: `dotnet restore services/api/Lorekeeper.slnx` succeeded with two existing SSH.NET `NU1903` warnings; `dotnet format services/api/Lorekeeper.slnx --verify-no-changes` succeeded with workspace-load warnings; `dotnet build services/api/Lorekeeper.slnx --no-restore --configuration Release` succeeded with the same two `NU1903` warnings; `dotnet test services/api/Lorekeeper.slnx --no-build --configuration Release` was partial because 27 of 28 integration tests were blocked by the unavailable Docker endpoint. No product assertion failure was observed.
 - Decision: use one `CampaignsController` for list/create/get, retain private-to-Presentation transport mapping through its nested `CreateCampaignRequest`, centralize expected results in `CampaignProblemDetails`, and use ASP.NET Core `IExceptionHandler`/`IProblemDetailsService` for unexpected failures. No generic controller abstraction was added.
 - Rollback boundary: revert the MVC controller, focused Problem Details helper, exception handler, API composition registrations, controller regression test, and ADR/documentation updates together; MediatR messages, handlers, persistence, and public Campaign contracts remain unchanged.
-- Work-unit commit: pending final commit.
+- Work-unit commit: `398de7b` (`refactor(api): adopt campaign MVC controllers`).
 
 ## Next step
 
