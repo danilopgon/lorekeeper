@@ -1,10 +1,11 @@
 using Api.Modules.Campaigns.Presentation;
-using Api.Presentation;
+using Api.Presentation.Core;
 using FluentAssertions;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Metadata;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,7 +16,7 @@ namespace Unit.Modules.Campaigns.Presentation;
 public sealed class CampaignsControllerTests
 {
     [Fact]
-    public void MapsTheThreeCampaignMvcActionsWithTheirEstablishedRouteNames()
+    public void MapsVerbOrientedCampaignMvcActionsWithTheirEstablishedRouteNamesAndOpenApiDocumentation()
     {
         using var app = CreateApplication();
 
@@ -44,8 +45,8 @@ public sealed class CampaignsControllerTests
     private static WebApplication CreateApplication()
     {
         var builder = WebApplication.CreateBuilder();
-        builder.Services.AddControllers().AddApplicationPart(typeof(CampaignsController).Assembly);
-        builder.Services.AddMediatR(configuration => configuration.RegisterServicesFromAssembly(typeof(CampaignsController).Assembly));
+        builder.Services.AddControllers().AddApplicationPart(typeof(CampaignsGetController).Assembly);
+        builder.Services.AddMediatR(configuration => configuration.RegisterServicesFromAssembly(typeof(CampaignsGetController).Assembly));
         return builder.Build();
     }
 
@@ -62,6 +63,12 @@ public sealed class CampaignsControllerTests
         routeEndpoints["CreateCampaign"].RoutePattern.RawText.Should().Be("api/campaigns");
         routeEndpoints["GetCampaign"].RoutePattern.RawText.Should().Be("api/campaigns/{campaignId}");
         routeEndpoints.Values.Should().OnlyContain(endpoint => endpoint.Metadata.GetMetadata<ControllerActionDescriptor>() != null);
+        routeEndpoints["ListCampaigns"].Metadata.GetMetadata<IEndpointSummaryMetadata>()!.Summary.Should().Be("List campaigns");
+        routeEndpoints["ListCampaigns"].Metadata.GetMetadata<IEndpointDescriptionMetadata>()!.Description.Should().Be("Returns the campaigns available to the single operator.");
+        routeEndpoints["CreateCampaign"].Metadata.GetMetadata<IEndpointSummaryMetadata>()!.Summary.Should().Be("Create a campaign");
+        routeEndpoints["CreateCampaign"].Metadata.GetMetadata<IEndpointDescriptionMetadata>()!.Description.Should().Be("Creates one campaign and returns its canonical campaign representation.");
+        routeEndpoints["GetCampaign"].Metadata.GetMetadata<IEndpointSummaryMetadata>()!.Summary.Should().Be("Get a campaign");
+        routeEndpoints["GetCampaign"].Metadata.GetMetadata<IEndpointDescriptionMetadata>()!.Description.Should().Be("Returns one campaign by canonical UUID.");
     }
 
     private sealed class RecordingProblemDetailsService : IProblemDetailsService

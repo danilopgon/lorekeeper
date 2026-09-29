@@ -47,6 +47,12 @@ Issue #15 identifies unnecessary navigation and registration ceremony in the cur
   - Acceptance: documentation no longer states MVC is excluded and accurately separates HTTP-oriented Presentation from CQRS-oriented Application.
   - Checks: documentation readback and relevant architecture checks.
 
+- [x] MVC-04 — Address PR #16 review feedback: split Campaign controllers by HTTP verb, restore OpenAPI summaries/descriptions, place shared API error handling in a coherent Presentation core, and align the governing architecture instruction.
+  - Route: delegated direct.
+  - Trigger: review correction spans API Presentation, tests, documentation, and repository architecture rules.
+  - Acceptance: GET routes are cohesive in a GET controller, POST is isolated in a create controller, OpenAPI descriptions are preserved, shared error handling has an intentional home, and governing guidance agrees with ADR-004.
+  - Checks: observed RED/GREEN focused tests; formatting, build, and Docker-backed integration coverage.
+
 ## Progress and evidence
 
 - 2026-09-29: Issue #15 mapped. Current branch: `feat/campaign-mvc-controllers`.
@@ -62,7 +68,13 @@ Issue #15 identifies unnecessary navigation and registration ceremony in the cur
 - Decision: use one `CampaignsController` for list/create/get, retain private-to-Presentation transport mapping through its nested `CreateCampaignRequest`, centralize expected results in `CampaignProblemDetails`, and use ASP.NET Core `IExceptionHandler`/`IProblemDetailsService` for unexpected failures. No generic controller abstraction was added.
 - Rollback boundary: revert the MVC controller, focused Problem Details helper, exception handler, API composition registrations, controller regression test, and ADR/documentation updates together; MediatR messages, handlers, persistence, and public Campaign contracts remain unchanged.
 - Work-unit commit: `398de7b` (`refactor(api): adopt campaign MVC controllers`).
+- PR #16 review feedback accepted: controllers must be organized by HTTP verb rather than placed together by resource; preserve prior OpenAPI summaries/descriptions; relocate the shared unexpected-error handler into an intentional Presentation core; reconcile the governing Campaign adapter instruction with this architecture decision.
+- MVC-04 RED: `dotnet test services/api/tests/Unit/Unit.csproj --filter "FullyQualifiedName~CampaignsControllerTests" --no-restore` failed before implementation because `Api.Presentation.Core` did not exist.
+- MVC-04 GREEN: the same focused unit command passed 2/2 after adding the verb-oriented controllers, API Presentation core exception-handler location, and `EndpointSummary`/`EndpointDescription` metadata assertions.
+- MVC-04 focused integration: `dotnet test services/api/tests/Integration/Integration.csproj --filter "FullyQualifiedName~CampaignEndpointsTests" --no-restore` passed 22/22 with Docker-backed PostgreSQL. It emitted two existing SSH.NET `NU1903` warnings.
+- MVC-04 final checks: `dotnet format services/api/Lorekeeper.slnx --verify-no-changes` passed with existing workspace-load warnings; `dotnet build services/api/Lorekeeper.slnx --no-restore --configuration Release` passed with two existing SSH.NET `NU1903` warnings; `dotnet test services/api/Lorekeeper.slnx --no-build --configuration Release` passed 22/22 unit and 28/28 integration tests.
+- MVC-04 work-unit commit: this correction commit (`refactor(api): address Campaign MVC review feedback`).
 
 ## Next step
 
-No local verification remains pending. Remote delivery has not been requested.
+Map and implement MVC-04 using strict TDD.

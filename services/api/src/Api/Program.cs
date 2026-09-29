@@ -1,5 +1,5 @@
 using Api.Modules.Campaigns;
-using Api.Presentation;
+using Api.Presentation.Core;
 
 var builder = WebApplication.CreateBuilder(args);
 

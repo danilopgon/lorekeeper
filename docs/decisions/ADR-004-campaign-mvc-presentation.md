@@ -17,9 +17,9 @@ ADR-003 introduced MediatR for the Campaign create command and list/get queries 
 - Benefits: preserves the current physical layout.
 - Costs/risks: one HTTP resource is split across route registration and three small files, and the custom exception middleware duplicates framework facilities.
 
-### Use one resource-oriented MVC controller
+### Use MVC controllers organized by HTTP verb
 
-- Benefits: keeps related HTTP operations, route metadata, transport binding and `ISender` dispatch together while retaining separate HTTP and Application DTOs.
+- Benefits: keeps cohesive read operations, route metadata, transport binding and `ISender` dispatch together while retaining separate HTTP and Application DTOs.
 - Costs/risks: adds MVC service and endpoint composition to the API root.
 
 ### Add a generic base controller or endpoint framework
@@ -29,9 +29,9 @@ ADR-003 introduced MediatR for the Campaign create command and list/get queries 
 
 ## Decision
 
-Use `CampaignsController` as the Campaign HTTP adapter. It owns the existing list, create and get operations, their route names and OpenAPI response metadata. Each action converts its HTTP request DTO into an explicit MediatR request and retains no application orchestration logic.
+Use `CampaignsGetController` for the existing list and get operations, and `CreateCampaignController` for the create operation. The controllers retain their route names, OpenAPI response metadata, summaries, and descriptions. Each action converts its HTTP request DTO into an explicit MediatR request and retains no application orchestration logic.
 
-Use a Campaign-specific Problem Details mapper for expected application results. Register ASP.NET Core `AddProblemDetails`, `AddExceptionHandler<UnexpectedExceptionHandler>` and `AddControllers` in the API composition root; execute `UseExceptionHandler` before mapped endpoints and use `MapControllers` to expose the controller. The exception handler writes the established `unexpected_error` RFC 7807 contract through `IProblemDetailsService`.
+Use a Campaign-specific Problem Details mapper for expected application results. Keep shared unexpected-error handling in the API Presentation core. Register ASP.NET Core `AddProblemDetails`, `AddExceptionHandler<UnexpectedExceptionHandler>` and `AddControllers` in the API composition root; execute `UseExceptionHandler` before mapped endpoints and use `MapControllers` to expose the controllers. The exception handler writes the established `unexpected_error` RFC 7807 contract through `IProblemDetailsService`.
 
 Do not introduce a generic controller, base controller, custom endpoint framework, MediatR pipeline behavior, repository, or wrapper interface.
 
@@ -39,7 +39,7 @@ Do not introduce a generic controller, base controller, custom endpoint framewor
 
 ### Positive
 
-- Campaign HTTP operations are discoverable in one controller without changing their public routes, names, payloads, `201 Location`, or stable Problem Details codes.
+- Campaign HTTP operations are discoverable in verb-oriented controllers without changing their public routes, names, payloads, `201 Location`, or stable Problem Details codes.
 - Expected and unexpected failures use ASP.NET Core Problem Details primitives with explicit, testable contract mapping.
 - MediatR remains the narrow Application dispatch boundary selected by ADR-003.
 
@@ -55,4 +55,4 @@ Do not introduce a generic controller, base controller, custom endpoint framewor
 
 ## Success criterion
 
-- `AddControllers` and `MapControllers` compose the API; `CampaignsController` maps exactly the established Campaign list/create/get route names; expected RFC 7807 codes and the unexpected `unexpected_error` contract remain stable; and focused unit plus Campaign API integration coverage verifies the boundary.
+- `AddControllers` and `MapControllers` compose the API; `CampaignsGetController` and `CreateCampaignController` map exactly the established Campaign list/create/get route names; expected RFC 7807 codes and the unexpected `unexpected_error` contract remain stable; and focused unit plus Campaign API integration coverage verifies the boundary.

@@ -1,5 +1,4 @@
 using Api.Modules.Campaigns.Application;
-using Api.Modules.Campaigns.Application.CreateCampaign;
 using Api.Modules.Campaigns.Application.GetCampaign;
 using Api.Modules.Campaigns.Application.ListCampaigns;
 using MediatR;
@@ -10,9 +9,11 @@ namespace Api.Modules.Campaigns.Presentation;
 [ApiController]
 [Route("api/campaigns/")]
 [Tags("Campaigns")]
-public sealed class CampaignsController(ISender sender) : ControllerBase
+public sealed class CampaignsGetController(ISender sender) : ControllerBase
 {
     [HttpGet(Name = "ListCampaigns")]
+    [EndpointSummary("List campaigns")]
+    [EndpointDescription("Returns the campaigns available to the single operator.")]
     [ProducesResponseType(typeof(IReadOnlyList<CampaignDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<CampaignDto>>> ListCampaigns(CancellationToken cancellationToken)
     {
@@ -20,26 +21,9 @@ public sealed class CampaignsController(ISender sender) : ControllerBase
         return Ok(campaigns);
     }
 
-    [HttpPost(Name = "CreateCampaign")]
-    [ProducesResponseType(typeof(CampaignDto), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
-    public async Task<ActionResult<CampaignDto>> CreateCampaign(
-        [FromBody] CreateCampaignRequest? request,
-        CancellationToken cancellationToken)
-    {
-        var result = await sender.Send(new CreateCampaignCommand(request?.Name), cancellationToken);
-
-        return result.Status switch
-        {
-            CreateCampaignStatus.Created => Created($"/api/campaigns/{result.Campaign!.Id}", result.Campaign),
-            CreateCampaignStatus.InvalidName => CampaignProblemDetails.InvalidName(),
-            CreateCampaignStatus.NameConflict => CampaignProblemDetails.NameConflict(),
-            _ => throw new InvalidOperationException($"Unexpected create campaign status '{result.Status}'.")
-        };
-    }
-
     [HttpGet("{campaignId}", Name = "GetCampaign")]
+    [EndpointSummary("Get a campaign")]
+    [EndpointDescription("Returns one campaign by canonical UUID.")]
     [ProducesResponseType(typeof(CampaignDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
@@ -55,6 +39,4 @@ public sealed class CampaignsController(ISender sender) : ControllerBase
             _ => throw new InvalidOperationException($"Unexpected get campaign status '{result.Status}'.")
         };
     }
-
-    public sealed record CreateCampaignRequest(string? Name);
 }
