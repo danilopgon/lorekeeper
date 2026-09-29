@@ -86,6 +86,8 @@ Issue #15 identifies unnecessary navigation and registration ceremony in the cur
 - MVC-05 focused integration: `dotnet test services/api/tests/Integration/Integration.csproj --filter "FullyQualifiedName~CampaignEndpointsTests" --no-restore` passed 22/22 with Docker-backed PostgreSQL; it emitted two existing SSH.NET `NU1903` warnings.
 - MVC-05 final checks: `dotnet format services/api/Lorekeeper.slnx --verify-no-changes` passed with existing workspace-load warnings; `dotnet build services/api/Lorekeeper.slnx --no-restore --configuration Release` passed with two existing SSH.NET `NU1903` warnings; `dotnet test services/api/Lorekeeper.slnx --no-build --configuration Release` passed 22/22 unit and 28/28 integration tests.
 - MVC-05 work-unit commit: this commit (`refactor(api): move shared exception handling to common module`).
+- Parent spot check after MVC-05: `dotnet test services/api/tests/Unit/Unit.csproj --configuration Release --filter "FullyQualifiedName~CampaignsControllerTests" --no-restore` passed 2/2.
+- Native assessment for the unpushed review corrections: medium risk (`executable_change`, 11 paths/266 lines) and under the review slice budget; receipt-driven development remains disabled clone-locally, so no native review was started.
 
 ## Next step
 
