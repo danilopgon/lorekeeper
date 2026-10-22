@@ -1,0 +1,9 @@
+# pnpm 12 is not yet supported by Dependabot's npm ecosystem updater.
+# GitHub Actions receive automated version-update PRs; pnpm is audited weekly.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
