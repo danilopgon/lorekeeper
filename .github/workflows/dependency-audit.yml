@@ -1,0 +1,33 @@
+name: Dependency security audit
+
+on:
+  schedule:
+    - cron: "27 7 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dependency-audit
+  cancel-in-progress: true
+
+jobs:
+  pnpm-audit:
+    name: pnpm advisories (high+)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.4.1
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Audit production dependencies (blocking)
+        run: pnpm audit --prod --audit-level=high
+      - name: Report development tooling advisories
+        continue-on-error: true
+        run: pnpm audit --dev --audit-level=high
