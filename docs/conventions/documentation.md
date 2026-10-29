@@ -10,6 +10,22 @@
 - Update or supersede stale statements. Do not leave contradictory directions active.
 - Do not duplicate a rule across files; link to its source of truth.
 
+## Where specifications and delivery records live
+
+There is one specification system: the numbered documents under `docs/`, `PRODUCT.md`, `DESIGN.md` and ADRs. There is no separate spec framework or task-plan directory.
+
+| Record | Lives in | Updated |
+| --- | --- | --- |
+| Acceptance criteria and scenarios | `02-requirements-and-acceptance.md` | Before or with the PR that changes the behaviour |
+| Domain invariants | `03-domain-model.md` | Same |
+| Endpoint DTOs, errors and transports | `06-api-contracts.md` | Same |
+| Block status, dependencies and readiness evidence | `10-roadmap.md` | When a block starts, changes status or finishes |
+| Work plan, PR slicing and open questions for one unit of work | The GitHub issue | During the work |
+| Verification evidence for a change | The PR body | Per PR |
+| Durable decisions | ADRs | When decided |
+
+Execution logs, agent progress files and per-task plans are not committed. OpenSpec (`openspec/`) and `odd/tasks/` were retired on 2026-10-29; their Block 01 and refactor records remain in git history up to commit `97099b6`.
+
 ## Evolving conventions
 
 - Add a convention when the same ambiguity appears more than once or when a tooling decision needs a durable rule for future agents.
