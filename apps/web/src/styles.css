@@ -1,33 +1,92 @@
 @import 'tailwindcss';
 
-:root {
+/* Self-hosted Codex Lithographica fonts (latin subset covers Spanish copy). See DESIGN.md §3. */
+@import '@fontsource/cinzel-decorative/latin-700.css';
+@import '@fontsource/newsreader/latin-400.css';
+@import '@fontsource/newsreader/latin-400-italic.css';
+@import '@fontsource/newsreader/latin-600.css';
+@import '@fontsource/ibm-plex-mono/latin-400.css';
+@import '@fontsource/ibm-plex-mono/latin-600.css';
+
+@theme {
   --color-parchment-base: #fcf9f3;
   --color-parchment-subtle: #f6f3ed;
   --color-parchment-dim: #ede9e1;
+  --color-parchment-dark: #dcdad4;
+
   --color-ink-primary: #191c1b;
   --color-ink-secondary: #424745;
   --color-ink-tertiary: #717876;
+  --color-ink-border: #d4d0c7;
+
   --color-pimenton: #dd4124;
   --color-pimenton-deep: #b33018;
   --color-pimenton-light: #fbeee9;
-  --surface: var(--color-parchment-base);
-  --surface-dim: var(--color-parchment-subtle);
-  --surface-raised: #ffffff;
-  --text-primary: var(--color-ink-primary);
-  --text-secondary: var(--color-ink-secondary);
-  --text-muted: var(--color-ink-tertiary);
-  --text-accent: var(--color-pimenton);
-  --border-muted: rgba(25, 28, 27, 0.14);
-  --border-accent: rgba(221, 65, 36, 0.35);
+  --color-pimenton-border: rgba(221, 65, 36, 0.35);
+
+  --color-gold-halo: #c8963e;
+  --color-iron-blue: #23395d;
+  --color-amber-hidden: #b45309;
+
+  --font-display: 'Cinzel Decorative', Georgia, 'Times New Roman', serif;
+  --font-serif: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+  --default-font-family: var(--font-serif);
+  --default-mono-font-family: var(--font-mono);
+
+  --tracking-ceremonial: 0.22em;
+  --tracking-monumental: 0.35em;
+  --tracking-tightest: -0.03em;
+
+  --shadow-codex-card: 0 4px 20px -2px rgba(25, 28, 27, 0.05), 0 1px 3px 0 rgba(25, 28, 27, 0.03);
+  --shadow-codex-border: 0 0 0 1px rgba(25, 28, 27, 0.12);
 }
 
-body {
-  margin: 0;
-  background: var(--surface);
-  color: var(--text-primary);
+@theme inline {
+  --color-surface: var(--color-parchment-base);
+  --color-surface-dim: var(--color-parchment-subtle);
+  --color-surface-raised: #ffffff;
+  --color-surface-sunken: var(--color-parchment-dim);
+  --color-surface-accent-tint: var(--color-pimenton-light);
+
+  --color-border-muted: rgba(25, 28, 27, 0.14);
+  --color-border-strong: rgba(25, 28, 27, 0.35);
+  --color-border-accent: var(--color-pimenton-border);
+
+  --color-state-canonical: var(--color-pimenton);
+  --color-state-hidden: var(--color-amber-hidden);
+  --color-state-boundary: var(--color-ink-tertiary);
 }
 
-:focus-visible {
-  outline: 3px solid var(--color-pimenton);
-  outline-offset: 3px;
+:root {
+  /* Craft-pass hooks (#17): declared, not yet applied. */
+  --paper-grain-opacity: 0.035;
+  --dither-illustration-color: var(--color-pimenton);
+
+  --duration-fast: 120ms;
+  --duration-normal: 240ms;
+  --duration-slow: 400ms;
+}
+
+@layer base {
+  body {
+    margin: 0;
+    background: var(--color-surface);
+    color: var(--color-ink-primary);
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-pimenton);
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 }

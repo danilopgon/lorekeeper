@@ -11,7 +11,6 @@ import { CampaignApiError } from '../../state/problem-details';
 @Component({
   imports: [FormsModule, RouterLink],
   selector: 'app-campaign-selection-page',
-  styleUrl: './campaign-selection.page.css',
   templateUrl: './campaign-selection.page.html',
 })
 export class CampaignSelectionPage {
