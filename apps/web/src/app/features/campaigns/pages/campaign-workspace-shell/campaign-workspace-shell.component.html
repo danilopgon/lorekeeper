@@ -1,77 +1,58 @@
-<main class="min-h-dvh px-4 py-16 sm:px-8 lg:px-16" aria-labelledby="workspace-heading">
-  <section class="mx-auto max-w-6xl py-12 text-center">
-    <p class="font-mono text-xs tracking-ceremonial text-pimenton-deep uppercase">
-      {{ kicker() }}
-    </p>
-    <h1
-      id="workspace-heading"
-      class="mx-auto my-4 max-w-4xl font-display text-4xl leading-tight font-bold text-balance break-words sm:text-5xl lg:text-6xl"
-    >
-      {{ title() }}
-    </h1>
-    <p class="mx-auto max-w-2xl text-xl text-ink-secondary">
-      Campaign context is loaded from the route before this shell renders any workspace content.
-    </p>
-  </section>
+<main class="mx-auto min-h-dvh max-w-4xl px-4 py-8 sm:px-8" aria-labelledby="workspace-heading">
+  <a class="action-link" routerLink="/campaigns">Todas las campañas</a>
 
-  <section
-    class="mx-auto my-6 max-w-6xl border border-border-muted bg-surface-raised p-5 shadow-codex-card sm:p-8"
-    aria-labelledby="workspace-state-heading"
-  >
-    @if (errorKind() === 'invalid') {
-      <h2 id="workspace-state-heading" class="mb-4 text-3xl">Campaign route is invalid</h2>
+  @if (errorKind() === 'invalid') {
+    <app-page-header heading="Enlace de campaña no válido" headingId="workspace-heading" />
+    <section class="codex-section" aria-label="Estado de la campaña">
       <p class="font-semibold text-pimenton-deep" role="alert">
-        This campaign URL is malformed. Return to the campaign register and choose a campaign.
+        Este enlace no corresponde a ninguna campaña. Vuelve al registro y elige una.
       </p>
-      <a
-        class="mt-4 inline-block border border-pimenton-deep bg-pimenton-deep px-4 py-3 font-mono tracking-widest text-white uppercase no-underline"
-        routerLink="/campaigns"
-      >
-        Back to campaigns
-      </a>
-    } @else if (campaign.isLoading() || !currentCampaign()) {
-      @if (errorKind() === 'notFound') {
-        <h2 id="workspace-state-heading" class="mb-4 text-3xl">Campaign was not found</h2>
-        <p class="font-semibold text-pimenton-deep" role="alert">
-          This campaign does not exist or is no longer available.
-        </p>
+    </section>
+  } @else if (currentCampaign(); as campaign) {
+    <app-page-header [heading]="campaign.name" headingId="workspace-heading">
+      <p class="text-ink-secondary">
+        Creada
+        <time class="font-mono text-sm text-pimenton-deep" [attr.datetime]="campaign.createdAt">{{
+          formatDate(campaign.createdAt)
+        }}</time>
+      </p>
+      <nav class="mt-6 flex justify-center gap-8 text-xl" aria-label="Secciones de la campaña">
         <a
-          class="mt-4 inline-block border border-pimenton-deep bg-pimenton-deep px-4 py-3 font-mono tracking-widest text-white uppercase no-underline"
-          routerLink="/campaigns"
+          class="action-link py-2"
+          [routerLink]="['/campaigns', campaign.id, 'chat']"
+          [attr.aria-current]="workspaceKind() === 'chat' ? 'page' : null"
+          >Chat</a
         >
-          Back to campaigns
-        </a>
-      } @else if (errorKind() === 'recoverable') {
-        <h2 id="workspace-state-heading" class="mb-4 text-3xl">Campaign could not be loaded</h2>
-        <p class="font-semibold text-pimenton-deep" role="alert">
-          Check the connection and retry when the API is available.
-        </p>
-        <button
-          class="mt-4 cursor-pointer border border-pimenton-deep bg-pimenton-deep px-4 py-3 font-mono tracking-widest text-white uppercase"
-          type="button"
-          (click)="campaign.reload()"
+        <a
+          class="action-link py-2"
+          [routerLink]="['/campaigns', campaign.id, 'sources']"
+          [attr.aria-current]="workspaceKind() === 'sources' ? 'page' : null"
+          >Fuentes</a
         >
-          Retry
-        </button>
-      } @else {
-        <h2 id="workspace-state-heading" class="mb-4 text-3xl">Loading campaign…</h2>
-        <p class="text-ink-tertiary" role="status">Resolving campaign context from the URL.</p>
-      }
-    } @else {
-      <h2 id="workspace-state-heading" class="mb-4 text-3xl">
-        {{ currentCampaign()?.name }}
-      </h2>
-      <p class="text-ink-tertiary">Campaign ID: {{ currentCampaign()?.id }}</p>
-      <p>{{ unavailableCopy() }}</p>
-      <p class="text-ink-tertiary">
-        This shell confirms the route boundary only. No future controls are exposed in this slice.
+      </nav>
+    </app-page-header>
+    <section class="codex-section" aria-labelledby="workspace-section-heading">
+      <h2 id="workspace-section-heading" class="mb-3 text-3xl">{{ sectionTitle() }}</h2>
+      <p class="max-w-2xl text-lg text-ink-secondary">{{ unavailableCopy() }}</p>
+    </section>
+  } @else if (errorKind() === 'notFound') {
+    <app-page-header heading="Campaña no encontrada" headingId="workspace-heading" />
+    <section class="codex-section" aria-label="Estado de la campaña">
+      <p class="font-semibold text-pimenton-deep" role="alert">
+        No existe ninguna campaña con este enlace o ya no está disponible.
       </p>
-      <a
-        class="mt-4 inline-block border border-pimenton-deep bg-pimenton-deep px-4 py-3 font-mono tracking-widest text-white uppercase no-underline"
-        routerLink="/campaigns"
-      >
-        Back to campaigns
-      </a>
-    }
-  </section>
+    </section>
+  } @else if (errorKind() === 'recoverable') {
+    <app-page-header heading="No se pudo cargar la campaña" headingId="workspace-heading" />
+    <section class="codex-section" aria-label="Estado de la campaña">
+      <p class="mb-4 font-semibold text-pimenton-deep" role="alert">
+        Comprueba la conexión y vuelve a intentarlo.
+      </p>
+      <button class="action-primary" type="button" (click)="campaign.reload()">Reintentar</button>
+    </section>
+  } @else {
+    <app-page-header heading="Cargando campaña…" headingId="workspace-heading">
+      <p class="text-ink-secondary" role="status">Buscando la campaña de este enlace.</p>
+    </app-page-header>
+  }
 </main>

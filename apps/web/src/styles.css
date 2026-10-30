@@ -34,12 +34,10 @@
   --default-font-family: var(--font-serif);
   --default-mono-font-family: var(--font-mono);
 
+  --tracking-action: 0.1em;
   --tracking-ceremonial: 0.22em;
   --tracking-monumental: 0.35em;
   --tracking-tightest: -0.03em;
-
-  --shadow-codex-card: 0 4px 20px -2px rgba(25, 28, 27, 0.05), 0 1px 3px 0 rgba(25, 28, 27, 0.03);
-  --shadow-codex-border: 0 0 0 1px rgba(25, 28, 27, 0.12);
 }
 
 @theme inline {
@@ -48,6 +46,7 @@
   --color-surface-raised: #ffffff;
   --color-surface-sunken: var(--color-parchment-dim);
   --color-surface-accent-tint: var(--color-pimenton-light);
+  --color-on-accent: var(--color-parchment-base);
 
   --color-border-muted: rgba(25, 28, 27, 0.14);
   --color-border-strong: rgba(25, 28, 27, 0.35);
@@ -69,6 +68,11 @@
 }
 
 @layer base {
+  html,
+  body {
+    overflow-x: clip;
+  }
+
   body {
     margin: 0;
     background: var(--color-surface);
@@ -89,4 +93,89 @@
       transition-duration: 0.01ms !important;
     }
   }
+}
+
+/* Shared native-element primitives. Contracts in DESIGN.md §4. */
+@utility action-primary {
+  display: inline-block;
+  cursor: pointer;
+  border: 1px solid var(--color-pimenton-deep);
+  background: var(--color-pimenton-deep);
+  color: var(--color-on-accent);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: var(--tracking-action);
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 0.75rem 1.25rem;
+  transition:
+    background-color var(--duration-fast),
+    border-color var(--duration-fast);
+
+  &:hover {
+    border-color: var(--color-ink-primary);
+    background: var(--color-ink-primary);
+  }
+
+  &:active {
+    border-color: var(--color-ink-secondary);
+    background: var(--color-ink-secondary);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    border-color: var(--color-ink-border);
+    background: var(--color-parchment-dim);
+    color: var(--color-ink-secondary);
+  }
+}
+
+@utility action-link {
+  cursor: pointer;
+  color: var(--color-pimenton-deep);
+  font-weight: 600;
+  text-decoration-line: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.2em;
+  transition: color var(--duration-fast);
+
+  &:hover {
+    color: var(--color-ink-primary);
+  }
+
+  &[aria-current='page'] {
+    color: var(--color-ink-primary);
+    text-decoration-thickness: 0.15em;
+  }
+}
+
+@utility field-input {
+  min-width: 0;
+  border: 1px solid var(--color-ink-tertiary);
+  background: var(--color-surface);
+  color: var(--color-ink-primary);
+  font-size: 1.125rem;
+  padding: 0.75rem 1rem;
+
+  &[aria-invalid='true'] {
+    border-color: var(--color-pimenton-deep);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    background: var(--color-parchment-dim);
+  }
+}
+
+@utility folio {
+  color: var(--color-pimenton-deep);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  letter-spacing: var(--tracking-ceremonial);
+  text-transform: uppercase;
+}
+
+@utility codex-section {
+  border-top: 1px solid var(--color-border-strong);
+  padding-top: 2rem;
 }

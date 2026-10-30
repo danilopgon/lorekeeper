@@ -1,0 +1,12 @@
+<header class="mx-auto max-w-4xl py-10 text-center">
+  @if (folio(); as folio) {
+    <p class="folio">{{ folio }}</p>
+  }
+  <h1
+    [id]="headingId()"
+    class="my-4 min-w-0 font-display text-4xl leading-tight font-bold text-balance wrap-break-word sm:text-5xl"
+  >
+    {{ heading() }}
+  </h1>
+  <ng-content />
+</header>

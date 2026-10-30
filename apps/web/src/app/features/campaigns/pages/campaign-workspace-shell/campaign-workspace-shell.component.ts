@@ -1,8 +1,10 @@
 import { Component, computed, inject, input, resource } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { PageHeaderComponent } from '../../../../shared/ui/page-header/page-header.component';
 import { CampaignsApiService } from '../../api/campaigns-api.service';
 import { Campaign } from '../../models/campaign.model';
+import { formatCampaignDate } from '../../models/campaign-date';
 import { parseCampaignId } from '../../routing/campaign-id';
 import { CampaignApiError } from '../../state/problem-details';
 
@@ -10,7 +12,7 @@ type WorkspaceKind = 'chat' | 'sources';
 
 /** Route shell that loads campaign context before rendering unavailable workspace capabilities. */
 @Component({
-  imports: [RouterLink],
+  imports: [PageHeaderComponent, RouterLink],
   selector: 'app-campaign-workspace-shell',
   templateUrl: './campaign-workspace-shell.component.html',
 })
@@ -45,17 +47,17 @@ export class CampaignWorkspaceShellComponent {
     return campaign.id === expectedId ? campaign : undefined;
   });
 
-  protected readonly title = computed(() =>
-    this.workspaceKind() === 'chat' ? 'Chat is not available yet' : 'Sources are not available yet',
-  );
-  protected readonly kicker = computed(() =>
-    this.workspaceKind() === 'chat' ? 'Lorekeeper · Chat shell' : 'Lorekeeper · Sources shell',
+  protected readonly sectionTitle = computed(() =>
+    this.workspaceKind() === 'chat'
+      ? 'El chat aún no está disponible'
+      : 'Las fuentes aún no están disponibles',
   );
   protected readonly unavailableCopy = computed(() =>
     this.workspaceKind() === 'chat'
-      ? 'AI chat, source-backed querying, retrieval, citations, conversation history, streaming, and draft persistence are unavailable in this slice.'
-      : 'Ingestion, upload, paste, Notion import, source updates, removal, indexing, retry, progress, and source lifecycle actions are unavailable in this slice.',
+      ? 'Aquí preguntarás por esta campaña y verás de qué notas sale cada respuesta.'
+      : 'Aquí añadirás notas en Markdown o texto y verás en qué estado está cada una.',
   );
+  protected readonly formatDate = formatCampaignDate;
 
   protected errorKind(): 'invalid' | 'notFound' | 'recoverable' | null {
     if (!this.campaignId().valid) {

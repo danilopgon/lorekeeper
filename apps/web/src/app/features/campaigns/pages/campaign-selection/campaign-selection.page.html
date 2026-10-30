@@ -1,44 +1,32 @@
-<main class="min-h-dvh px-4 py-16 sm:px-8 lg:px-16" aria-labelledby="campaigns-heading">
-  <section class="mx-auto max-w-6xl py-12 text-center">
-    <p class="font-mono text-xs tracking-ceremonial text-pimenton-deep uppercase">
-      Lorekeeper · Campaign register
-    </p>
-    <h1
-      id="campaigns-heading"
-      class="mx-auto my-4 max-w-4xl font-display text-4xl leading-tight font-bold text-balance break-words sm:text-5xl lg:text-6xl"
-    >
-      Choose your campaign chronicle
-    </h1>
-    <p class="mx-auto max-w-2xl text-xl text-ink-secondary">
-      Campaign context is required before future notes, questions, Chat, or Sources can be opened.
-      Nothing is selected implicitly.
-    </p>
-  </section>
-
-  <section
-    class="mx-auto my-6 max-w-6xl border border-border-muted bg-surface-raised p-5 shadow-codex-card sm:p-8"
-    aria-labelledby="create-campaign-heading"
+<main class="mx-auto min-h-dvh max-w-4xl px-4 py-12 sm:px-8" aria-labelledby="campaigns-heading">
+  <app-page-header
+    [folio]="campaignCountFolio()"
+    heading="Elige tu crónica"
+    headingId="campaigns-heading"
   >
-    <h2 id="create-campaign-heading" class="mb-4 text-3xl">Create a campaign</h2>
-    <form (ngSubmit)="createCampaign()" novalidate>
-      <label for="campaign-name" class="mb-2 block font-mono text-sm">Campaign name</label>
+    <p class="mx-auto max-w-2xl text-xl text-ink-secondary">
+      Cada nota y cada pregunta pertenecen a una campaña. Elige una o crea otra; nunca se selecciona
+      ninguna por ti.
+    </p>
+  </app-page-header>
+
+  <section class="codex-section" aria-labelledby="create-campaign-heading">
+    <h2 id="create-campaign-heading" class="mb-4 text-3xl">Nueva campaña</h2>
+    <form class="bg-surface-sunken p-5 sm:p-6" (ngSubmit)="createCampaign()" novalidate>
+      <label for="campaign-name" class="mb-2 block text-lg">Nombre de la campaña</label>
       <div class="flex flex-col gap-3 sm:flex-row">
         <input
           id="campaign-name"
           name="campaignName"
           type="text"
-          class="min-w-0 flex-1 border border-ink-tertiary bg-surface px-4 py-3 text-lg text-ink-primary"
+          class="field-input flex-1"
           [(ngModel)]="campaignName"
           [disabled]="creating()"
           [attr.aria-describedby]="nameError() ? 'campaign-name-error' : null"
           [attr.aria-invalid]="nameError() ? 'true' : null"
         />
-        <button
-          type="submit"
-          class="cursor-pointer border border-pimenton-deep bg-pimenton-deep px-4 py-3 font-mono tracking-widest text-white uppercase disabled:cursor-wait disabled:opacity-70"
-          [disabled]="creating()"
-        >
-          {{ creating() ? 'Creating…' : 'Create campaign' }}
+        <button type="submit" class="action-primary whitespace-nowrap" [disabled]="creating()">
+          {{ creating() ? 'Creando…' : 'Crear campaña' }}
         </button>
       </div>
       @if (nameError(); as error) {
@@ -48,66 +36,57 @@
       }
       @if (createRecoverableError()) {
         <p class="mt-3 font-semibold text-pimenton-deep" role="alert">
-          Campaign creation failed. Check the connection and retry.
+          No se pudo crear la campaña. Comprueba la conexión y vuelve a intentarlo.
         </p>
       }
     </form>
   </section>
 
-  <section
-    class="mx-auto my-6 max-w-6xl border border-border-muted bg-surface-raised p-5 shadow-codex-card sm:p-8"
-    aria-labelledby="campaign-list-heading"
-  >
+  <section class="codex-section mt-12" aria-labelledby="campaign-list-heading">
     <div class="mb-4 flex items-center justify-between gap-4">
-      <h2 id="campaign-list-heading" class="text-3xl">Campaigns</h2>
+      <h2 id="campaign-list-heading" class="text-3xl">Campañas</h2>
       @if (campaigns.error()) {
-        <button
-          type="button"
-          class="cursor-pointer border border-pimenton-deep bg-pimenton-deep px-4 py-3 font-mono tracking-widest text-white uppercase"
-          (click)="campaigns.reload()"
-        >
-          Retry
+        <button type="button" class="action-primary" (click)="campaigns.reload()">
+          Reintentar
         </button>
       }
     </div>
 
     @if (campaigns.isLoading()) {
-      <p class="text-ink-tertiary" role="status">Loading campaigns…</p>
+      <p class="text-ink-secondary" role="status">Cargando campañas…</p>
     } @else if (campaigns.error()) {
       <p class="font-semibold text-pimenton-deep" role="alert">
-        Campaigns could not be loaded. Retry when the API is available.
+        No se pudieron cargar las campañas. Vuelve a intentarlo cuando el servidor responda.
       </p>
     } @else if (campaigns.value()?.length === 0) {
-      <p class="text-ink-tertiary" role="status">
-        No campaigns yet. Create one to start a chronicle.
+      <p class="text-ink-secondary" role="status">
+        Aún no hay campañas. Crea una para empezar su crónica.
       </p>
     } @else {
-      <ul class="m-0 grid list-none gap-4 p-0" aria-label="Available campaigns">
+      <ul class="m-0 list-none p-0" aria-label="Campañas disponibles">
         @for (campaign of campaigns.value(); track campaign.id) {
-          <li>
-            <article
-              class="flex flex-col gap-4 border border-border-muted p-4 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div>
-                <h3 class="text-2xl">{{ campaign.name }}</h3>
-                <p class="font-mono text-sm text-ink-tertiary">Created {{ campaign.createdAt }}</p>
-              </div>
-              <nav
-                class="flex flex-wrap gap-3"
-                [attr.aria-label]="campaign.name + ' workspace links'"
+          <li
+            class="flex flex-col gap-3 border-b border-dotted border-border-strong py-4 last:border-b-0 sm:flex-row sm:items-baseline sm:justify-between"
+          >
+            <div class="min-w-0">
+              <h3 class="text-2xl wrap-break-word">{{ campaign.name }}</h3>
+              <p class="text-ink-secondary">
+                Creada
+                <time
+                  class="font-mono text-sm text-pimenton-deep"
+                  [attr.datetime]="campaign.createdAt"
+                  >{{ formatDate(campaign.createdAt) }}</time
+                >
+              </p>
+            </div>
+            <nav class="flex gap-5 text-lg" [attr.aria-label]="'Secciones de ' + campaign.name">
+              <a class="action-link py-2" [routerLink]="['/campaigns', campaign.id, 'chat']"
+                >Chat</a
               >
-                <a
-                  class="font-semibold text-pimenton-deep underline decoration-[0.12em] underline-offset-[0.2em]"
-                  [routerLink]="['/campaigns', campaign.id, 'chat']"
-                  >Open Chat</a
-                >
-                <a
-                  class="font-semibold text-pimenton-deep underline decoration-[0.12em] underline-offset-[0.2em]"
-                  [routerLink]="['/campaigns', campaign.id, 'sources']"
-                  >Open Sources</a
-                >
-              </nav>
-            </article>
+              <a class="action-link py-2" [routerLink]="['/campaigns', campaign.id, 'sources']"
+                >Fuentes</a
+              >
+            </nav>
           </li>
         }
       </ul>
