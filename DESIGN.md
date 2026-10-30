@@ -85,7 +85,7 @@ Reglas:
 | `folio` | `@utility` | Línea de foliación: mono, versales, tracking ceremonial, pimentón profundo. Solo con un dato real ("3 campañas"); se omite si no lo hay. Sin separadores `·` ni `◆` de relleno. |
 | `codex-row` + `codex-margin` | `@utility` | Retícula de página de códice: columna de marginalia (≈1/4, alineada a la derecha en escritorio) para datos y rúbricas (`h2` de sección, fechas, recuento, navegación de sección) junto a la columna de lectura (≈3/4). En móvil la marginalia pasa al flujo, encima de su contenido. |
 | Lenguaje de filetes | `rule-double`, `codex-rule`, punteado | Un solo lenguaje con tres pesos: doble (4 px) bajo el título de página, filete sencillo `border-strong` entre regiones, punteado entre filas. Nunca dos separadores seguidos; nunca tarjeta dentro de tarjeta. |
-| `drop-cap` | `@utility` | Capitular en Cinzel pimentón profundo para la entradilla. Una por página como máximo y solo si hay entradilla; sustituye al folio genérico. |
+| `drop-cap` | `@utility` | Capitular en Cinzel pimentón profundo para la entradilla, solo en escritorio (≥ 48 rem); en móvil ocupa demasiado. Una por página como máximo y solo si hay entradilla. |
 | Barra superior | `app.component.html` | Wordmark "Lorekeeper" en Cinzel, enlace a Campañas, filete inferior. Única pieza de chrome global. |
 | Zona hundida | `bg-surface-sunken` | Una por región cuando agrupa controles (el formulario de creación). |
 | `app-page-header` | `shared/ui/page-header` | Cabecera de página en `codex-row`: en el margen, folio opcional con dato o contenido `[pageHeaderMargin]` (p. ej. fecha de creación); en la columna de lectura, único `h1` en Cinzel con `rule-double` y contenido proyectado (entradilla). |
