@@ -83,10 +83,13 @@ Reglas:
 | `action-link` | `@utility` | Navegación y acciones secundarias. Newsreader 600, pimentón profundo subrayado; hover tinta; `aria-current="page"` en tinta con subrayado grueso. Área táctil ampliada con `py-2` en las navegaciones. |
 | `field-input` | `@utility` | Borde `ink-tertiary` (≥ 3:1), fondo pergamino; `aria-invalid="true"` pasa el borde a pimentón profundo; el error es texto asociado con `aria-describedby`, nunca solo color. Etiqueta visible en Newsreader. |
 | `folio` | `@utility` | Línea de foliación: mono, versales, tracking ceremonial, pimentón profundo. Solo con un dato real ("3 campañas"); se omite si no lo hay. Sin separadores `·` ni `◆` de relleno. |
-| `codex-section` | `@utility` | Región de página: filete superior `border-strong` y aire superior. Sustituye a la tarjeta. Las filas internas se separan con filete punteado `border-muted`/`border-strong`; nunca tarjeta dentro de tarjeta. |
+| `codex-row` + `codex-margin` | `@utility` | Retícula de página de códice: columna de marginalia (≈1/4, alineada a la derecha en escritorio) para datos y rúbricas (`h2` de sección, fechas, recuento, navegación de sección) junto a la columna de lectura (≈3/4). En móvil la marginalia pasa al flujo, encima de su contenido. |
+| Lenguaje de filetes | `rule-double`, `codex-rule`, punteado | Un solo lenguaje con tres pesos: doble (4 px) bajo el título de página, filete sencillo `border-strong` entre regiones, punteado entre filas. Nunca dos separadores seguidos; nunca tarjeta dentro de tarjeta. |
+| `drop-cap` | `@utility` | Capitular en Cinzel pimentón profundo para la entradilla. Una por página como máximo y solo si hay entradilla; sustituye al folio genérico. |
+| Barra superior | `app.component.html` | Wordmark "Lorekeeper" en Cinzel, enlace a Campañas, filete inferior. Única pieza de chrome global. |
 | Zona hundida | `bg-surface-sunken` | Una por región cuando agrupa controles (el formulario de creación). |
-| `app-page-header` | `shared/ui/page-header` | Cabecera de página: folio opcional con dato, único `h1` en Cinzel y contenido proyectado (entradilla, metadatos, navegación de sección). |
-| Cabecera de workspace | `campaign-workspace-shell` | El `h1` es la campaña; debajo, "Creada" + fecha mono y la navegación fija Chat / Fuentes con `aria-current`; enlace "Todas las campañas" arriba. Los estados (cargando, enlace no válido, no encontrada, error recuperable) sustituyen el `h1` por el estado. |
+| `app-page-header` | `shared/ui/page-header` | Cabecera de página en `codex-row`: en el margen, folio opcional con dato o contenido `[pageHeaderMargin]` (p. ej. fecha de creación); en la columna de lectura, único `h1` en Cinzel con `rule-double` y contenido proyectado (entradilla). |
+| Workspace | `campaign-workspace-shell` | El `h1` es la campaña con "Creada" + fecha mono en el margen; la navegación Chat / Fuentes (`aria-current`) y "Todas las campañas" forman la rúbrica de margen de la sección. Los estados (cargando, enlace no válido, no encontrada, error recuperable) sustituyen el `h1` por el estado y conservan el enlace a Campañas. |
 | Fechas | `formatCampaignDate` | Fecha corta en español y UTC (`29 oct 2026`) dentro de `<time datetime>`, en mono pimentón profundo. |
 
 ### Patrones futuros (documentados, no implementados)
@@ -95,7 +98,7 @@ Se implementan en el bloque que posee su capacidad, nunca como controles deshabi
 
 #### A. Frontispicio
 
-Cabecera de página centrada con folio con dato, título Cinzel y una línea de contexto. El craft pass (#17) puede añadir ilustración dither o grabado como acento, oculta del árbol accesible.
+Cabecera alineada a la columna de lectura: dato en el margen, título Cinzel con filete doble y entradilla con capitular. El craft pass (#17) puede añadir ilustración dither o grabado como acento en el margen o bajo la cabecera, oculta del árbol accesible.
 
 #### B. Veredicto del Oráculo (bloques condicionales según evidencia)
 No es obligatorio mostrar los tres bloques en cada respuesta. Se muestran solo los que correspondan a la evidencia recuperada.

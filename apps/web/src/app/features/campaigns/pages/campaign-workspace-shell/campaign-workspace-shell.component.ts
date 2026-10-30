@@ -58,6 +58,18 @@ export class CampaignWorkspaceShellComponent {
       : 'Aquí añadirás notas en Markdown o texto y verás en qué estado está cada una.',
   );
   protected readonly formatDate = formatCampaignDate;
+  protected readonly stateHeading = computed(() => {
+    switch (this.errorKind()) {
+      case 'invalid':
+        return 'Enlace de campaña no válido';
+      case 'notFound':
+        return 'Campaña no encontrada';
+      case 'recoverable':
+        return 'No se pudo cargar la campaña';
+      default:
+        return 'Cargando campaña…';
+    }
+  });
 
   protected errorKind(): 'invalid' | 'notFound' | 'recoverable' | null {
     if (!this.campaignId().valid) {

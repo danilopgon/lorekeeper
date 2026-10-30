@@ -1,6 +1,6 @@
 import { Component, input } from '@angular/core';
 
-/** Codex page header: an optional fact-bearing folio line, the display title and projected lead content. */
+/** Codex page header: margin facts (folio or `[pageHeaderMargin]` content) beside the display title and projected lead content. */
 @Component({
   selector: 'app-page-header',
   templateUrl: './page-header.component.html',

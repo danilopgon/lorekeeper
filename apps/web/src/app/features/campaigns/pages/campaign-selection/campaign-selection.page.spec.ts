@@ -120,9 +120,7 @@ describe('CampaignSelectionPage', () => {
 
   function folio(): string | null {
     return (
-      (fixture.nativeElement as HTMLElement)
-        .querySelector('header > p.folio')
-        ?.textContent?.trim() ?? null
+      (fixture.nativeElement as HTMLElement).querySelector('p.folio')?.textContent?.trim() ?? null
     );
   }
 

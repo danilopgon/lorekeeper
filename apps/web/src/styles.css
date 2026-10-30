@@ -175,7 +175,43 @@
   text-transform: uppercase;
 }
 
-@utility codex-section {
+/* Codex page: a marginalia column for facts and rubrics beside the reading column. */
+@utility codex-row {
+  display: grid;
+  row-gap: 0.75rem;
+
+  @media (width >= 48rem) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
+    column-gap: 2.5rem;
+  }
+}
+
+@utility codex-margin {
+  min-width: 0;
+
+  @media (width >= 48rem) {
+    text-align: right;
+  }
+}
+
+@utility codex-rule {
   border-top: 1px solid var(--color-border-strong);
-  padding-top: 2rem;
+  padding-top: 1.75rem;
+}
+
+@utility rule-double {
+  border-bottom: 4px double var(--color-ink-primary);
+  padding-bottom: 1rem;
+}
+
+@utility drop-cap {
+  &::first-letter {
+    float: left;
+    color: var(--color-pimenton-deep);
+    font-family: var(--font-display);
+    font-size: 3.4em;
+    font-weight: 700;
+    line-height: 0.8;
+    padding: 0.08em 0.12em 0 0;
+  }
 }

@@ -1,18 +1,18 @@
-<main class="mx-auto min-h-dvh max-w-4xl px-4 py-12 sm:px-8" aria-labelledby="campaigns-heading">
+<main class="mx-auto min-h-dvh max-w-5xl px-4 pb-16 sm:px-8" aria-labelledby="campaigns-heading">
   <app-page-header
     [folio]="campaignCountFolio()"
     heading="Elige tu crónica"
     headingId="campaigns-heading"
   >
-    <p class="mx-auto max-w-2xl text-xl text-ink-secondary">
+    <p class="drop-cap max-w-2xl text-xl text-ink-secondary">
       Cada nota y cada pregunta pertenecen a una campaña. Elige una o crea otra; nunca se selecciona
       ninguna por ti.
     </p>
   </app-page-header>
 
-  <section class="codex-section" aria-labelledby="create-campaign-heading">
-    <h2 id="create-campaign-heading" class="mb-4 text-3xl">Nueva campaña</h2>
-    <form class="bg-surface-sunken p-5 sm:p-6" (ngSubmit)="createCampaign()" novalidate>
+  <section class="codex-row codex-rule" aria-labelledby="create-campaign-heading">
+    <h2 id="create-campaign-heading" class="codex-margin text-2xl">Nueva campaña</h2>
+    <form class="min-w-0 bg-surface-sunken p-5 sm:p-6" (ngSubmit)="createCampaign()" novalidate>
       <label for="campaign-name" class="mb-2 block text-lg">Nombre de la campaña</label>
       <div class="flex flex-col gap-3 sm:flex-row">
         <input
@@ -42,54 +42,59 @@
     </form>
   </section>
 
-  <section class="codex-section mt-12" aria-labelledby="campaign-list-heading">
-    <div class="mb-4 flex items-center justify-between gap-4">
-      <h2 id="campaign-list-heading" class="text-3xl">Campañas</h2>
+  <section class="codex-row codex-rule mt-12" aria-labelledby="campaign-list-heading">
+    <div class="codex-margin">
+      <h2 id="campaign-list-heading" class="text-2xl">Campañas</h2>
       @if (campaigns.error()) {
-        <button type="button" class="action-primary" (click)="campaigns.reload()">
+        <button type="button" class="action-primary mt-4" (click)="campaigns.reload()">
           Reintentar
         </button>
       }
     </div>
 
-    @if (campaigns.isLoading()) {
-      <p class="text-ink-secondary" role="status">Cargando campañas…</p>
-    } @else if (campaigns.error()) {
-      <p class="font-semibold text-pimenton-deep" role="alert">
-        No se pudieron cargar las campañas. Vuelve a intentarlo cuando el servidor responda.
-      </p>
-    } @else if (campaigns.value()?.length === 0) {
-      <p class="text-ink-secondary" role="status">
-        Aún no hay campañas. Crea una para empezar su crónica.
-      </p>
-    } @else {
-      <ul class="m-0 list-none p-0" aria-label="Campañas disponibles">
-        @for (campaign of campaigns.value(); track campaign.id) {
-          <li
-            class="flex flex-col gap-3 border-b border-dotted border-border-strong py-4 last:border-b-0 sm:flex-row sm:items-baseline sm:justify-between"
-          >
-            <div class="min-w-0">
-              <h3 class="text-2xl wrap-break-word">{{ campaign.name }}</h3>
-              <p class="text-ink-secondary">
-                Creada
-                <time
-                  class="font-mono text-sm text-pimenton-deep"
-                  [attr.datetime]="campaign.createdAt"
-                  >{{ formatDate(campaign.createdAt) }}</time
+    <div class="min-w-0">
+      @if (campaigns.isLoading()) {
+        <p class="text-ink-secondary" role="status">Cargando campañas…</p>
+      } @else if (campaigns.error()) {
+        <p class="font-semibold text-pimenton-deep" role="alert">
+          No se pudieron cargar las campañas. Vuelve a intentarlo cuando el servidor responda.
+        </p>
+      } @else if (campaigns.value()?.length === 0) {
+        <p class="text-ink-secondary" role="status">
+          Aún no hay campañas. Crea una para empezar su crónica.
+        </p>
+      } @else {
+        <ul class="m-0 list-none p-0" aria-label="Campañas disponibles">
+          @for (campaign of campaigns.value(); track campaign.id) {
+            <li
+              class="flex flex-col gap-2 border-b border-dotted border-border-strong py-4 first:pt-0 last:border-b-0 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6"
+            >
+              <div class="min-w-0">
+                <h3 class="text-2xl wrap-break-word">{{ campaign.name }}</h3>
+                <p class="text-ink-secondary">
+                  Creada
+                  <time
+                    class="font-mono text-sm text-pimenton-deep"
+                    [attr.datetime]="campaign.createdAt"
+                    >{{ formatDate(campaign.createdAt) }}</time
+                  >
+                </p>
+              </div>
+              <nav
+                class="flex shrink-0 gap-5 text-lg"
+                [attr.aria-label]="'Secciones de ' + campaign.name"
+              >
+                <a class="action-link py-2" [routerLink]="['/campaigns', campaign.id, 'chat']"
+                  >Chat</a
                 >
-              </p>
-            </div>
-            <nav class="flex gap-5 text-lg" [attr.aria-label]="'Secciones de ' + campaign.name">
-              <a class="action-link py-2" [routerLink]="['/campaigns', campaign.id, 'chat']"
-                >Chat</a
-              >
-              <a class="action-link py-2" [routerLink]="['/campaigns', campaign.id, 'sources']"
-                >Fuentes</a
-              >
-            </nav>
-          </li>
-        }
-      </ul>
-    }
+                <a class="action-link py-2" [routerLink]="['/campaigns', campaign.id, 'sources']"
+                  >Fuentes</a
+                >
+              </nav>
+            </li>
+          }
+        </ul>
+      }
+    </div>
   </section>
 </main>
