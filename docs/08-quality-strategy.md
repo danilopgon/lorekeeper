@@ -166,7 +166,7 @@ Use at least two campaigns with overlapping NPC names. Test retrieval/citations,
 
 ## Evaluation sequencing
 
-Create fixed questions and expected sources before block 05. Measure lexical/vector baselines in 05 and fusion/reranking in 06. Block 07 consolidates measured regression thresholds; it is not the first evaluation activity. Live-provider variability must not be labelled deterministic.
+Create fixed questions and expected sources before block 05A. Measure the lexical baseline in 05A, the vector baseline in 05B and fusion/reranking in 06. Block 07 consolidates measured regression thresholds; it is not the first evaluation activity. Live-provider variability must not be labelled deterministic.
 
 Offline Python experiments may help compare embeddings, rerankers or batching strategies, but the committed product baseline remains the source of truth. Any result used to justify a production dependency must be reproducible from versioned inputs and configuration.
 

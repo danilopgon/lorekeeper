@@ -139,8 +139,9 @@ OpenTelemetry remains the system-wide observability baseline. An LLM-focused pla
 
 - **03:** NaN adapter configuration, supported chat/embedding models, dimensions, budgets, timeouts, retries and failure behaviour; verify compatibility before locking settings.
 - **04:** Notion root per campaign, supported block types, canonical schema, structural chunking limits, tables, source removal, idempotency and job lifecycle. Preserve knowledge status; unknown is not confirmed canon.
-- **Before 05:** fixed corpus and expected-source questions, including overlapping NPC names in different campaigns. Record baseline results before adding regression thresholds.
-- **05:** FTS language, vector representation/index compatibility, candidate limits and retrieval parameters. Decide whether Python experiments are useful for comparing embedding alternatives; they are not required for the product path.
+- **Before 05A:** fixed corpus and expected-source questions, including overlapping NPC names in different campaigns. Record baseline results before adding regression thresholds.
+- **05A:** FTS language/configuration, ranking, snippet and locator contract, candidate limits.
+- **05B:** vector representation/index compatibility, embedding model and candidate limits. Decide whether Python experiments are useful for comparing embedding alternatives; they are not required for the product path.
 - **06:** RRF settings, reranker decision, context budget/truncation, citation schema, contradictory/insufficient evidence and response transport. Compare provider/local/no-reranker options with committed evaluation cases before adding runtime complexity. Define whether any structured current-state context is in scope rather than assuming all Lazy Lands features exist here.
 - **07:** measured thresholds and tolerances; distinguish frozen reproducible fixtures from live-provider evals. Decide whether an AI-specific observability platform adds sufficient value beyond the OpenTelemetry baseline.
 

@@ -6,13 +6,10 @@ This document protects the current scope from attractive distractions.
 
 | Idea | Why it may matter | Revisit when | Constraints |
 | --- | --- | --- | --- |
-| `[idea]` | `[value]` | `[real trigger]` | `[cost/risk]` |
+| Codex Lithographica craft pass (#17): dithered imagery, restrained texture, optical refinement | Gives the product its intended visual finish | After the DS slices (#8) deliver fonts, tokens and primitives; maintainer-led | Decoration stays out of the accessibility tree and never obscures content or captures pointer input; ship exported assets, no runtime image tooling |
+| Future product components: `OracleVerdictCard`, `IngestionDropzone`, `SourceStatusRow`, `MarginaliaColumn`, session indicators, indexed-source counters, campaign filters, campaign artwork, archive actions | Patterns already sketched in design references | The block that owns the capability (04A Sources, 05A search, 06 Chat) | Do not render them as disabled placeholders before their capability exists |
 
-Deferred means **not part of the active roadmap**. Do not scaffold it.
-
-## Intentional non-goals
-
-- **[Non-goal]:** [why it does not fit].
+Deferred means **not part of the active roadmap**. Do not scaffold it. Optional engineering spikes (#18–#22) are positioned in the roadmap's non-blocking evaluations.
 
 ## Rejected ideas
 
