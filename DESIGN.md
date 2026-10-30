@@ -92,6 +92,22 @@ Reglas:
 | Workspace | `campaign-workspace-shell` | El `h1` es la campaña con "Creada" + fecha mono en el margen; la navegación Chat / Fuentes (`aria-current`) y "Todas las campañas" forman la rúbrica de margen de la sección. Los estados (cargando, enlace no válido, no encontrada, error recuperable) sustituyen el `h1` por el estado y conservan el enlace a Campañas. |
 | Fechas | `formatCampaignDate` | Fecha corta en español y UTC (`29 oct 2026`) dentro de `<time datetime>`, en mono pimentón profundo. |
 
+### Reglas de la marginalia
+
+1. El margen solo lleva datos, localizadores, rúbricas y navegación de sección; nunca decoración sola.
+2. Cada nota del margen se alinea con lo que anota (cabecera, fila, párrafo, fragmento) y en el DOM va junto a ese contenido, de modo que el orden de lectura siga siendo correcto.
+3. En móvil la marginalia pasa al flujo: la rúbrica encima de su contenido y la cita debajo. Nada queda accesible solo al pasar el ratón.
+4. Texto del margen en Newsreader (rúbricas, etiquetas) o Plex Mono (datos), en pimentón profundo o tinta secundaria, siempre por encima de AA.
+5. Solo se pinta un hueco cuando su bloque existe. Usos previstos: estado y fecha de cada fuente (04A), localizador de cada fragmento (05A), rúbrica de evidencia y cita de cada párrafo (06).
+
+### Extensiones para el craft pass (#17)
+
+- **Dónde:** viñeta del frontispicio del registro (columna de margen o banda bajo el filete doble) y estados vacíos. En móvil se reduce o se omite. Sin arte por campaña hasta que esa capacidad tenga alcance propio.
+- **Formato:** imágenes exportadas (Dither Boy / Script Slayer) a 1 bit con transparencia, PNG o SVG; el ASCII se exporta como imagen, nunca como texto vivo.
+- **Color:** `mask-image` con `background: var(--dither-illustration-color)`, para recolorear con tokens sin reexportar.
+- **Render:** `image-rendering: pixelated` a escala entera, medidas fijas (sin saltos de layout), `aria-hidden` y `pointer-events: none`.
+- **Textura:** una sola familia por página (grano de papel con `--paper-grain-opacity`); el tramado de una imagen pertenece a la imagen.
+
 ### Patrones futuros (documentados, no implementados)
 
 Se implementan en el bloque que posee su capacidad, nunca como controles deshabilitados de relleno: `OracleVerdictCard` (06), citas (06), `IngestionDropzone` y `SourceStatusRow` (04A), búsqueda (05A), `MarginaliaColumn`, ilustración de frontispicio y textura (#17). Ver `docs/11-backlog.md`.
