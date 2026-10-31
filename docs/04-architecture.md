@@ -10,7 +10,7 @@ CQRS means commands and queries have distinct use cases and models. Campaign use
 
 ```text
 Angular 22
-    ↓ generated OpenAPI client
+    ↓ generated OpenAPI types and Zod schemas
 ASP.NET Core API
     ↓
 Functional modules / vertical slices
@@ -101,10 +101,10 @@ Query   → Handler → Read model / projection
 - Standalone components and lazy feature routes.
 - Keep Angular artifact suffixes (`*.component.*`, `*.service.ts`, etc.) as configured in `apps/web/angular.json`; see `docs/conventions/angular.md`.
 - Signals for local synchronous state; `computed` for derived state.
-- `resource`/`httpResource` for remote state when the API and lifecycle fit.
+- Remote data follows ADR-006: `httpResource` queries and `HttpClient` commands in each feature's `api/` folder.
 - Zoneless change detection and `OnPush`-compatible patterns.
 - Domain components before generic abstractions.
-- Generated OpenAPI client at the transport boundary; map DTOs when the UI needs its own model.
+- Generated OpenAPI types and Zod schemas at the transport boundary; map DTOs when the UI needs its own model.
 - Semantic HTML, Angular ARIA or CDK for behaviour that native HTML cannot provide cleanly.
 
 ## Contract flow
@@ -112,12 +112,12 @@ Query   → Handler → Read model / projection
 ```text
 ASP.NET endpoint contracts
         ↓ OpenAPI
-generated TypeScript client
-        ↓ adapter / facade
+generated TypeScript types + Zod schemas
+        ↓ feature queries / commands (ADR-006)
 Angular feature model
 ```
 
-The generated client is never edited manually. CI fails when a contract change leaves generated code stale.
+Generated files are never edited manually. CI fails when a contract change leaves the committed OpenAPI document or generated code stale (see `06`).
 
 ## AI and retrieval boundary
 

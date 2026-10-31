@@ -12,7 +12,7 @@ Test behaviour at the cheapest layer that provides confidence. Most tests live b
 | Application unit | xUnit, NSubstitute | Command/query orchestration and failure paths |
 | Angular unit/component | Vitest, Angular Testing Library | Signals, rendering, interaction and accessible behaviour |
 | Backend integration | WebApplicationFactory, Testcontainers, PostgreSQL/pgvector | HTTP pipeline, EF mappings, migrations, FTS and vector queries |
-| Contract | OpenAPI snapshot/diff, generated TypeScript client | Angular ↔ API compatibility |
+| Contract | Committed OpenAPI document diff, generated TypeScript types and Zod schemas | Angular ↔ API compatibility |
 | End-to-end | Playwright | Critical user journeys only |
 | AI evaluations | Versioned dataset and reproducible repository runner(s) | Retrieval, fusion, reranking and grounded generation |
 
@@ -56,7 +56,7 @@ If Python tooling is introduced:
 - GitHub Actions as the CI platform.
 - Conventional Commits enforced in CI and locally once scaffolded, using commitlint plus Husky/lint-staged or equivalent JavaScript tooling.
 - Docker Compose PostgreSQL 17 for local development; Testcontainers should match required PostgreSQL extensions for automated integration tests.
-- OpenAPI generation and breaking-change detection.
+- OpenAPI generation and contract-diff gate; breaking-change detection when a public API version exists (see `06`).
 - Dependabot/Renovate or equivalent dependency updates.
 - Dependency and container vulnerability scanning in CI.
 - OpenTelemetry for traces, metrics and structured logs.
@@ -140,7 +140,7 @@ Adapt script names to the repository during scaffold, then replace this block wi
 - [ ] Acceptance criteria have test or review evidence.
 - [ ] Applicable format, lint, build and test gates pass.
 - [ ] Integration tests exercise every changed external/persistence boundary.
-- [ ] OpenAPI and generated client are in sync.
+- [ ] Committed OpenAPI document and generated TypeScript output are in sync.
 - [ ] Retrieval/eval baselines do not regress beyond the agreed tolerance.
 - [ ] Accessibility states and keyboard flow were checked for UI changes.
 - [ ] Security, ownership, observability and failure behaviour were reviewed.

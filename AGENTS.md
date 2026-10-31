@@ -22,7 +22,7 @@ The GM retains control over campaign canon; retrieved preparation is not automat
 | Backend | ASP.NET Core/.NET 10, C#, vertical slices, pragmatic CQRS |
 | Database | PostgreSQL 17, EF Core, pgvector where semantic retrieval is required |
 | AI | Microsoft.Extensions.AI behind project-owned ports; OpenAI-compatible providers |
-| Contracts | OpenAPI with a generated TypeScript client |
+| Contracts | OpenAPI with generated TypeScript types and Zod schemas |
 | Frontend QA | Vitest, Angular Testing Library, Playwright |
 | Backend QA | xUnit, FluentAssertions, NSubstitute, WebApplicationFactory, Testcontainers |
 

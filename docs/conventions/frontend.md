@@ -2,13 +2,35 @@
 
 ## Angular async boundaries
 
-- Feature API adapters expose `Promise<T>` methods for one-shot HTTP request/response operations.
-- Route and page reads consume adapter promises through Angular `resource`.
-- UI commands and mutations may wrap adapter promises with RxJS `from(...)` in the page/component layer.
-- Command flows use extracted success/error handlers, `finalize(...)`, and `takeUntilDestroyed(...)` when subscribing.
-- API adapters do not expose Observables unless a future use case is genuinely streaming or multi-emission.
+Remote data follows the query/command split in [ADR-006](../decisions/ADR-006-frontend-cqrs-data-access.md). Each feature keeps it in `api/`:
 
-This keeps transport mapping simple while allowing command handlers to use familiar RxJS orchestration in UI code.
+```text
+features/<feature>/api/
+├── <feature>.queries.ts            # inject<Noun>Query functions
+├── <feature>-commands.service.ts   # <Feature>Commands with <verb><Noun> methods
+└── <feature>-api-error.ts          # transport errors → feature API error
+```
+
+- **Queries** are `inject<Noun>Query(...)` functions (`injectCampaignListQuery()`, `injectCampaignQuery(campaignId)`). They wrap one GET in `httpResource` with `parse: z<Dto>.parse`, take parameters as signals (an `undefined` value means no request) and are called from component field initializers.
+- **Commands** are `<verb><Noun>` methods on a stateless `<Feature>Commands` service (`createCampaign(request)`). They call `HttpClient`, validate the response with the generated schema and return a `Promise`.
+- Types and Zod schemas come from `shared/api/generated/`; never hand-write DTO guards or edit generated files.
+- Commands throw the feature API error; pages expose query errors already mapped through a `computed`. Templates never see `HttpErrorResponse` or `ZodError`.
+- The code that runs a command reloads the queries it affects (`resource.reload()`).
+- Components use `async`/`await` for commands and only `value()`, `isLoading()`, `error()` and `reload()` from queries. They never inject `HttpClient` or build URLs.
+- API code does not expose Observables unless a future use case is genuinely streaming or multi-emission.
+
+```ts
+export class CampaignSelectionPage {
+  private readonly commands = inject(CampaignCommands);
+  protected readonly campaigns = injectCampaignListQuery();
+
+  protected async create(name: string) {
+    const campaign = await this.commands.createCampaign({ name });
+    this.campaigns.reload();
+    // navigate to the new campaign
+  }
+}
+```
 
 ## Styling
 
@@ -26,7 +48,7 @@ This keeps transport mapping simple while allowing command handlers to use famil
 
 ## API origins and environments
 
-- Frontend API adapters build URLs from `environment.apiBaseUrl`.
+- Feature queries and commands build URLs from `environment.apiBaseUrl`.
 - The default value is an empty string, so production assumes the API is available under the same origin unless a deployment-specific build replaces it.
 - Local development keeps `apiBaseUrl` empty and uses the Angular dev-server proxy (`proxy.conf.json`) for `/api` requests.
 - Internet-facing deployment is blocked until the deployment slice chooses and verifies the API origin, CORS policy, private-access/authentication boundary, and OWASP-aligned hardening. Do not weaken CORS or expose the API publicly as a convenience for frontend wiring.
