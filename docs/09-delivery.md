@@ -59,7 +59,7 @@ After the block 00 scaffold is committed, protect `main` and use feature branche
 
 1. Restore/install from lockfiles.
 2. Run format, lint, typecheck, build and unit tests.
-3. Generate OpenAPI and verify the TypeScript client.
+3. Regenerate the OpenAPI document and TypeScript output and fail on uncommitted differences.
 4. Run integration tests against Testcontainers.
 5. Run deterministic AI evals when introduced and critical Playwright flows from `apps/web/e2e`.
 6. Run applicable reproducible AI-workbench checks only after that tooling exists and owns a changed capability.
