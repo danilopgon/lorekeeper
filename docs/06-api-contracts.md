@@ -10,11 +10,21 @@
 
 ## Source of truth and client generation
 
-ASP.NET endpoint contracts generate OpenAPI. Block 01 uses a narrow handwritten Angular campaign adapter behind the feature boundary; Block 02 owns generated TypeScript client automation and its contract-diff workflow.
+ASP.NET endpoint contracts generate OpenAPI. Block 01 uses a narrow handwritten Angular campaign adapter behind the feature boundary; Block 02 replaces it with generated contract artefacts and a contract-diff gate. Decisions recorded 2026-10-31:
 
-- Never hand-edit generated files when generation is introduced.
-- Commit generated output only if the repository chooses that strategy consistently.
-- Block 02 must make CI regeneration and unexpected-diff handling executable.
+| Concern | Decision |
+| --- | --- |
+| Document generation | `Microsoft.AspNetCore.OpenApi` (.NET 10 built-in) describes the API. `Microsoft.Extensions.ApiDescription.Server` writes the document at build time, so generation must not need a running database or secrets. |
+| Document location | `services/api/openapi/v1.json`, committed. |
+| Error schema | 4xx responses declare `ProblemDetails` with the `code` extension used by the frontend error mapping. |
+| Runtime exposure | `/openapi/v1.json` and Swagger UI (`Swashbuckle.AspNetCore.SwaggerUI`, reading that document) are mapped only when the environment is `Development`. No other environment serves either. |
+| TypeScript generator | `@hey-api/openapi-ts` with the `@hey-api/typescript` and `zod` plugins only: types and Zod schemas, no SDK, client or framework plugin. Pinned to an exact version while it is 0.x. |
+| Generated output | `apps/web/src/app/shared/api/generated/`, committed. |
+| Frontend use | Queries and commands consume the generated types and schemas as defined in [ADR-006](decisions/ADR-006-frontend-cqrs-data-access.md). |
+| Contract-diff policy | CI rebuilds the API, regenerates the document and the TypeScript output, and fails if either differs from the committed files. Contract changes are therefore reviewed as diffs in the PR. |
+
+- Never hand-edit generated files.
+- Automated breaking-change detection (for example `oasdiff`) is not required while the API has a single same-origin consumer; add it with a public API version.
 - Breaking changes require an explicit migration or versioning decision.
 
 ## Campaign DTOs

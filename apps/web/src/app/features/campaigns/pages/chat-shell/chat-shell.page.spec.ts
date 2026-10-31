@@ -30,7 +30,7 @@ describe('ChatShellPage', () => {
     fixture.detectChanges();
 
     expect((fixture.nativeElement as HTMLElement).textContent).toContain(
-      'Chat is not available yet',
+      'El chat aún no está disponible',
     );
   });
 });

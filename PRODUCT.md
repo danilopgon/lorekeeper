@@ -15,6 +15,8 @@ Select a campaign → ingest its configured notes → inspect ingestion outcome 
 
 The first implementation slice is narrower: create or select a campaign and enter an empty campaign workspace with Chat and Sources routes. It does not include ingestion, AI chat, retrieval, citations or campaign deletion.
 
+The first useful version follows: import Markdown/text notes and pasted text into a campaign, then search them and open the matching source fragments, without AI-generated answers. Grounded answers in Chat build on that evidence.
+
 Exact screen design, API schemas, knowledge-status representation and generation acceptance criteria remain subject to their roadmap entry gates. This flow does not authorize additional features.
 
 ## Boundaries

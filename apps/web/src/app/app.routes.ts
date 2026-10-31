@@ -5,7 +5,11 @@ import { SourcesShellPage } from './features/campaigns/pages/sources-shell/sourc
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'campaigns' },
-  { path: 'campaigns', component: CampaignSelectionPage },
-  { path: 'campaigns/:campaignId/chat', component: ChatShellPage },
-  { path: 'campaigns/:campaignId/sources', component: SourcesShellPage },
+  { path: 'campaigns', title: 'Campañas — Lorekeeper', component: CampaignSelectionPage },
+  { path: 'campaigns/:campaignId/chat', title: 'Chat — Lorekeeper', component: ChatShellPage },
+  {
+    path: 'campaigns/:campaignId/sources',
+    title: 'Fuentes — Lorekeeper',
+    component: SourcesShellPage,
+  },
 ];
