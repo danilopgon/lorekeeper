@@ -8,9 +8,8 @@ Apply the blocking Definition of Ready in `08-quality-strategy.md` before every 
 
 ## Current focus
 
-- **Done:** Definition, 00, 01.
-- **In progress:** DS — frontend design-system foundation (#8). It gates new UI work, starting with 04A Sources screens.
-- **Ready to start in parallel:** 02 — generated OpenAPI client, once its entry decisions are recorded in `06`. It touches no UI and does not wait for DS.
+- **Done:** Definition, 00, 01, DS.
+- **Next:** 02 — generated OpenAPI client, once its entry decisions are recorded in `06`. It is the remaining dependency of 04A Sources.
 - **First useful version target:** 05A — the operator can import Markdown/text notes into a campaign and search them with source-backed fragments, without an LLM.
 
 ## Sequence
@@ -22,7 +21,7 @@ Block IDs are kept for traceability with issues and history; the order column is
 | — | Definition | Product and scope | none | Personal multicampaign boundaries, first slice, non-goals and observable acceptance in PRODUCT, 00–03 | First slice passes Definition of Ready | Done |
 | — | 00 | Skeleton and CI | Definition | Runtime/package versions, layout, E2E location, commands and CI tools in 04/08/09 | Scaffold builds; checks run; AGENTS commands updated | Done |
 | — | 01 | Angular → .NET → PostgreSQL slice | 00 | Campaign schema/invariants, URL campaign selection, DTOs/errors, minimal UI states in 02/03/06/DESIGN | First flow and database isolation tests pass | Done |
-| 1 | DS | Frontend design-system foundation (#8) | 01 | Approved in #8: self-hosted fonts and delivery (2026-10-01); Hallmark audit outcomes (2026-10-30); Spanish UI copy (ADR-005) | Fonts load locally; tokens generate Tailwind v4 utilities; current screens use shared primitives and states; Spanish UI with `lang="es"`; accessibility review recorded | In progress |
+| 1 | DS | Frontend design-system foundation (#8) | 01 | Approved in #8: self-hosted fonts and delivery (2026-10-01); Hallmark audit outcomes (2026-10-30); Spanish UI copy (ADR-005) | Fonts load locally; tokens generate Tailwind v4 utilities; current screens use shared primitives and states; Spanish UI with `lang="es"`; accessibility review recorded | Done |
 | 1 | 02 | Generated OpenAPI client | 01 | Build-time OpenAPI document generation (none exists yet), generator, output location/versioning and contract-diff policy in 06 | Client generation and CI contract-diff gate run; Campaign adapter consumes the generated client | Not started |
 | 2 | 04A | Sources: Markdown/text and pasted text | 01, 02, DS | Upload/paste limits, canonical document schema, knowledge status, structural chunking, job lifecycle/progress/retry, identity/version publication, removal and private-data policy in 02/03/05/06/07/12; persistence pattern for Sources (#18) and command validation approach (#22) | Supported inputs imported per campaign; partial failure, update, removal and campaign isolation verified against PostgreSQL; initial eval fixtures committed | Not started |
 | 3 | 05A | Lexical source search (FTS) | 04A | FTS language/configuration, ranking and snippet/locator contract, search placement in the workspace (12/DESIGN), initial eval corpus with expected sources | Campaign-scoped search returns fragments with real locators; lexical baseline (Recall@K/MRR) recorded; no cross-campaign leakage | Not started |
@@ -59,7 +58,7 @@ These spikes are optional engineering experiments. None blocks a block unless th
 | #18 Campaign repository boundary | Decided during 04A design | Sources needs atomic version publication, a real transactional boundary. Choose the persistence pattern there; refactor Campaigns only if the same pattern is adopted. No preventive refactor. |
 | #22 FluentValidation | Decided during 04A design | 04A introduces the next commands. Until then current domain-result validation is retained. |
 | #21 Chat streaming transport | Before 06 Definition of Ready | 03 may define a transport-agnostic async stream port. |
-| #19 Vite+ / Oxlint / Oxfmt | After 05A, or earlier only if frontend tooling becomes a measured pain | Must not change build/lint/test scripts while DS is in progress. Settle before #20 if it changes scripts. |
+| #19 Vite+ / Oxlint / Oxfmt | After 05A, or earlier only if frontend tooling becomes a measured pain | Settle before #20 if it changes scripts. |
 | #20 Aspire AppHost | After 05A | More value once the system has more resources (AI provider, background jobs). Not a prerequisite for 03. |
 | #17 Codex Lithographica craft pass | After DS slices; maintainer-led | Does not block any block. |
 
@@ -86,7 +85,7 @@ OpenTelemetry remains the default system-wide observability stack. Langfuse or a
 - **Definition — Done.** First slice is campaign creation/selection plus empty Chat and Sources shells (`PRODUCT`, `00`, `02`); Campaign fields and invariants in `03`; endpoints, DTOs and errors in `06`. No blocker remains.
 - **00 — Done.** pnpm, Node 24.15+, .NET 10, Angular 22, Tailwind, GitHub Actions, Docker Compose PostgreSQL 17, Playwright in `apps/web/e2e` and Conventional Commits are recorded in `04`, `08` and `09`. Evidence: frontend format/lint/test/build/E2E, backend restore/format/build/test and commitlint passed locally.
 - **01 — Done.** US-01 in `02`, Campaign invariants in `03` and contracts in `06` define the slice. Evidence: UUID/name/timestamp invariants, PostgreSQL persistence with case-insensitive uniqueness, three campaign endpoints with RFC 7807 codes, Angular campaign selection plus URL-scoped Chat/Sources shells and Playwright creation/navigation flows; full frontend and backend gates passed. The original Block 01 design recorded English UI copy; ADR-005 supersedes it. The retired OpenSpec change for this block remains in git history up to commit `97099b6`.
-- **DS — In progress.** Decisions approved in #8 (fonts, language and delivery on 2026-10-01; Hallmark audit outcomes on 2026-10-30) and recorded in `DESIGN.md` and ADR-005. Slices 1–3 are implemented together in one PR; exit evidence is recorded when it merges. Remaining blocker: none.
+- **DS — Done.** Decisions approved in #8 (fonts, language and delivery on 2026-10-01; Hallmark audit outcomes on 2026-10-30) and recorded in `DESIGN.md` and ADR-005. Slices 1–3 merged together in #29 on 2026-10-30. Evidence: five self-hosted font faces load from local `/media/*.woff2`; Tailwind v4 `@theme` tokens generate utilities; register and workspace use shared primitives and route states; Spanish copy with `lang="es"`, per-route titles and API error codes mapped to Spanish; accessibility review in #29 (verified contrast pairs, visible keyboard focus, field-associated errors, enlarged tap areas, reduced motion, no overflow at 390 px); format, lint, 27 unit tests, build and 2 E2E flows against PostgreSQL passed.
 - **02 — Not started.** Required before starting: OpenAPI document generation approach, generator, generated output location/versioning and contract-diff policy recorded in `06`.
 
 ## Cross-cutting gates
