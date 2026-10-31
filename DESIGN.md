@@ -1,186 +1,135 @@
 # DESIGN.md — Lorekeeper UI System: Codex Lithographica (Future Medieval)
 
-> **Source of Truth** para el sistema de diseño de Lorekeeper.  
-> Combina la solemnidad de los frontispicios litográficos renacentistas (*The Green Knight*, especímenes de *Deondor* y *Runsholy*) con la precisión analítica y tipográfica de un códice medieval asistido por terminal (*Newsreader* + *IBM Plex Mono*).
+> **Source of Truth** para el sistema de diseño de Lorekeeper.
+> Un códice leído por una máquina: la solemnidad de los frontispicios litográficos (*The Green Knight*) y la precisión de un terminal (*Newsreader* + *IBM Plex Mono*). Dentro del Future Medieval se sitúa en la rama sobria y tecnológica (referencias: teenage engineering EP–1320 medieval, Dither Boy / Script Slayer), no en la maximalista de blackletter y ornamento denso.
 
 ---
 
 ## 1. Principios de Diseño
 
-1. **Light-First / Codex Pergamino:** Fondo marfil litográfico cálido (`--surface: #fcf9f3`) que emula papel impreso con textura tenue (2–4%), huyendo deliberadamente del "gris dashboard corporativo".
-2. **Trilogía Tipográfica Canónica:**
-   - **Display / Monumental:** *Cinzel Decorative* / *Bodoni Moda* con tracking ceremonial y serifas afiladas incisas para frontispicios, títulos de campaña y encabezados principales.
-   - **Editorial / Prosa:** *Newsreader* para respuestas del oráculo, transcripciones y notas de mesa. Alta legibilidad literaria.
-   - **Datos / Máquina:** *IBM Plex Mono* para metadatos, números de línea (`L. 84`), referencias de folio (`Fol. 14v`, `§ 14.B`), insignias y comandos de terminal.
-3. **Color Semántico Litográfico:** 
-   - El estado positivo o veredicto afirmativo utiliza **Pimentón / Bermellón Terracota** (`#dd4124`), no verde de dashboard SaaS.
-   - Púrpura/azul litográfico antiguo (`#23395d` o tintas ferrogálicas) y ocres dorados para ornatos y distinciones secundarias.
-4. **Marginalia y Foliación:** La información contextual vive en los márgenes exteriores (foliación, referencias cruzadas, glifos xilográficos) respetando el ritmo de un incunable.
+1. **Light-First / Codex Pergamino:** un único fondo de pergamino (`#fcf9f3`) sobre el que se compone todo; la estructura la dan filetes de tinta, no tarjetas. Huye deliberadamente del "gris dashboard corporativo" y de las cajas blancas con sombra.
+2. **Trilogía Tipográfica Canónica** (§3):
+   - **Display / Monumental:** *Cinzel Decorative* solo para títulos de página (`h1`).
+   - **Editorial / Prosa:** *Newsreader* para lectura, subtítulos, etiquetas de formulario y enlaces.
+   - **Datos / Máquina:** *IBM Plex Mono* para datos reales (fechas, recuentos, identificadores, localizadores `L. 84`) y para la acción principal. Es la capa "cifras digitales" del EP–1320.
+3. **Color Semántico Litográfico:** pimentón para acción, acento y estado afirmativo, nunca verde de SaaS. Hierro azul y oro para distinciones secundarias. La paleta, sola, se lee como el look "crema + serif + terracota" que se asocia a lo generado; la identidad la dan la tipografía, la estructura de códice y la imagen del craft pass (#17).
+4. **Marginalia y Foliación con dato:** la foliación y la información contextual aportan un hecho (cuántas campañas, qué campaña, qué localizador). Una línea de folio sin dato es decoración y no se usa.
+5. **Sobriedad:** ornamento, textura e ilustración son herramientas opcionales del craft pass (#17), no un requisito de cada pantalla.
 
 ---
 
-## 2. Design Tokens (CSS Variables)
+## 2. Design Tokens
 
-```css
-:root {
-  /* =========================================
-     Color Primitives (--color-*)
-     ========================================= */
-  --color-parchment-base: #fcf9f3;
-  --color-parchment-subtle: #f6f3ed;
-  --color-parchment-dim: #ede9e1;
-  --color-parchment-dark: #dcdad4;
+Implementados en `apps/web/src/styles.css` como variables de tema de Tailwind v4 (`@theme` para primitivos, `@theme inline` para semánticos que referencian otros tokens). Cada token `--color-*` genera utilidades (`bg-*`, `text-*`, `border-*`).
 
-  --color-ink-primary: #191c1b;
-  --color-ink-secondary: #424745;
-  --color-ink-tertiary: #717876;
-  --color-ink-border: #d4d0c7;
+| Grupo | Token | Valor | Uso |
+| --- | --- | --- | --- |
+| Pergamino | `parchment-base` / `-subtle` / `-dim` / `-dark` | `#fcf9f3` / `#f6f3ed` / `#ede9e1` / `#dcdad4` | Fondo, zonas hundidas, estados deshabilitados |
+| Tinta | `ink-primary` / `-secondary` / `-tertiary` / `-border` | `#191c1b` / `#424745` / `#717876` / `#d4d0c7` | Texto, texto secundario, bordes de campo |
+| Pimentón | `pimenton` / `-deep` / `-light` / `-border` | `#dd4124` / `#b33018` / `#fbeee9` / `rgba(221,65,36,.35)` | Acento grande y foco / acción y texto de acento / tinte / borde |
+| Secundarios | `gold-halo`, `iron-blue`, `amber-hidden` | `#c8963e`, `#23395d`, `#b45309` | Ornato, distinciones, asimetría de conocimiento |
+| Superficie | `surface`, `surface-dim`, `surface-sunken`, `surface-accent-tint` | pergamino base / subtle / dim / pimentón light | Fondo único; una zona hundida por región que lo necesite |
+| Superficie | `surface-raised` | `#ffffff` | Reservado (p. ej. un futuro panel de cita). No es el contenedor por defecto |
+| Sobre acento | `on-accent` | pergamino base | Texto sobre pimentón profundo (no blanco puro) |
+| Filetes | `border-muted`, `border-strong`, `border-accent` | tinta 14 %, tinta 35 %, pimentón borde | Separadores punteados, filetes de sección |
+| Estado | `state-canonical`, `state-hidden`, `state-boundary` | pimentón, ámbar, tinta terciaria | Bloques de evidencia (§4.B) |
+| Tracking | `tracking-action`, `-ceremonial`, `-monumental`, `-tightest` | `0.1em`, `0.22em`, `0.35em`, `-0.03em` | Botón principal, folio, rótulos, ajuste óptico |
+| Movimiento | `--duration-fast` / `-normal` / `-slow` | 120 / 240 / 400 ms | Solo color y opacidad; anulado con `prefers-reduced-motion` |
+| Craft (#17) | `--paper-grain-opacity`, `--dither-illustration-color` | `0.035`, pimentón | Declarados, aún sin aplicar |
 
-  --color-pimenton: #dd4124;
-  --color-pimenton-deep: #b33018;
-  --color-pimenton-light: #fbeee9;
-  --color-pimenton-border: rgba(221, 65, 36, 0.35);
+No hay sombras de contenedor: la profundidad se expresa con filetes y la zona hundida.
 
-  --color-gold-halo: #c8963e;
-  --color-iron-blue: #23395d;
+### Combinaciones de contraste verificadas (WCAG 2.2)
 
-  /* =========================================
-     Semantic Tokens
-     ========================================= */
-  --surface: var(--color-parchment-base);
-  --surface-dim: var(--color-parchment-subtle);
-  --surface-raised: #ffffff;
-  --surface-sunken: var(--color-parchment-dim);
-  --surface-accent-tint: var(--color-pimenton-light);
-
-  --text-primary: var(--color-ink-primary);
-  --text-secondary: var(--color-ink-secondary);
-  --text-muted: var(--color-ink-tertiary);
-  --text-accent: var(--color-pimenton);
-  --text-on-accent: #ffffff;
-
-  --border-muted: rgba(25, 28, 27, 0.14);
-  --border-strong: rgba(25, 28, 27, 0.35);
-  --border-accent: var(--color-pimenton-border);
-
-  --state-canonical: var(--color-pimenton);
-  --state-hidden: #b45309; /* Ámbar oscuro para secretos/asimetría */
-  --state-boundary: #717876; /* Gris neutro para límites de evidencia */
-
-  /* Dither & Texture */
-  --paper-grain-opacity: 0.035;
-  --dither-illustration-color: var(--color-pimenton);
-
-  /* Motion */
-  --duration-fast: 120ms;
-  --duration-normal: 240ms;
-  --duration-slow: 400ms;
-}
-```
+| Texto / elemento | Fondo | Ratio | Uso permitido |
+| --- | --- | ---: | --- |
+| `ink-primary` | pergamino base | 16.34 | Todo |
+| `ink-secondary` | pergamino base / dim | 9.01 / 7.82 | Texto secundario a cualquier tamaño |
+| `ink-tertiary` | pergamino base | 4.30 | Solo texto grande (≥ 24 px, o 18.66 px en negrita) y bordes de campo (≥ 3:1) |
+| `pimenton-deep` | pergamino base / dim | 5.96 / 5.17 | Texto de acento, errores, enlaces, datos mono |
+| `pimenton` | pergamino base | 4.12 | Solo texto grande, foco (3 px) y elementos no textuales |
+| `on-accent` | `pimenton-deep` | 5.96 | Botón principal |
+| `on-accent` | `ink-primary` / `ink-secondary` | 16.34 / 9.01 | Botón principal en hover / active |
+| `ink-secondary` | `parchment-dim` | 7.82 | Botón deshabilitado |
 
 ---
 
-## 3. Configuración para Tailwind CSS (`tailwind.config.js`)
+## 3. Tipografía e integración con Tailwind v4
 
-Referencia de mapeo de paleta, tipografías y sombras. Antes del scaffold, verificar y adaptar su sintaxis a la versión de Tailwind elegida, conservando los tokens y la dirección visual. Este ejemplo no fija una versión ni exige implementar modo oscuro:
+Fuentes servidas con la aplicación (sin CDN) desde paquetes `@fontsource` versionados en `apps/web/package.json` (licencia SIL OFL 1.1 incluida en cada paquete). Solo el subconjunto `latin`, que cubre el español, y `font-display: swap`.
 
-```javascript
-/** @type {import('tailwindcss').Config} */
-module.exports = {
-  darkMode: 'class',
-  theme: {
-    extend: {
-      colors: {
-        parchment: {
-          50: '#ffffff',
-          100: '#fcf9f3', // Base surface
-          200: '#f6f3ed', // Subtle container
-          300: '#ede9e1', // Dim/sunken
-          400: '#dcdad4',
-          500: '#c5c2bb',
-        },
-        ink: {
-          DEFAULT: '#191c1b',
-          light: '#424745',
-          muted: '#717876',
-          border: '#d4d0c7',
-        },
-        pimenton: {
-          DEFAULT: '#dd4124',
-          hover: '#b33018',
-          light: '#fbeee9',
-          border: 'rgba(221, 65, 36, 0.35)',
-        },
-        iron: {
-          blue: '#23395d',
-        },
-        halo: {
-          gold: '#c8963e',
-        }
-      },
-      fontFamily: {
-        display: ['"Cinzel Decorative"', '"Bodoni Moda"', 'Cinzel', 'serif'],
-        serif: ['Newsreader', 'Georgia', 'serif'],
-        mono: ['"IBM Plex Mono"', 'Menlo', 'monospace'],
-      },
-      letterSpacing: {
-        ceremonial: '0.22em',
-        monumental: '0.35em',
-        tightest: '-0.03em',
-      },
-      boxShadow: {
-        'codex-card': '0 4px 20px -2px rgba(25, 28, 27, 0.05), 0 1px 3px 0 rgba(25, 28, 27, 0.03)',
-        'codex-border': '0 0 0 1px rgba(25, 28, 27, 0.12)',
-      },
-      borderWidth: {
-        'hairline': '0.75px',
-      }
-    },
-  },
-  plugins: [],
-}
-```
+| Rol | Familia | Pesos / estilos cargados | Token / utilidad | Fallback |
+| --- | --- | --- | --- | --- |
+| Display (`h1`) | Cinzel Decorative | 700 | `--font-display` / `font-display` | Georgia, Times New Roman, serif |
+| Lectura y UI | Newsreader | 400, 400 italic, 600 | `--font-serif` / `font-serif` (fuente por defecto) | Georgia, Times New Roman, serif |
+| Datos y acción | IBM Plex Mono | 400, 600 | `--font-mono` / `font-mono` | ui-monospace, Menlo, Consolas, monospace |
+
+Reglas:
+
+- Una familia por rol. Bodoni Moda queda como alternativa de diseño no cargada; no se añade blackletter.
+- Cinzel Decorative es casi toda versal: no se aplica `uppercase` ni tracking ceremonial a los títulos, y se adaptan con `text-balance` y `wrap-break-word`.
+- Mono solo para datos reales y la acción principal; nunca para etiquetas de formulario ni para enlaces.
+- Para añadir un peso, se importa su `latin-<peso>.css` en `styles.css` y se documenta aquí.
 
 ---
 
-## 4. Patrones de Componentes (Component Tokens & Patterns)
+## 4. Componentes y patrones
 
-### A. Frontispicio / Título Monumental
-```html
-<div class="text-center py-6 border-b border-ink/10">
-  <div class="font-mono text-[10px] tracking-ceremonial text-pimenton uppercase">
-    Folio 14R · Crónica Canónica
-  </div>
-  <h1 class="font-display text-4xl lg:text-5xl font-bold tracking-ceremonial uppercase text-ink mt-2">
-    La Corona de Ceniza
-  </h1>
-  <div class="font-mono text-[9px] tracking-monumental text-ink-muted uppercase mt-2">
-    ◆ Registro de Campaña · Anales de Valen ◆
-  </div>
-</div>
-```
+### Implementados
 
-### B. Veredicto del Oráculo (Bloques condicionales según evidencia)
+| Pieza | Dónde | Contrato |
+| --- | --- | --- |
+| `action-primary` | `@utility` en `styles.css` | Acción principal de una región (`button`, o `a` solo si la acción navega a un flujo). Mono 600, versales, `tracking-action`, pimentón profundo con `on-accent`; hover tinta, active tinta secundaria; deshabilitado por tres canales (fondo, tinta, cursor) más el atributo `disabled`. Una sola por región. |
+| `action-link` | `@utility` | Navegación y acciones secundarias. Newsreader 600, pimentón profundo subrayado; hover tinta; `aria-current="page"` en tinta con subrayado grueso. Área táctil ampliada con `py-2` en las navegaciones. |
+| `field-input` | `@utility` | Borde `ink-tertiary` (≥ 3:1), fondo pergamino; `aria-invalid="true"` pasa el borde a pimentón profundo; el error es texto asociado con `aria-describedby`, nunca solo color. Etiqueta visible en Newsreader. |
+| `folio` | `@utility` | Línea de foliación: mono, versales, tracking ceremonial, pimentón profundo. Solo con un dato real ("3 campañas"); se omite si no lo hay. Sin separadores `·` ni `◆` de relleno. |
+| `codex-row` + `codex-margin` | `@utility` | Retícula de página de códice: columna de marginalia (≈1/4, alineada a la derecha en escritorio) para datos y rúbricas (`h2` de sección, fechas, recuento, navegación de sección) junto a la columna de lectura (≈3/4). En móvil la marginalia pasa al flujo, encima de su contenido. |
+| Lenguaje de filetes | `rule-double`, `codex-rule`, punteado | Un solo lenguaje con tres pesos: doble (4 px) bajo el título de página, filete sencillo `border-strong` entre regiones, punteado entre filas. Nunca dos separadores seguidos; nunca tarjeta dentro de tarjeta. |
+| `drop-cap` | `@utility` | Capitular en Cinzel pimentón profundo para la entradilla, solo en escritorio (≥ 48 rem); en móvil ocupa demasiado. Una por página como máximo y solo si hay entradilla. |
+| Barra superior | `app.component.html` | Wordmark "Lorekeeper" en Cinzel, enlace a Campañas, filete inferior. Única pieza de chrome global. |
+| Zona hundida | `bg-surface-sunken` | Una por región cuando agrupa controles (el formulario de creación). |
+| `app-page-header` | `shared/ui/page-header` | Cabecera de página en `codex-row`: en el margen, folio opcional con dato o contenido `[pageHeaderMargin]` (p. ej. fecha de creación); en la columna de lectura, único `h1` en Cinzel con `rule-double` y contenido proyectado (entradilla). |
+| Workspace | `campaign-workspace-shell` | El `h1` es la campaña con "Creada" + fecha mono en el margen; la navegación Chat / Fuentes (`aria-current`) y "Todas las campañas" forman la rúbrica de margen de la sección. Los estados (cargando, enlace no válido, no encontrada, error recuperable) sustituyen el `h1` por el estado y conservan el enlace a Campañas. |
+| Fechas | `formatCampaignDate` | Fecha corta en español y UTC (`29 oct 2026`) dentro de `<time datetime>`, en mono pimentón profundo. |
+
+### Reglas de la marginalia
+
+1. El margen solo lleva datos, localizadores, rúbricas y navegación de sección; nunca decoración sola.
+2. Cada nota del margen se alinea con lo que anota (cabecera, fila, párrafo, fragmento) y en el DOM va junto a ese contenido, de modo que el orden de lectura siga siendo correcto.
+3. En móvil la marginalia pasa al flujo: la rúbrica encima de su contenido y la cita debajo. Nada queda accesible solo al pasar el ratón.
+4. Texto del margen en Newsreader (rúbricas, etiquetas) o Plex Mono (datos), en pimentón profundo o tinta secundaria, siempre por encima de AA.
+5. Solo se pinta un hueco cuando su bloque existe. Usos previstos: estado y fecha de cada fuente (04A), localizador de cada fragmento (05A), rúbrica de evidencia y cita de cada párrafo (06).
+
+### Extensiones para el craft pass (#17)
+
+- **Dónde:** viñeta del frontispicio del registro (columna de margen o banda bajo el filete doble) y estados vacíos. En móvil se reduce o se omite. Sin arte por campaña hasta que esa capacidad tenga alcance propio.
+- **Formato:** imágenes exportadas (Dither Boy / Script Slayer) a 1 bit con transparencia, PNG o SVG; el ASCII se exporta como imagen, nunca como texto vivo.
+- **Color:** `mask-image` con `background: var(--dither-illustration-color)`, para recolorear con tokens sin reexportar.
+- **Render:** `image-rendering: pixelated` a escala entera, medidas fijas (sin saltos de layout), `aria-hidden` y `pointer-events: none`.
+- **Textura:** una sola familia por página (grano de papel con `--paper-grain-opacity`); el tramado de una imagen pertenece a la imagen.
+
+### Patrones futuros (documentados, no implementados)
+
+Se implementan en el bloque que posee su capacidad, nunca como controles deshabilitados de relleno: `OracleVerdictCard` (06), citas (06), `IngestionDropzone` y `SourceStatusRow` (04A), búsqueda (05A), `MarginaliaColumn`, ilustración de frontispicio y textura (#17). Ver `docs/11-backlog.md`.
+
+#### A. Frontispicio
+
+Cabecera alineada a la columna de lectura: dato en el margen, título Cinzel con filete doble y entradilla con capitular. El craft pass (#17) puede añadir ilustración dither o grabado como acento en el margen o bajo la cabecera, oculta del árbol accesible.
+
+#### B. Veredicto del Oráculo (bloques condicionales según evidencia)
 No es obligatorio mostrar los tres bloques en cada respuesta. Se muestran solo los que correspondan a la evidencia recuperada.
 
-1. **Hecho Canónico (`border-l-2 border-pimenton`):** Solo hechos que las fuentes acrediten como ocurridos; una nota de preparación no basta. Resaltados de entidad clave en negrita y color `text-pimenton`.
-2. **Asimetría en Mesa (`bg-amber-500/10 border-l-2 border-amber-600`):** Solo cuando las fuentes acrediten la diferencia entre conocimiento del DJ, jugadores o PJ. La ausencia de una mención no demuestra desconocimiento.
-3. **Límite de Información (`bg-ink/5 border-l-2 border-ink-muted`):** Transparencia epistémica donde las notas no detallan el hecho sin inventar datos.
+1. **Hecho Canónico** (`border-l-2 border-pimenton`): solo hechos que las fuentes acrediten como ocurridos; una nota de preparación no basta. Resaltados de entidad en negrita `text-pimenton-deep`.
+2. **Asimetría en Mesa** (`bg-amber-hidden/10 border-l-2 border-amber-hidden`): solo cuando las fuentes acrediten la diferencia entre conocimiento del DJ, jugadores o PJ. La ausencia de una mención no demuestra desconocimiento.
+3. **Límite de Información** (`bg-ink-primary/5 border-l-2 border-ink-tertiary`): transparencia epistémica donde las notas no detallan el hecho, sin inventar datos.
 
-### C. Cápsula de Entrada y Búsqueda (Oráculo Input)
-- Bordes limpios, tipografía *Newsreader* para la consulta humana, botón de acción en bloque pimentón pleno con tipografía monospace en mayúsculas:
-```html
-<button class="bg-pimenton hover:bg-pimenton-hover text-white font-mono text-xs uppercase tracking-ceremonial px-6 py-3 transition-colors">
-  Buscar en Notas ⚲
-</button>
-```
+#### C. Consulta (entrada del oráculo)
+Campo `field-input` con la consulta en Newsreader y una `action-primary`.
 
-### D. Citas y Atribución a Archivos
-- Fichas en contenedor `bg-parchment-200 border border-ink/10 rounded-sm p-3`.
-- Nombre de archivo: `font-mono text-xs text-pimenton font-semibold`.
-- Fragmento citado: `font-serif text-xs italic text-ink-light`.
-- Localizador: `font-mono text-[10px] text-ink-muted` (`L. 84`, `Fol. 14v`).
-
+#### D. Citas y atribución a archivos
+- Nombre de archivo: `font-mono text-sm text-pimenton-deep font-semibold`.
+- Fragmento citado: `font-serif italic text-ink-secondary`.
+- Localizador: `font-mono text-sm text-ink-secondary` (`L. 84`, `Fol. 14v`), solo si existe (§5).
 
 ---
 
@@ -218,6 +167,8 @@ Cada flujo define inicial/vacío, carga, éxito, validación, error recuperable 
 
 ## 9. Regla de implementación y decisiones pendientes
 
-Antes de implementar una pantalla, revisar este documento, el flujo UX y la pantalla existente más cercana. Preparar y verificar una lista de campos, copy, estados, composición, tokens, componentes, responsive, teclado y movimiento.
+Antes de implementar una pantalla, revisar este documento, el flujo UX y la pantalla existente más cercana. Preparar y verificar campos, copy, estados, composición, tokens, componentes, responsive, teclado y movimiento, y pasar `docs/conventions/frontend-design-review.md`.
 
-La dirección Codex Lithographica y sus tokens quedan adoptados. Siguen pendientes por slice: componentes detallados, escalas de espaciado/tamaño, foco y estados de error, ajustes de contraste, estrategia de carga tipográfica y mapeo al tooling elegido. Light-first no exige modo oscuro en la PoC. La semántica de evidencia y los contratos se cierran según los bloqueos SDD del roadmap.
+Copy visible en español, en registro práctico de mesa (ADR-005). La estética monumental es visual; los verbos son llanos ("Crear campaña", no "Consagrar campaña").
+
+Resuelto por #8: carga tipográfica, mapeo a Tailwind v4, contraste verificado, superficies, foliación y primitivas actuales. Pendiente por slice: composición, medidas y breakpoints de cada pantalla futura; textura, ilustración y ajuste óptico pertenecen al craft pass (#17). Light-first no exige modo oscuro en la PoC. La semántica de evidencia y los contratos se cierran según los bloqueos del roadmap.

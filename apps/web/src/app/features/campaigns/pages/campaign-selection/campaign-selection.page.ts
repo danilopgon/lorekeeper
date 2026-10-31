@@ -1,17 +1,18 @@
-import { Component, DestroyRef, effect, inject, resource, signal } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, resource, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { finalize, from } from 'rxjs';
+import { PageHeaderComponent } from '../../../../shared/ui/page-header/page-header.component';
 import { CampaignsApiService } from '../../api/campaigns-api.service';
 import { Campaign } from '../../models/campaign.model';
+import { formatCampaignDate } from '../../models/campaign-date';
 import { CampaignApiError } from '../../state/problem-details';
 
 /** Campaign selection and creation route for the Block 01 workspace entry point. */
 @Component({
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, PageHeaderComponent, RouterLink],
   selector: 'app-campaign-selection-page',
-  styleUrl: './campaign-selection.page.css',
   templateUrl: './campaign-selection.page.html',
 })
 export class CampaignSelectionPage {
@@ -28,6 +29,14 @@ export class CampaignSelectionPage {
   protected readonly campaigns = resource<Campaign[], unknown>({
     loader: () => this.campaignsApi.listCampaigns(),
   });
+  protected readonly campaignCountFolio = computed(() => {
+    const count = this.campaigns.hasValue() ? this.campaigns.value().length : 0;
+    if (count === 0) {
+      return undefined;
+    }
+    return count === 1 ? '1 campaña' : `${count} campañas`;
+  });
+  protected readonly formatDate = formatCampaignDate;
 
   constructor() {
     effect(() => {
@@ -58,11 +67,11 @@ export class CampaignSelectionPage {
       });
   }
 
-  /** Maps adapter field errors to English form copy. */
+  /** Maps stable API field error codes to Spanish form copy. */
   protected fieldErrorMessage(code: 'campaign_name_invalid' | 'campaign_name_conflict'): string {
     return code === 'campaign_name_conflict'
-      ? 'A campaign with this name already exists.'
-      : 'Enter a campaign name between 1 and 120 characters.';
+      ? 'Ya existe una campaña con ese nombre.'
+      : 'Escribe un nombre de entre 1 y 120 caracteres.';
   }
 
   private startCreate(): void {

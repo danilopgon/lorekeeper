@@ -22,7 +22,7 @@ The GM retains control over campaign canon; retrieved preparation is not automat
 | Backend | ASP.NET Core/.NET 10, C#, vertical slices, pragmatic CQRS |
 | Database | PostgreSQL 17, EF Core, pgvector where semantic retrieval is required |
 | AI | Microsoft.Extensions.AI behind project-owned ports; OpenAI-compatible providers |
-| Contracts | OpenAPI with a generated TypeScript client |
+| Contracts | OpenAPI with generated TypeScript types and Zod schemas |
 | Frontend QA | Vitest, Angular Testing Library, Playwright |
 | Backend QA | xUnit, FluentAssertions, NSubstitute, WebApplicationFactory, Testcontainers |
 
@@ -149,6 +149,10 @@ Reach for a better name, smaller function, typed boundary or test name before a 
 Before starting any implementation block, apply the Definition of Ready in `docs/08-quality-strategy.md` and its entry criteria in `docs/10-roadmap.md`. An unresolved decision required by that block means **Blocked**: record the question, affected document and unblock condition. Do not invent product decisions from placeholders. Independent ready work may proceed. Update specifications before implementation when behaviour changes.
 
 The current release is a personal, single-operator installation supporting multiple campaigns. All campaign data and retrieval are explicitly scoped by `campaignId`. This is data isolation, not authentication. Do not scaffold accounts, teams, invitations or multiuser permissions. ADR-002 selects Cloudflare Access with explicit email allowlisting and One-Time PIN authentication as the future remote-access boundary. Local development may proceed without application login; exposing UI or API on the Internet remains blocked until Access protects both surfaces, direct-origin bypass is prevented and deployment smoke evidence is recorded. See `docs/07-data-security-and-rls.md` and `docs/decisions/ADR-002-cloudflare-access-personal-deployment.md`.
+
+## Persist plans and specs in the existing system
+
+When a change is planned or a spec is produced, by hand or through any skill or tool (brainstorming, plan writers, spec generators), the last step is to persist its durable content where `docs/conventions/documentation.md` says it lives: acceptance criteria in `docs/02`, invariants in `docs/03`, contracts in `docs/06`, status and dependencies in `docs/10-roadmap.md`, the work plan in the GitHub issue, decisions in an ADR. Do not leave it only in chat or in a skill's default output location (for example `docs/superpowers/` or a `plans/` folder), and do not introduce a parallel spec or task-plan directory.
 
 Command tables must reflect verified scaffold commands. A placeholder never counts as a completed specification. Conventional Commits are enforced by CI plus local hooks.
 

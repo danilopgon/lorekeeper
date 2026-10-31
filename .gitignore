@@ -66,3 +66,6 @@ Thumbs.db
 # Local Pi runtime state
 .atl/
 .pi/
+
+# Hallmark audit artefacts (screenshots, before/after records)
+.hallmark/

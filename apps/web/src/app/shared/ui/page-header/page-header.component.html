@@ -1,0 +1,17 @@
+<header class="codex-row pt-8 pb-8">
+  <div class="codex-margin md:pt-3">
+    @if (folio(); as folio) {
+      <p class="folio">{{ folio }}</p>
+    }
+    <ng-content select="[pageHeaderMargin]" />
+  </div>
+  <div class="min-w-0">
+    <h1
+      [id]="headingId()"
+      class="rule-double mb-5 min-w-0 font-display text-4xl leading-tight font-bold text-balance wrap-break-word sm:text-5xl"
+    >
+      {{ heading() }}
+    </h1>
+    <ng-content />
+  </div>
+</header>

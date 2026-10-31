@@ -4,41 +4,67 @@
 
 `Not started` · `In progress` · `Blocked` · `Done`.
 
-Apply the blocking Definition of Ready in `08-quality-strategy.md` before every block. Dependencies are necessary but not sufficient: resolve the entry decisions below in their owning documents. Record evidence and status here before coding. Unknowns on another block's path do not block independent ready work.
+Apply the blocking Definition of Ready in `08-quality-strategy.md` before every block. Dependencies are necessary but not sufficient: resolve the entry decisions below in their owning documents. Record status and readiness evidence here; the work plan lives in the block's GitHub issue and verification evidence in each PR (see `conventions/documentation.md`). Unknowns on another block's path do not block independent ready work.
 
-## Current block
+## Current focus
 
-**Block:** 01 — Angular → .NET → PostgreSQL slice
-**Status:** Done
-**Outcome:** campaign creation/selection plus empty campaign workspace shells, delivered through chained review slices.
+- **Done:** Definition, 00, 01, DS.
+- **Ready:** 02 — generated OpenAPI contract and frontend CQRS data access (`06`, ADR-006). It is the remaining dependency of 04A Sources.
+- **First useful version target:** 05A — the operator can import Markdown/text notes into a campaign and search them with source-backed fragments, without an LLM.
 
-Definition remains Done: personal single-operator use, multiple isolated campaigns, no multiuser scaffolding, access control required before Internet exposure. First slice: campaign creation/selection plus empty campaign workspace shell with Chat and Sources routes, without ingestion or AI. Minimal campaign fields are `id`, `name`, `createdAt` and `updatedAt`; `name` is required, trimmed, 1–120 characters and unique case-insensitively. Active campaign is represented in the URL: `/campaigns`, `/campaigns/{campaignId}/chat`, `/campaigns/{campaignId}/sources`. Campaign deletion is excluded from the first slice.
+## Sequence
 
-Block 00 readiness decisions are recorded in `04`, `08` and `09`: pnpm, Node 24.15+, .NET 10, Angular 22, Tailwind aligned to `DESIGN.md`, GitHub Actions, Docker Compose PostgreSQL 17, Playwright E2E in `apps/web/e2e`, and Conventional Commits enforced through CI plus local hooks. Python/AI evaluation workbench remains planned for later and is not an active block 00 dependency or check. ADR-002 now selects Cloudflare Access for the future personal remote-access boundary; implementation and verification remain deferred to the deployment gate.
+Block IDs are kept for traceability with issues and history; the order column is the execution order. Revised 2026-10-29 (see [revision notes](#revision-2026-10-29)).
 
-Block 00 exit evidence: pnpm workspace, Angular 22/Tailwind frontend, Playwright in `apps/web/e2e`, .NET 10 API/test solution, Docker Compose PostgreSQL 17, GitHub Actions and Conventional Commit hooks are scaffolded. Local checks have passed for frontend format/lint/test/build/E2E, backend restore/format/build/test and commitlint.
+| Order | Block | Outcome | Depends on | Required decisions before implementation | Exit evidence | Status |
+| ---: | --- | --- | --- | --- | --- | --- |
+| — | Definition | Product and scope | none | Personal multicampaign boundaries, first slice, non-goals and observable acceptance in PRODUCT, 00–03 | First slice passes Definition of Ready | Done |
+| — | 00 | Skeleton and CI | Definition | Runtime/package versions, layout, E2E location, commands and CI tools in 04/08/09 | Scaffold builds; checks run; AGENTS commands updated | Done |
+| — | 01 | Angular → .NET → PostgreSQL slice | 00 | Campaign schema/invariants, URL campaign selection, DTOs/errors, minimal UI states in 02/03/06/DESIGN | First flow and database isolation tests pass | Done |
+| 1 | DS | Frontend design-system foundation (#8) | 01 | Approved in #8: self-hosted fonts and delivery (2026-10-01); Hallmark audit outcomes (2026-10-30); Spanish UI copy (ADR-005) | Fonts load locally; tokens generate Tailwind v4 utilities; current screens use shared primitives and states; Spanish UI with `lang="es"`; accessibility review recorded | Done |
+| 1 | 02 | Generated OpenAPI contract | 01 | Recorded in 06 and ADR-006 (2026-10-31): build-time OpenAPI document, Development-only Swagger UI, hey-api types and Zod schemas, committed output and contract-diff policy; frontend query/command split | OpenAPI document and TypeScript output generated and committed; CI contract-diff gate fails on stale output; Swagger UI and `/openapi` absent outside Development; campaign feature uses `httpResource` queries and `CampaignCommands` with generated schemas | Not started |
+| 2 | 04A | Sources: Markdown/text and pasted text | 01, 02, DS | Upload/paste limits, canonical document schema, knowledge status, structural chunking, job lifecycle/progress/retry, identity/version publication, removal and private-data policy in 02/03/05/06/07/12; persistence pattern for Sources (#18) and command validation approach (#22) | Supported inputs imported per campaign; partial failure, update, removal and campaign isolation verified against PostgreSQL; initial eval fixtures committed | Not started |
+| 3 | 05A | Lexical source search (FTS) | 04A | FTS language/configuration, ranking and snippet/locator contract, search placement in the workspace (12/DESIGN), initial eval corpus with expected sources | Campaign-scoped search returns fragments with real locators; lexical baseline (Recall@K/MRR) recorded; no cross-campaign leakage | Not started |
+| 3 | 03 | AI ports and deterministic fake | 01 | Adapter/model settings, dimensions, limits and failure policy in 05/09 | Fake verifies orchestration; configured adapter compatibility checked before live use | Not started |
+| 4 | 05B | Vector retrieval | 03, 05A | Embedding model/dimensions, vector index configuration, candidate limits; whether offline Python comparisons add value | Vector baseline recorded beside the lexical one on the same corpus; no campaign leakage | Not started |
+| 5 | 06 | Fusion and grounded answer (Chat) | 05B; #21 resolved | RRF settings, reranker decision, budgets, citations, contradictions, insufficient evidence, streaming transport and generation criteria in 02/05/06; conversation persistence and drafts in 12 | Answers trace to campaign evidence; comparison against baselines recorded | Not started |
+| 6 | 04B | Notion ingestion | 04A | Root/credentials, traversal, supported blocks, sync and remote deletion in 03/05/06/07/12 | Notion uses the same canonical pipeline and source lifecycle; campaign isolation verified | Not started |
+| 7 | 07 | Regression gates | 06 | Measured thresholds/tolerances, frozen versus live eval execution in 08; whether Langfuse or equivalent adds value beyond OpenTelemetry | Repeatable gates with documented baseline and cost/variance policy | Not started |
+| 8 | 08 | Complete flow and deployment | 07 | Hosting, Cloudflare Access/Tunnel details, backups, limits and rollback in 07/09 and ADR-002 | Critical flow passes; any remote exposure passes Access/origin-bypass smoke verification | Not started |
 
-Block 01 entry decisions are confirmed against `02`, `03`, `06`, `DESIGN.md` and the SDD change `openspec/changes/block-01-campaign-workspace-slice`. Implementation completed through chained review slices.
+Rows sharing an order number may run in parallel. 04B may be scheduled any time after 04A; it is placed after 06 because Markdown exports already cover Notion content for the first useful version, and it should reuse a pipeline proven by 05A.
 
-## Blocks and gates
+ADR-003 records MediatR as the narrow Campaign Application dispatch boundary. ADR-004 refines its HTTP adapter choice. Neither marks a future block ready or introduces pipeline behaviors, repositories or generic controller abstractions.
 
-| Block | Outcome / dependency | Required decisions before implementation | Exit evidence |
-| --- | --- | --- | --- |
-| Definition | Product and scope / none | Personal multicampaign boundaries, first slice, non-goals and observable acceptance in PRODUCT, 00–03 | First slice passes Definition of Ready; unresolved later decisions explicitly assigned |
-| 00 | Skeleton and CI / Definition | Runtime/package versions, package manager, module/project layout, one E2E location, real commands and CI tools in 04/08/09 | Scaffold builds; applicable checks run; AGENTS commands updated |
-| 01 | Angular → .NET → PostgreSQL slice / 00 | Campaign schema/invariants, explicit campaign selection, endpoint DTOs/errors, minimal UI states/tokens in 02/03/06/DESIGN | Accepted first flow and database isolation tests pass |
-| 02 | Generated OpenAPI client / 01 | Generator, output location/versioning and contract-diff policy in 06 | Client generation and contract gate run |
-| 03 | AI ports and deterministic fake / 01 | NaN adapter/model settings, dimensions, limits, failure policy in 05/09 | Fake verifies orchestration; configured adapter compatibility checked before live use |
-| 04A | Sources: Markdown/text and pasted text / 03 | Upload/review limits, canonical schema, knowledge status, chunking, progress/retry, identity/version publication, removal and private-data policy in 02/03/05/06/07/12 | Supported inputs available per campaign; partial failure/update/isolation verified; initial eval fixtures ready |
-| 04B | Notion ingestion / 04A | Root/credentials, traversal, supported blocks, sync and remote deletion in 03/05/06/07/12 | Notion uses the same canonical pipeline and source lifecycle; campaign isolation verified |
-| 05 | FTS + vector retrieval / 04B | FTS language, vector/index configuration and candidate limits; initial eval dataset exists; decide whether offline Python experiments add value for embedding/retrieval comparisons | Separate lexical/vector baselines recorded; no campaign leakage; any experimental comparison is reproducible from committed inputs |
-| 06 | Fusion and grounded answer / 05 | RRF settings, reranker decision, budgets, citations, contradictions, insufficient evidence, transport and generation criteria in 02/05/06; compare no-reranker/provider/local candidates before promoting runtime complexity | Answers trace to campaign evidence; comparison against baselines recorded; any promoted reranker has measured quality/latency/resource evidence |
-| 07 | Regression gates / 06 | Measured thresholds/tolerances, frozen versus live eval execution in 08; decide whether Langfuse or equivalent adds material value beyond OpenTelemetry | Repeatable gates with documented baseline and cost/variance policy; AI observability choice and privacy policy recorded |
-| 08 | Complete flow and deployment / 07 | Hosting, Cloudflare Access/Tunnel deployment details, backups, limits and rollback in 07/09 and ADR-002; any local-model runtime must have artefact/version/fallback/runbook decisions | Critical flow passes; any remote exposure passes Access/origin-bypass smoke verification; promoted AI runtime dependencies are operationally reproducible |
+## Revision 2026-10-29
 
-Block 00 is **Done**. Block 01 is **Done**. Blocks 02–08 are **Not started**. Mark a block **Blocked** when readiness assessment identifies an unresolved required decision; document the exact condition below.
+Changes are justified by dependencies, product value, effort and risk; architecture decisions ADR-001–004 are unchanged.
 
-ADR-003 records MediatR as the narrow Campaign Application dispatch boundary. ADR-004 refines its HTTP adapter choice: create/list/get retain their routes, OpenAPI metadata and Problem Details codes through a cohesive MVC controller, with central ASP.NET Core Problem Details and exception handling. Neither decision marks a future block ready or introduces pipeline behaviors, repositories, or generic controller abstractions.
+| Change | Reason |
+| --- | --- |
+| DS (#8) recorded as a block, kept as the gate for new UI | Typography is not loaded, tokens generate no utilities and screens mix two styling approaches. Building Sources on that baseline means rework, and the Spanish copy migration is cheapest before more screens exist. Delivery reduced from five chained PRs to three slices with unchanged acceptance: fonts and tokens; shared primitives and route states; Spanish UI and closure. |
+| 02 runs in parallel with DS | It is backend/contract work with no UI dependency. The API has no OpenAPI generation yet, so the block starts by adding it. |
+| 04A depends on 01, 02 and DS instead of 03 | Reading, chunking and storing Markdown needs no AI port; embeddings belong to 05B. The previous dependency delayed the first useful capability behind unrelated work. |
+| 05 split into 05A (FTS) and 05B (vector) | Lexical search over imported notes is useful without an LLM and produces the lexical baseline 05 already required. Accepted by the maintainer on 2026-10-29; its UI placement is a 05A entry decision. |
+| 03 can run in parallel with 04A/05A | It depends only on 01 and is required first by 05B. |
+| 04B no longer blocks retrieval | Notion is an additional adapter over the same pipeline; retrieval quality does not depend on it. |
+
+## Non-blocking evaluations
+
+These spikes are optional engineering experiments. None blocks a block unless the block's own entry decisions say so.
+
+| Issue | Position | Trigger / constraint |
+| --- | --- | --- |
+| #18 Campaign repository boundary | Decided during 04A design | Sources needs atomic version publication, a real transactional boundary. Choose the persistence pattern there; refactor Campaigns only if the same pattern is adopted. No preventive refactor. |
+| #22 FluentValidation | Decided during 04A design | 04A introduces the next commands. Until then current domain-result validation is retained. |
+| #21 Chat streaming transport | Before 06 Definition of Ready | 03 may define a transport-agnostic async stream port. |
+| #19 Vite+ / Oxlint / Oxfmt | After 05A, or earlier only if frontend tooling becomes a measured pain | Settle before #20 if it changes scripts. |
+| #20 Aspire AppHost | After 05A | More value once the system has more resources (AI provider, background jobs). Not a prerequisite for 03. |
+| #17 Codex Lithographica craft pass | After DS slices; maintainer-led | Does not block any block. |
+
+## Open questions
+
+- None on the current critical path. Entry decisions listed in the sequence table remain unresolved until recorded in their owning documents.
 
 ## AI engineering extension rule
 
@@ -54,39 +80,25 @@ Adopt them incrementally:
 
 OpenTelemetry remains the default system-wide observability stack. Langfuse or another AI-specific platform may be added when prompt/model/retrieval inspection and eval workflows justify a second telemetry system, with explicit privacy and retention rules.
 
-## Readiness record (required per block)
+## Readiness records
 
-- Block and status: Definition — Done.
-- Entry decisions and links to resolved specifications: first implementation slice is campaign creation/selection plus empty Chat and Sources workspace shell (`PRODUCT`, `00`, `02`); Campaign fields and invariants are defined (`03`); first-slice campaign endpoints, DTOs and error mapping are defined (`06`); delete campaign, ingestion and AI are excluded from the slice (`PRODUCT`, `00`, `02`, `03`, `06`).
-- Remaining blocker, target document and unblock condition: no Definition blocker remains.
-- Acceptance criteria and verification plan: US-01 in `02` defines creation, validation, URL campaign selection, Chat/Sources shells and excluded behaviours; verification covers domain/unit validation, backend integration, frontend route/component states and one E2E smoke test.
-- Exit evidence and remaining limitations: Documentation-only definition update; no scaffold, code, tests, generated client or implementation evidence exists yet.
-
-- Block and status: 00 — Done.
-- Entry decisions and links to resolved specifications: pnpm, Node 24.15+, .NET 10, Tailwind, GitHub Actions, Docker Compose PostgreSQL 17, initial Playwright E2E location `apps/web/e2e`, Conventional Commits enforcement, and inactive Python/AI workbench are recorded in `04`, `08` and `09`.
-- Remaining blocker, target document and unblock condition: none for block 00. Internet exposure remains gated by `07`/`09`, but it does not block local work.
-- Acceptance criteria and verification plan: scaffold creates real frontend/backend/local database/CI command surfaces; AGENTS commands are executable; applicable checks run locally.
-- Exit evidence and remaining limitations: `pnpm install`; `pnpm run format:check`; `pnpm run lint`; `pnpm run test`; `pnpm run build`; `pnpm run e2e`; `dotnet restore services/api/Lorekeeper.slnx`; `dotnet format services/api/Lorekeeper.slnx --verify-no-changes`; `dotnet build services/api/Lorekeeper.slnx --no-restore --configuration Release`; `dotnet test services/api/Lorekeeper.slnx --no-build --configuration Release`; commitlint smoke check. CI is configured but not observed remotely in this local evidence.
-
-- Block and status: 01 — Done.
-- Entry decisions and links to resolved specifications: campaign schema, invariants and exclusions are defined in `02`, `03` and `06`; UI visual direction and English visible copy are defined in `DESIGN.md` and `openspec/changes/block-01-campaign-workspace-slice`; SDD proposal/spec/design/tasks are present for the Block 01 campaign workspace slice.
-- Remaining blocker, target document and unblock condition: none for Block 01. Internet exposure remains gated by `07`/`09` and is out of scope.
-- Acceptance criteria and verification plan: US-01 plus the OpenSpec `campaigns` and `workspace` specs define campaign creation/selection, validation, explicit URL campaign context, empty Chat/Sources shells, excluded behaviours and accessible states; verification covers backend unit/integration tests, frontend route/component tests, focused E2E and full quality gates.
-- Exit evidence and remaining limitations: chained slices implement campaign UUID/name/timestamp invariants, PostgreSQL persistence and case-insensitive uniqueness, the three campaign API endpoints and RFC 7807 codes, Angular campaign selection plus URL-scoped Chat/Sources unavailable shells, and focused Playwright creation/navigation flows. Full final verification passed: frontend lint/test/build/E2E, backend format/build/unit/integration tests. Docker Desktop was used only for the final local PostgreSQL/Testcontainers gates and is stopped afterward. No ingestion, AI, retrieval, citations, deletion, auth, accounts, teams, or Internet exposure is included.
+- **Definition — Done.** First slice is campaign creation/selection plus empty Chat and Sources shells (`PRODUCT`, `00`, `02`); Campaign fields and invariants in `03`; endpoints, DTOs and errors in `06`. No blocker remains.
+- **00 — Done.** pnpm, Node 24.15+, .NET 10, Angular 22, Tailwind, GitHub Actions, Docker Compose PostgreSQL 17, Playwright in `apps/web/e2e` and Conventional Commits are recorded in `04`, `08` and `09`. Evidence: frontend format/lint/test/build/E2E, backend restore/format/build/test and commitlint passed locally.
+- **01 — Done.** US-01 in `02`, Campaign invariants in `03` and contracts in `06` define the slice. Evidence: UUID/name/timestamp invariants, PostgreSQL persistence with case-insensitive uniqueness, three campaign endpoints with RFC 7807 codes, Angular campaign selection plus URL-scoped Chat/Sources shells and Playwright creation/navigation flows; full frontend and backend gates passed. The original Block 01 design recorded English UI copy; ADR-005 supersedes it. The retired OpenSpec change for this block remains in git history up to commit `97099b6`.
+- **DS — Done.** Decisions approved in #8 (fonts, language and delivery on 2026-10-01; Hallmark audit outcomes on 2026-10-30) and recorded in `DESIGN.md` and ADR-005. Slices 1–3 merged together in #29 on 2026-10-30. Evidence: five self-hosted font faces load from local `/media/*.woff2`; Tailwind v4 `@theme` tokens generate utilities; register and workspace use shared primitives and route states; Spanish copy with `lang="es"`, per-route titles and API error codes mapped to Spanish; accessibility review in #29 (verified contrast pairs, visible keyboard focus, field-associated errors, enlarged tap areas, reduced motion, no overflow at 390 px); format, lint, 27 unit tests, build and 2 E2E flows against PostgreSQL passed.
+- **02 — Ready.** Entry decisions recorded on 2026-10-31: document generation, runtime exposure, generator, output locations and contract-diff policy in `06`; frontend query/command data access in ADR-006 and `docs/conventions/frontend.md`. Remaining blocker: none.
 
 ## Cross-cutting gates
 
 - Any Internet exposure, including an early preview, uses the Cloudflare Access boundary selected by ADR-002 and requires verified control of both UI and API plus prevention of direct-origin bypass. Selection alone does not unblock exposure.
 - Campaign boundaries are enforced from the first persistence slice onward.
 - Preparation, actual events and player knowledge must be modelled before ingestion; a DM note is not proof of player discovery.
-- Evaluation starts before retrieval implementation; block 07 formalises gates.
+- Evaluation starts before retrieval implementation: the corpus and expected sources are committed in 04A/05A; block 07 formalises gates.
 - AI/model tooling does not enter the production runtime solely for portfolio value; the committed evaluation corpus must justify the added dependency.
 - Each PR identifies its block, specification and acceptance evidence. No feature may rely on a placeholder as an approved decision.
 
-## First UX approach: sequencing clarification
+## Workspace sequencing
 
-[Workspace and ingestion UX](12-workspace-and-ingestion-ux.md) assigns campaign creation/selection and navigation to 01, Sources/file-text import to 04A, Notion to 04B, and Chat/citations to 06. The first implementation slice narrows block 01 to campaign creation/selection and empty workspace shells only; no ingestion or AI capability is included. Define the navigation/states before the corresponding UI work. Source publication/progress contracts are specified in 04A; vector indexing is completed with 05, so an intermediate parser/storage milestone must not claim production retrieval readiness. End-to-end source availability is verified once indexing exists. This decomposition preserves the existing gates and does not mark blocks ready or complete.
+[Workspace and ingestion UX](12-workspace-and-ingestion-ux.md) assigns campaign navigation to 01, Sources with file/text import to 04A, source search to 05A, Notion to 04B and Chat/citations to 06. In 04A the "Indexing" stage covers the lexical index delivered with 05A; vector indexing arrives with 05B, so 04A alone must not claim retrieval readiness.
 
-## Design decision resolved
-
-Codex Lithographica is adopted in [DESIGN.md](../DESIGN.md), including conditional evidence blocks, real citation locators, responsive and accessibility requirements. The visual-direction decision is resolved; detailed screen/component specifications and verified accessible token combinations remain block 01 / affected-UI entry requirements. This documentation update does not mark implementation blocks complete.
+Codex Lithographica is adopted in [DESIGN.md](../DESIGN.md). Detailed component specifications and verified accessible token combinations are delivered by DS for current screens and by each UI block for its own screens.
