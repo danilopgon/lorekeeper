@@ -22,14 +22,14 @@ describe('CampaignSelectionPage', () => {
     fixture = TestBed.createComponent(CampaignSelectionPage);
 
     fixture.detectChanges();
-    expect(text()).toContain('Loading campaigns…');
+    expect(text()).toContain('Cargando campañas…');
 
     await settle();
-    expect(text()).toContain('No campaigns yet. Create one to start a chronicle.');
-    expect(text()).not.toContain('active campaign');
+    expect(text()).toContain('Aún no hay campañas. Crea una para empezar su crónica.');
+    expect(folio()).toBeNull();
   });
 
-  it('renders campaigns with explicit Chat and Sources links', async () => {
+  it('renders campaigns with explicit Chat and Fuentes links, a count folio and Spanish dates', async () => {
     campaignsApi.listCampaignsResult = [campaign('123e4567-e89b-12d3-a456-426614174000')];
     fixture = TestBed.createComponent(CampaignSelectionPage);
 
@@ -37,10 +37,11 @@ describe('CampaignSelectionPage', () => {
     await settle();
 
     expect(text()).toContain('Ash Crown');
-    expect(linkHref('Open Chat')).toBe('/campaigns/123e4567-e89b-12d3-a456-426614174000/chat');
-    expect(linkHref('Open Sources')).toBe(
-      '/campaigns/123e4567-e89b-12d3-a456-426614174000/sources',
-    );
+    expect(linkHref('Chat')).toBe('/campaigns/123e4567-e89b-12d3-a456-426614174000/chat');
+    expect(linkHref('Fuentes')).toBe('/campaigns/123e4567-e89b-12d3-a456-426614174000/sources');
+    expect(folio()).toBe('1 campaña');
+    expect(text()).toContain('15 sept 2026');
+    expect(text()).not.toContain('2026-09-15T10:00:00Z');
   });
 
   it('creates a campaign and refreshes the list without navigating implicitly', async () => {
@@ -54,7 +55,7 @@ describe('CampaignSelectionPage', () => {
     submitForm();
 
     fixture.detectChanges();
-    expect(text()).toContain('Creating…');
+    expect(text()).toContain('Creando…');
 
     await settle();
     expect(campaignsApi.createdNames).toEqual(['Ash Crown']);
@@ -76,7 +77,9 @@ describe('CampaignSelectionPage', () => {
     submitForm();
     await settle();
 
-    expect(text()).toContain('Enter a campaign name between 1 and 120 characters.');
+    expect(text()).toContain('Escribe un nombre de entre 1 y 120 caracteres.');
+    expect(nameInput().getAttribute('aria-invalid')).toBe('true');
+    expect(nameInput().getAttribute('aria-describedby')).toBe('campaign-name-error');
 
     campaignsApi.createCampaignError = {
       kind: 'fieldError',
@@ -86,7 +89,7 @@ describe('CampaignSelectionPage', () => {
     submitForm();
     await settle();
 
-    expect(text()).toContain('A campaign with this name already exists.');
+    expect(text()).toContain('Ya existe una campaña con ese nombre.');
   });
 
   it('renders recoverable list and creation errors with retry', async () => {
@@ -96,19 +99,35 @@ describe('CampaignSelectionPage', () => {
     fixture.detectChanges();
     await settle();
 
-    expect(text()).toContain('Campaigns could not be loaded. Retry when the API is available.');
-    expect(button('Retry')).toBeTruthy();
+    expect(text()).toContain(
+      'No se pudieron cargar las campañas. Vuelve a intentarlo cuando el servidor responda.',
+    );
+    expect(button('Reintentar')).toBeTruthy();
 
     campaignsApi.createCampaignError = { kind: 'recoverableError', code: 'network_error' };
     setInputValue('campaign-name', 'Ash Crown');
     submitForm();
     await settle();
 
-    expect(text()).toContain('Campaign creation failed. Check the connection and retry.');
+    expect(text()).toContain(
+      'No se pudo crear la campaña. Comprueba la conexión y vuelve a intentarlo.',
+    );
   });
 
   function text(): string {
     return (fixture.nativeElement as HTMLElement).textContent ?? '';
+  }
+
+  function folio(): string | null {
+    return (
+      (fixture.nativeElement as HTMLElement).querySelector('p.folio')?.textContent?.trim() ?? null
+    );
+  }
+
+  function nameInput(): HTMLInputElement {
+    return (fixture.nativeElement as HTMLElement).querySelector<HTMLInputElement>(
+      '#campaign-name',
+    )!;
   }
 
   function linkHref(label: string): string | null {

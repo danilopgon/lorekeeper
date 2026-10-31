@@ -35,7 +35,7 @@ A UI slice is not review-ready until all applicable checks pass or an explicit e
 
 ### Evidence
 
-Record the result in the PR summary or SDD apply-progress with:
+Record the result in the PR summary with:
 
 ```text
 Design review: pass|exception

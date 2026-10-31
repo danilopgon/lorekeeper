@@ -70,6 +70,8 @@ Before **01**: campaign creation fields, selector/navigation behaviour, minimal 
 
 Before **04A**: upload size/count/encoding limits, pasted-text limits, supported Markdown handling, duplicate identity policy, preview API, job lifecycle, retry/idempotency, version publication, deletion races and retention. Define concrete DTOs and observable acceptance criteria in 02/03/06; update 05/07 for processing and data policies.
 
+Before **05A**: where search lives (Sources, Chat or its own route), result fragment and locator display, empty/no-match states and how results link to the source fragment.
+
 Before **04B**: Notion credential/root configuration, traversal/preview, supported blocks, synchronisation and remote deletion semantics. No OAuth/multiuser subsystem is implied.
 
 Before **06**: conversation persistence/reset policy, draft handling, response transport, source-fragment display and historical citation/version resolution. Final visual direction belongs in DESIGN.md.
@@ -78,6 +80,7 @@ Before **06**: conversation persistence/reset policy, draft handling, response t
 
 **01:** campaign creation/selection and workspace navigation.  
 **04A:** Sources with Markdown/text upload and pasted text.  
+**05A:** campaign-scoped lexical search over available sources, showing fragments and real locators without AI answers.  
 **04B:** Notion adapter and source update integration.  
 **06:** Chat, grounded answers and citations.  
 **08:** complete-flow verification and deployment access gate.

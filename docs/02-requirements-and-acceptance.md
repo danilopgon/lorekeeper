@@ -22,6 +22,9 @@
 6. Given a selected campaign, when the operator opens `/campaigns/{campaignId}/sources`, then the Sources workspace shell renders for that campaign, contains no upload, paste, import, update or removal actions, and communicates that ingestion is not available in this slice.
 7. Given an unknown or malformed `campaignId` in `/campaigns/{campaignId}/chat` or `/campaigns/{campaignId}/sources`, when the route is requested, then the UI/API reports a not-found or validation state without falling back to another campaign.
 8. Loading, empty, validation-error, not-found and success states are explicit for campaign creation, campaign selection and both workspace shell routes.
+9. Given two concurrent requests create the same trimmed name with different casing, when they reach persistence, then database-backed uniqueness keeps one campaign and the other request fails with `campaign_name_conflict`.
+10. Given a workspace route is loading or switching campaign, when resolution is pending, then no content from a previously shown campaign is rendered.
+11. Given a keyboard-only operator, when they create a campaign and navigate to Chat or Sources, then every control is reachable and operable with visible focus, and errors are conveyed by text associated with the affected field, not by colour alone.
 
 ### Not included
 

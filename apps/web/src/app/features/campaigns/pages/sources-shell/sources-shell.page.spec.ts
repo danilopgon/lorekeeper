@@ -30,7 +30,7 @@ describe('SourcesShellPage', () => {
     fixture.detectChanges();
 
     expect((fixture.nativeElement as HTMLElement).textContent).toContain(
-      'Sources are not available yet',
+      'Las fuentes aún no están disponibles',
     );
   });
 });

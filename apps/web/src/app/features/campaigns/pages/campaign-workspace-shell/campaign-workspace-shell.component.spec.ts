@@ -32,16 +32,16 @@ describe('CampaignWorkspaceShellComponent', () => {
     createShell('chat');
 
     fixture.detectChanges();
-    expect(text()).toContain('Loading campaign…');
+    expect(text()).toContain('Cargando campaña…');
 
     await settle();
 
     expect(campaignsApi.requestedIds).toEqual(['123e4567-e89b-12d3-a456-426614174000']);
-    expect(text()).toContain('Ash Crown');
-    expect(text()).toContain(
-      'AI chat, source-backed querying, retrieval, citations, conversation history, streaming, and draft persistence are unavailable in this slice.',
-    );
-    expect(text()).not.toContain('active campaign');
+    expect(heading()).toBe('Ash Crown');
+    expect(text()).toContain('El chat aún no está disponible');
+    expect(currentSection()).toBe('Chat');
+    expect(sectionHref('Fuentes')).toBe('/campaigns/123e4567-e89b-12d3-a456-426614174000/sources');
+    expect(text()).not.toContain('123e4567-e89b-12d3-a456-426614174000');
     expect(prohibitedControls()).toEqual([]);
   });
 
@@ -55,10 +55,9 @@ describe('CampaignWorkspaceShellComponent', () => {
     fixture.detectChanges();
     await settle();
 
-    expect(text()).toContain('Sources are not available yet');
-    expect(text()).toContain(
-      'Ingestion, upload, paste, Notion import, source updates, removal, indexing, retry, progress, and source lifecycle actions are unavailable in this slice.',
-    );
+    expect(heading()).toBe('Ash Crown');
+    expect(text()).toContain('Las fuentes aún no están disponibles');
+    expect(currentSection()).toBe('Fuentes');
     expect(prohibitedControls()).toEqual([]);
   });
 
@@ -70,8 +69,8 @@ describe('CampaignWorkspaceShellComponent', () => {
     await settle();
 
     expect(campaignsApi.requestedIds).toEqual([]);
-    expect(text()).toContain('Campaign route is invalid');
-    expect(text()).toContain('This campaign URL is malformed.');
+    expect(heading()).toBe('Enlace de campaña no válido');
+    expect(text()).toContain('Este enlace no corresponde a ninguna campaña.');
   });
 
   it('renders unknown campaign and recoverable API states', async () => {
@@ -81,7 +80,7 @@ describe('CampaignWorkspaceShellComponent', () => {
     fixture.detectChanges();
     await settle();
 
-    expect(text()).toContain('Campaign was not found');
+    expect(heading()).toBe('Campaña no encontrada');
 
     campaignsApi.error = { kind: 'recoverableError', code: 'network_error' };
     campaignsApi.requestedIds = [];
@@ -89,8 +88,8 @@ describe('CampaignWorkspaceShellComponent', () => {
     await settle();
 
     expect(campaignsApi.requestedIds).toEqual(['223e4567-e89b-12d3-a456-426614174000']);
-    expect(text()).toContain('Campaign could not be loaded');
-    expect(button('Retry')).toBeTruthy();
+    expect(heading()).toBe('No se pudo cargar la campaña');
+    expect(button('Reintentar')).toBeTruthy();
   });
 
   it('does not display the previous campaign while a new campaign id is resolving', async () => {
@@ -107,7 +106,7 @@ describe('CampaignWorkspaceShellComponent', () => {
     route.setCampaignId('223e4567-e89b-12d3-a456-426614174000');
     fixture.detectChanges();
 
-    expect(text()).toContain('Loading campaign…');
+    expect(text()).toContain('Cargando campaña…');
     expect(text()).not.toContain('Ash Crown');
   });
 
@@ -118,6 +117,21 @@ describe('CampaignWorkspaceShellComponent', () => {
 
   function text(): string {
     return (fixture.nativeElement as HTMLElement).textContent ?? '';
+  }
+
+  function heading(): string | undefined {
+    return (fixture.nativeElement as HTMLElement).querySelector('h1')?.textContent?.trim();
+  }
+
+  function currentSection(): string | undefined {
+    return (fixture.nativeElement as HTMLElement)
+      .querySelector('a[aria-current="page"]')
+      ?.textContent?.trim();
+  }
+
+  function sectionHref(label: string): string | null {
+    const links = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('nav a'));
+    return links.find((link) => link.textContent?.trim() === label)?.getAttribute('href') ?? null;
   }
 
   function button(label: string): HTMLButtonElement | undefined {
