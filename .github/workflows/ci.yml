@@ -68,6 +68,24 @@ jobs:
         env:
           ConnectionStrings__Campaigns: Host=127.0.0.1;Port=${{ job.services.postgres.ports[5432] }};Database=lorekeeper;Username=lorekeeper;Password=lorekeeper_test_password
 
+  contract:
+    name: Contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 12.4.1
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: pnpm
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run contract:check
+
   backend:
     name: Backend
     runs-on: ubuntu-latest
