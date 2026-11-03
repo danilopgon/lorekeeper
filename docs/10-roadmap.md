@@ -58,8 +58,8 @@ These spikes are optional engineering experiments. None blocks a block unless th
 | #18 Campaign repository boundary | Decided during 04A design | Sources needs atomic version publication, a real transactional boundary. Choose the persistence pattern there; refactor Campaigns only if the same pattern is adopted. No preventive refactor. |
 | #22 FluentValidation | Decided during 04A design | 04A introduces the next commands. Until then current domain-result validation is retained. |
 | #21 Chat streaming transport | Before 06 Definition of Ready | 03 may define a transport-agnostic async stream port. |
-| #19 Vite+ / Oxlint / Oxfmt | After 05A, or earlier only if frontend tooling becomes a measured pain | Settle before #20 if it changes scripts. |
-| #20 Aspire AppHost | After 05A | More value once the system has more resources (AI provider, background jobs). Not a prerequisite for 03. |
+| #19 Vite+ / Oxlint / Oxfmt | Rejected 2026-11-03 (spike evidence in #19) | Keep Angular CLI, ESLint and Prettier. Reopen if Vite+ documents Angular support or Oxlint lints Angular templates. |
+| #20 Aspire AppHost | Adopted for local development 2026-11-03 (ADR-007) | Spike evidence in #20. Not a deployment architecture. YARP and the architecture review were not evaluated; open them only on a concrete need. |
 | #17 Codex Lithographica craft pass | After DS slices; maintainer-led | Does not block any block. |
 
 ## Open questions

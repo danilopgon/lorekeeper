@@ -49,6 +49,7 @@ Lorekeeper/
 | Command | What it does |
 | --- | --- |
 | `pnpm install --frozen-lockfile` | Install frontend dependencies from the lockfile |
+| `pnpm run dev` | Start PostgreSQL, migrations, API and Angular through Aspire (needs the Aspire CLI and Docker; see ADR-007) |
 | `pnpm run start` | Start Angular locally |
 | `pnpm run build` | Build the Angular application |
 | `pnpm run lint` | Run Angular ESLint |

@@ -69,6 +69,7 @@ The `ai/` workbench is not an application runtime boundary by default and is not
 - Backend runtime: .NET 10 / ASP.NET Core 10.
 - Styling: Tailwind is part of the block 00 frontend scaffold and must map to the durable tokens in `DESIGN.md`.
 - CI: GitHub Actions.
+- Local orchestration: an Aspire AppHost for development only (ADR-007); Compose and the pnpm scripts remain the fallback.
 - Local database: Docker Compose running PostgreSQL 17; pgvector remains required where semantic retrieval needs it in later blocks.
 - Initial E2E location: `apps/web/e2e` for Playwright.
 - Commit policy: Conventional Commits enforced by CI plus local hooks using commitlint and Husky/lint-staged or equivalent JavaScript tooling once scaffolded.

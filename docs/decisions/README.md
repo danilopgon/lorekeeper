@@ -18,3 +18,4 @@ Create ADRs for provider/stack choices, architectural boundaries, public contrac
 - [ADR-004 — MVC controllers for Campaign HTTP presentation](ADR-004-campaign-mvc-presentation.md)
 - [ADR-005 — Spanish UI copy for the personal installation](ADR-005-spanish-ui-copy.md)
 - [ADR-006 — Native Angular CQRS data access in the frontend](ADR-006-frontend-cqrs-data-access.md)
+- [ADR-007 — Aspire AppHost for local development orchestration](ADR-007-aspire-local-orchestration.md)

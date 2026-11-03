@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "prepare": "husky",
+    "dev": "docker compose stop postgres && aspire run",
     "start": "pnpm --filter web start",
     "web:start": "pnpm --filter web start",
     "api:start": "dotnet run --project services/api/src/Api/Api.csproj",
