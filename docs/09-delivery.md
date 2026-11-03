@@ -12,6 +12,8 @@
 
 Block 00 local development choices are pnpm, Node 24.15+, .NET 10 and Docker Compose PostgreSQL 17. The local application remains local-only with no application login. [ADR-002](decisions/ADR-002-cloudflare-access-personal-deployment.md) selects Cloudflare Access for remote access, but Internet exposure stays blocked until that boundary is configured and verified. Python is not part of the block 00 runtime or delivery baseline.
 
+`pnpm run dev` starts the local stack through the Aspire AppHost ([ADR-007](decisions/ADR-007-aspire-local-orchestration.md)); it needs the Aspire CLI and Docker. Without Aspire, run `db:start`, `api:migrate`, `api:start` and `web:start`. Both flows share the Compose volume, so never run them at once. The development database credentials are known values committed to a public repository: PostgreSQL stays bound to loopback and no deployed environment may use them.
+
 Document variable names and purpose in `.env.example` or platform configuration. Never commit real values.
 
 | Variable | Used by | Purpose |
