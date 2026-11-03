@@ -114,6 +114,25 @@ public sealed class CampaignEndpointsTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task CampaignFailuresUseTheContentTypeDeclaredInTheContract()
+    {
+        using var response = await _client.PostAsJsonAsync("/api/campaigns", new { name = "   " });
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response.Content.Headers.ContentType!.MediaType.Should().Be("application/problem+json");
+    }
+
+    [Fact]
+    public async Task CreateCampaignRejectsMalformedJsonWithoutACampaignCode()
+    {
+        using var response = await _client.PostAsync("/api/campaigns", new StringContent("{", Encoding.UTF8, "application/json"));
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var problem = await ReadJsonObject(response);
+        problem.ContainsKey("code").Should().BeFalse("framework validation runs before Campaign error mapping");
+    }
+
+    [Fact]
     public async Task CreateCampaignRejectsDuplicateNameCaseInsensitively()
     {
         await CreateCampaign("Ash Crown");

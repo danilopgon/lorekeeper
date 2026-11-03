@@ -13,9 +13,9 @@ public sealed class CreateCampaignController(ISender sender) : ControllerBase
     [HttpPost(Name = "CreateCampaign")]
     [EndpointSummary("Create a campaign")]
     [EndpointDescription("Creates one campaign and returns its canonical campaign representation.")]
-    [ProducesResponseType(typeof(CampaignDto), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(CampaignDto), StatusCodes.Status201Created, "application/json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict, "application/problem+json")]
     public async Task<ActionResult<CampaignDto>> CreateCampaign(
         [FromBody] CreateCampaignRequest? request,
         CancellationToken cancellationToken)
