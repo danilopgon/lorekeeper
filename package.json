@@ -25,6 +25,8 @@
     "api:format:check": "dotnet format services/api/Lorekeeper.slnx --verify-no-changes",
     "api:build": "dotnet build services/api/Lorekeeper.slnx --no-restore --configuration Release",
     "api:test": "dotnet test services/api/Lorekeeper.slnx --no-build --configuration Release",
+    "contract:generate": "dotnet build services/api/src/Api/Api.csproj && pnpm --filter web contract:generate",
+    "contract:check": "pnpm run contract:generate && git status --porcelain -- services/api/openapi apps/web/src/app/shared/api/generated | (! grep .)",
     "commitlint": "commitlint --from=HEAD~1 --to=HEAD --verbose"
   },
   "devDependencies": {

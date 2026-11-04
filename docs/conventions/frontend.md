@@ -14,6 +14,7 @@ features/<feature>/api/
 - **Queries** are `inject<Noun>Query(...)` functions (`injectCampaignListQuery()`, `injectCampaignQuery(campaignId)`). They wrap one GET in `httpResource` with `parse: z<Dto>.parse`, take parameters as signals (an `undefined` value means no request) and are called from component field initializers.
 - **Commands** are `<verb><Noun>` methods on a stateless `<Feature>Commands` service (`createCampaign(request)`). They call `HttpClient`, validate the response with the generated schema and return a `Promise`.
 - Types and Zod schemas come from `shared/api/generated/`; never hand-write DTO guards or edit generated files.
+- Use the generated DTO directly while the UI needs the same shape; do not alias it as a model. When the UI needs a different shape, add a model in `models/` and a pure mapper in `api/<feature>.mapper.ts`, applied after schema validation.
 - Commands throw the feature API error; pages expose query errors already mapped through a `computed`. Templates never see `HttpErrorResponse` or `ZodError`.
 - The code that runs a command reloads the queries it affects (`resource.reload()`).
 - Components use `async`/`await` for commands and only `value()`, `isLoading()`, `error()` and `reload()` from queries. They never inject `HttpClient` or build URLs.

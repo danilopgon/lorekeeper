@@ -6,6 +6,9 @@ const jsdoc = require('eslint-plugin-jsdoc');
 
 module.exports = tseslint.config(
   {
+    ignores: ['src/app/shared/api/generated/**'],
+  },
+  {
     files: ['**/*.ts'],
     extends: [
       eslint.configs.recommended,

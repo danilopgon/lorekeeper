@@ -55,6 +55,8 @@ Lorekeeper/
 | `pnpm run lint` | Run Angular ESLint |
 | `pnpm run test` | Run frontend unit/component tests with Vitest |
 | `pnpm run e2e` | Run Playwright end-to-end tests |
+| `pnpm run contract:generate` | Rebuild the API and regenerate the OpenAPI document and TypeScript types and Zod schemas |
+| `pnpm run contract:check` | Regenerate the contract and fail if it differs from the committed files |
 | `dotnet restore services/api/Lorekeeper.slnx` | Restore backend dependencies |
 | `dotnet build services/api/Lorekeeper.slnx --no-restore --configuration Release` | Build .NET with analyzers |
 | `dotnet test services/api/Lorekeeper.slnx --no-build --configuration Release` | Run .NET unit and integration tests |

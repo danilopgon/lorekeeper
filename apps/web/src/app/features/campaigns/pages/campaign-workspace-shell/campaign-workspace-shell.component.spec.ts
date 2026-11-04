@@ -1,58 +1,55 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
-import { CampaignsApiService } from '../../api/campaigns-api.service';
-import { Campaign } from '../../models/campaign.model';
 import { CampaignWorkspaceShellComponent } from './campaign-workspace-shell.component';
+
+const firstId = '123e4567-e89b-12d3-a456-426614174000';
+const secondId = '223e4567-e89b-12d3-a456-426614174000';
 
 describe('CampaignWorkspaceShellComponent', () => {
   let fixture: ComponentFixture<CampaignWorkspaceShellComponent>;
-  let campaignsApi: CampaignsApiStub;
+  let http: HttpTestingController;
   let route: ActivatedRouteStub;
 
   beforeEach(async () => {
-    campaignsApi = new CampaignsApiStub();
-    route = new ActivatedRouteStub('123e4567-e89b-12d3-a456-426614174000');
+    route = new ActivatedRouteStub(firstId);
 
     await TestBed.configureTestingModule({
       imports: [CampaignWorkspaceShellComponent],
       providers: [
         provideRouter([]),
-        { provide: CampaignsApiService, useValue: campaignsApi },
+        provideHttpClient(),
+        provideHttpClientTesting(),
         { provide: ActivatedRoute, useValue: route },
       ],
     }).compileComponents();
+    http = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => {
+    http.verify();
   });
 
   it('loads valid campaign context for the Chat shell without exposing unavailable controls', async () => {
-    campaignsApi.campaigns.set(
-      '123e4567-e89b-12d3-a456-426614174000',
-      campaign('123e4567-e89b-12d3-a456-426614174000'),
-    );
     createShell('chat');
-
-    fixture.detectChanges();
     expect(text()).toContain('Cargando campaña…');
 
+    http.expectOne(`/api/campaigns/${firstId}`).flush(campaign(firstId));
     await settle();
 
-    expect(campaignsApi.requestedIds).toEqual(['123e4567-e89b-12d3-a456-426614174000']);
     expect(heading()).toBe('Ash Crown');
     expect(text()).toContain('El chat aún no está disponible');
     expect(currentSection()).toBe('Chat');
-    expect(sectionHref('Fuentes')).toBe('/campaigns/123e4567-e89b-12d3-a456-426614174000/sources');
-    expect(text()).not.toContain('123e4567-e89b-12d3-a456-426614174000');
+    expect(sectionHref('Fuentes')).toBe(`/campaigns/${firstId}/sources`);
+    expect(text()).not.toContain(firstId);
     expect(prohibitedControls()).toEqual([]);
   });
 
   it('loads valid campaign context for the Sources shell without exposing ingestion controls', async () => {
-    campaignsApi.campaigns.set(
-      '123e4567-e89b-12d3-a456-426614174000',
-      campaign('123e4567-e89b-12d3-a456-426614174000'),
-    );
     createShell('sources');
-
-    fixture.detectChanges();
+    http.expectOne(`/api/campaigns/${firstId}`).flush(campaign(firstId));
     await settle();
 
     expect(heading()).toBe('Ash Crown');
@@ -64,55 +61,60 @@ describe('CampaignWorkspaceShellComponent', () => {
   it('renders malformed campaign route state before calling the API', async () => {
     route.setCampaignId('not-a-campaign-id');
     createShell('chat');
-
-    fixture.detectChanges();
     await settle();
 
-    expect(campaignsApi.requestedIds).toEqual([]);
+    http.expectNone(() => true);
     expect(heading()).toBe('Enlace de campaña no válido');
     expect(text()).toContain('Este enlace no corresponde a ninguna campaña.');
   });
 
   it('renders unknown campaign and recoverable API states', async () => {
-    campaignsApi.error = { kind: 'notFound', code: 'campaign_not_found' };
     createShell('chat');
-
-    fixture.detectChanges();
+    http
+      .expectOne(`/api/campaigns/${firstId}`)
+      .flush({ code: 'campaign_not_found' }, { status: 404, statusText: 'Not Found' });
     await settle();
 
     expect(heading()).toBe('Campaña no encontrada');
 
-    campaignsApi.error = { kind: 'recoverableError', code: 'network_error' };
-    campaignsApi.requestedIds = [];
-    route.setCampaignId('223e4567-e89b-12d3-a456-426614174000');
+    route.setCampaignId(secondId);
+    await settle();
+    http.expectOne(`/api/campaigns/${secondId}`).error(new ProgressEvent('error'));
     await settle();
 
-    expect(campaignsApi.requestedIds).toEqual(['223e4567-e89b-12d3-a456-426614174000']);
     expect(heading()).toBe('No se pudo cargar la campaña');
     expect(button('Reintentar')).toBeTruthy();
   });
 
-  it('does not display the previous campaign while a new campaign id is resolving', async () => {
-    campaignsApi.campaigns.set(
-      '123e4567-e89b-12d3-a456-426614174000',
-      campaign('123e4567-e89b-12d3-a456-426614174000'),
-    );
+  it('renders a schema-invalid campaign as the recoverable state', async () => {
     createShell('chat');
+    http.expectOne(`/api/campaigns/${firstId}`).flush({ ...campaign(firstId), name: null });
+    await settle();
 
-    fixture.detectChanges();
+    expect(heading()).toBe('No se pudo cargar la campaña');
+  });
+
+  it('does not display the previous campaign while a new campaign id is resolving', async () => {
+    createShell('chat');
+    http.expectOne(`/api/campaigns/${firstId}`).flush(campaign(firstId));
     await settle();
     expect(text()).toContain('Ash Crown');
 
-    route.setCampaignId('223e4567-e89b-12d3-a456-426614174000');
+    route.setCampaignId(secondId);
     fixture.detectChanges();
 
     expect(text()).toContain('Cargando campaña…');
     expect(text()).not.toContain('Ash Crown');
+
+    await settle();
+    http.expectOne(`/api/campaigns/${secondId}`).flush(campaign(secondId));
   });
 
   function createShell(kind: 'chat' | 'sources'): void {
     fixture = TestBed.createComponent(CampaignWorkspaceShellComponent);
     fixture.componentRef.setInput('workspaceKind', kind);
+    fixture.detectChanges();
+    TestBed.tick();
   }
 
   function text(): string {
@@ -148,34 +150,13 @@ describe('CampaignWorkspaceShellComponent', () => {
   }
 
   async function settle(): Promise<void> {
-    await fixture.whenStable();
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
+    for (let turn = 0; turn < 3; turn += 1) {
+      await new Promise((resolve) => setTimeout(resolve));
+      TestBed.tick();
+      fixture.detectChanges();
+    }
   }
 });
-
-class CampaignsApiStub {
-  readonly campaigns = new Map<string, Campaign>();
-  requestedIds: string[] = [];
-  error: unknown;
-
-  async getCampaign(id: string): Promise<Campaign> {
-    this.requestedIds.push(id);
-
-    if (this.error) {
-      throw this.error;
-    }
-
-    const value = this.campaigns.get(id);
-
-    if (!value) {
-      throw { kind: 'notFound', code: 'campaign_not_found' };
-    }
-
-    return value;
-  }
-}
 
 class ActivatedRouteStub {
   private readonly paramMapSubject: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
@@ -196,7 +177,7 @@ class ActivatedRouteStub {
   }
 }
 
-function campaign(id: string): Campaign {
+function campaign(id: string) {
   return {
     id,
     name: id.startsWith('123') ? 'Ash Crown' : 'Bright Vale',

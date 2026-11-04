@@ -1,12 +1,11 @@
-import { Component, computed, inject, input, resource } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { PageHeaderComponent } from '../../../../shared/ui/page-header/page-header.component';
-import { CampaignsApiService } from '../../api/campaigns-api.service';
-import { Campaign } from '../../models/campaign.model';
+import { toCampaignApiError } from '../../api/campaign-api-error';
+import { injectCampaignQuery } from '../../api/campaign.queries';
 import { formatCampaignDate } from '../../models/campaign-date';
 import { parseCampaignId } from '../../routing/campaign-id';
-import { CampaignApiError } from '../../state/problem-details';
 
 type WorkspaceKind = 'chat' | 'sources';
 
@@ -20,7 +19,6 @@ export class CampaignWorkspaceShellComponent {
   readonly workspaceKind = input.required<WorkspaceKind>();
 
   private readonly route = inject(ActivatedRoute);
-  private readonly campaignsApi = inject(CampaignsApiService);
   private readonly paramMap = toSignal(this.route.paramMap, {
     initialValue: this.route.snapshot.paramMap,
   });
@@ -32,10 +30,7 @@ export class CampaignWorkspaceShellComponent {
     const result = this.campaignId();
     return result.valid ? result.value : undefined;
   });
-  protected readonly campaign = resource<Campaign, string | undefined>({
-    params: () => this.validCampaignId(),
-    loader: ({ params }) => this.campaignsApi.getCampaign(params),
-  });
+  protected readonly campaign = injectCampaignQuery(this.validCampaignId);
   protected readonly currentCampaign = computed(() => {
     const expectedId = this.validCampaignId();
 
@@ -76,34 +71,12 @@ export class CampaignWorkspaceShellComponent {
       return 'invalid';
     }
 
-    const error = unwrapCampaignApiError(this.campaign.error());
+    const error = this.campaign.error();
 
-    if (error?.kind === 'notFound') {
-      return 'notFound';
+    if (!error) {
+      return null;
     }
 
-    if (error) {
-      return 'recoverable';
-    }
-
-    return null;
+    return toCampaignApiError(error).kind === 'notFound' ? 'notFound' : 'recoverable';
   }
-}
-
-function unwrapCampaignApiError(error: unknown): Partial<CampaignApiError> | undefined {
-  let current = error;
-
-  for (let depth = 0; depth < 3; depth += 1) {
-    if (!current || typeof current !== 'object') {
-      return undefined;
-    }
-
-    if ('kind' in current) {
-      return current as Partial<CampaignApiError>;
-    }
-
-    current = (current as { cause?: unknown }).cause;
-  }
-
-  return undefined;
 }

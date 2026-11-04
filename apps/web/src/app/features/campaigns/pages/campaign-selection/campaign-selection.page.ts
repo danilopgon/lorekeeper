@@ -1,13 +1,11 @@
-import { Component, DestroyRef, computed, effect, inject, resource, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { finalize, from } from 'rxjs';
 import { PageHeaderComponent } from '../../../../shared/ui/page-header/page-header.component';
-import { CampaignsApiService } from '../../api/campaigns-api.service';
-import { Campaign } from '../../models/campaign.model';
+import { toCampaignApiError } from '../../api/campaign-api-error';
+import { CampaignCommands } from '../../api/campaign-commands.service';
+import { injectCampaignListQuery } from '../../api/campaign.queries';
 import { formatCampaignDate } from '../../models/campaign-date';
-import { CampaignApiError } from '../../state/problem-details';
 
 /** Campaign selection and creation route for the Block 01 workspace entry point. */
 @Component({
@@ -16,8 +14,7 @@ import { CampaignApiError } from '../../state/problem-details';
   templateUrl: './campaign-selection.page.html',
 })
 export class CampaignSelectionPage {
-  private readonly campaignsApi = inject(CampaignsApiService);
-  private readonly destroyRef = inject(DestroyRef);
+  private readonly commands = inject(CampaignCommands);
   private readonly refreshAfterActiveLoad = signal(false);
 
   protected campaignName = '';
@@ -26,9 +23,7 @@ export class CampaignSelectionPage {
     null,
   );
   protected readonly createRecoverableError = signal(false);
-  protected readonly campaigns = resource<Campaign[], unknown>({
-    loader: () => this.campaignsApi.listCampaigns(),
-  });
+  protected readonly campaigns = injectCampaignListQuery();
   protected readonly campaignCountFolio = computed(() => {
     const count = this.campaigns.hasValue() ? this.campaigns.value().length : 0;
     if (count === 0) {
@@ -48,7 +43,7 @@ export class CampaignSelectionPage {
   }
 
   /** Creates a campaign without selecting or navigating to it implicitly. */
-  protected createCampaign(): void {
+  protected async createCampaign(): Promise<void> {
     if (this.creating()) {
       return;
     }
@@ -56,15 +51,14 @@ export class CampaignSelectionPage {
     const name = this.campaignName;
     this.startCreate();
 
-    from(this.campaignsApi.createCampaign(name))
-      .pipe(
-        takeUntilDestroyed(this.destroyRef),
-        finalize(() => this.creating.set(false)),
-      )
-      .subscribe({
-        next: () => this.handleCreateSuccess(),
-        error: (error: unknown) => this.handleCreateError(error),
-      });
+    try {
+      await this.commands.createCampaign({ name });
+      this.handleCreateSuccess();
+    } catch (error) {
+      this.handleCreateError(error);
+    } finally {
+      this.creating.set(false);
+    }
   }
 
   /** Maps stable API field error codes to Spanish form copy. */
@@ -92,10 +86,10 @@ export class CampaignSelectionPage {
   }
 
   private handleCreateError(error: unknown): void {
-    const apiError = error as Partial<CampaignApiError>;
+    const apiError = toCampaignApiError(error);
 
-    if (apiError.kind === 'fieldError' && apiError.field === 'name') {
-      this.nameError.set(apiError.code as 'campaign_name_invalid' | 'campaign_name_conflict');
+    if (apiError.kind === 'fieldError') {
+      this.nameError.set(apiError.code);
       return;
     }
 
