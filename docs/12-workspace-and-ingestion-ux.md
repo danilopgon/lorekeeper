@@ -1,6 +1,6 @@
 # 12 — Workspace and Ingestion UX: First Approach
 
-**Status:** Accepted initial approach; detailed slice specifications pending.  
+**Status:** Accepted initial approach; 04A specified on 2026-11-11 except the inspect action; later slices pending.  
 **Date:** 2026-09-13
 
 This defines the initial product flow, not a final visual design or an executable API contract. Apply the roadmap Definition of Ready before implementing each slice.
@@ -35,7 +35,7 @@ Do not render unfinished methods as working actions. Do not silently accept unsu
 
 1. Open Sources → Add content within a selected campaign.
 2. Choose an available entry method; select files, paste text or configure Notion.
-3. Review detected documents: title, origin/format, optional content category and destination campaign. Display unsupported or invalid input before confirmation where possible.
+3. Review detected documents: title, origin/format, optional content category, knowledge status and destination campaign. The browser reads the files, validates extension, size and UTF-8, proposes a title from the first heading or the file name, and computes each content hash; the server only reports which hashes already exist in the campaign. Invalid files are shown and not sent. Duplicate content is flagged and excluded by default. The server validates everything again on import (`06`).
 4. Confirm import. Bind the operation to that campaign even if the user later navigates elsewhere.
 5. Show progress per document, then availability or an actionable error and retry.
 
@@ -43,16 +43,17 @@ Content categories: session notes, preparation, characters/places, general refer
 
 ## Progress and source list
 
-User-facing stages: **Reading → Preparing → Indexing → Available**, with **Error** and retry. Internal job states and transport will be specified before implementation. Partial batch failure must preserve successful documents and identify failed ones. Expose useful errors without provider credentials or private internal payloads.
+User-facing stages show only steps that exist: **En cola → Procesando → Disponible**, with **Error** and Reintentar (decided 2026-11-11; this replaces the earlier Reading → Preparing → Indexing → Available proposal). 05A adds an indexing stage only if its lexical index is not built in the same transaction as the chunks; 05B adds an embedding stage. Jobs follow ADR-009 and progress streams over SSE (ADR-010). Partial batch failure must preserve successful documents and identify failed ones. Expose useful errors without provider credentials or private internal payloads.
 
-Rows show title, origin, state, last successful update and available actions: inspect, update, remove; retry after failure. Show pending/failed updates distinctly from the availability of an older indexed version. Use accessible status announcements, keyboard navigation and loading/empty/error/success states. Colour alone does not communicate status.
+Rows show title, origin, state, last successful update and available actions: inspect, update, edit metadata (title, category, knowledge status), remove; retry after failure. The inspect action's content and contract are still open. Show pending/failed updates distinctly from the availability of an older indexed version. Use accessible status announcements, keyboard navigation and loading/empty/error/success states. Colour alone does not communicate status.
 
 ## Update and removal semantics
 
 - Updating an existing source replaces its indexed version rather than creating a duplicate source. A normal new import is not automatically an update solely because its filename matches.
 - Keep the previous usable indexed version while preparing a replacement. Publish a complete successful replacement atomically for retrieval; a failed update leaves the old version usable.
-- Removing a source excludes it from future retrieval and answer generation. Define deletion-versus-in-flight-query behaviour before implementing removal.
-- Existing conversation citations indicate when a source is no longer available; do not silently resolve them to unrelated content. Version/snapshot retention and historical citation resolution remain pre-implementation decisions.
+- An update is started explicitly from the source's row. Content identical to the published version changes nothing. After a successful publication the superseded version is deleted; no history is kept.
+- Removing a source excludes it from future retrieval and answer generation, and wins over any job still processing it. Its content is deleted and a tombstone remains (`03`). Behaviour against an in-flight query is decided with 05A.
+- Existing conversation citations indicate when a source is no longer available; do not silently resolve them to unrelated content. Historical citation resolution after an update is a pre-06 decision.
 
 ## Acceptance scenarios to expand per slice
 
@@ -68,7 +69,7 @@ Rows show title, origin, state, last successful update and available actions: in
 
 Before **01**: campaign creation fields, selector/navigation behaviour, minimal layout/tokens and screen states.
 
-Before **04A**: upload size/count/encoding limits, pasted-text limits, supported Markdown handling, duplicate identity policy, preview API, job lifecycle, retry/idempotency, version publication, deletion races and retention. Define concrete DTOs and observable acceptance criteria in 02/03/06; update 05/07 for processing and data policies.
+Before **04A**: recorded on 2026-11-11 in `02` (US-02), `03` (Source), `06` (Sources), `07` and ADR-008 to ADR-011. Still open: the inspect action. Readiness is tracked in `10`.
 
 Before **05A**: where search lives (Sources, Chat or its own route), result fragment and locator display, empty/no-match states and how results link to the source fragment.
 
