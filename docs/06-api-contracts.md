@@ -181,8 +181,8 @@ Ingestion is job-based (ADR-009) and progress streams over SSE (ADR-010). Rules 
   "lastPublishedAt": "2026-11-11T10:00:00Z",
   "processing": {
     "state": "failed",
-    "errorCode": "source_encoding_invalid",
-    "attempts": 1
+    "errorCode": "source_processing_failed",
+    "attempts": 3
   },
   "createdAt": "2026-11-10T09:00:00Z",
   "updatedAt": "2026-11-11T10:05:00Z"
@@ -194,7 +194,7 @@ Ingestion is job-based (ADR-009) and progress streams over SSE (ADR-010). Rules 
 - `knowledgeStatus`: `unknown`, `preparation` or `occurred`.
 - `availability`: `available` when a version is published, otherwise `unavailable`.
 - `lastPublishedAt`: when the published version became available, or `null`.
-- `processing`: the pending version's job (`queued`, `processing` or `failed`), or `null` when nothing is pending. A source can be `available` and have a failed `processing` at once: the old version stays usable after a failed update.
+- `processing`: the pending version's job (`queued`, `processing` or `failed`), or `null` when nothing is pending. `errorCode` is set only when `failed`: `source_processing_unavailable` (transient failures persisted after the automatic retries) or `source_processing_failed` (unexpected failure that is not retried). Content errors are rejected before a job exists, so they never appear here. A source can be `available` and have a failed `processing` at once: the old version stays usable after a failed update.
 
 ### `GET /sources`
 
@@ -223,7 +223,7 @@ Imports a batch of files. `multipart/form-data` with:
 - `files`: 1–50 file parts.
 - `metadata`: one JSON part, an array with one entry per file in the same order: `{ "title": "…", "category": null, "knowledgeStatus": "unknown" }`.
 
-The server validates request shape first (ADR-011), then each file independently. Duplicate content is not rejected; the review warns about it.
+The server validates request shape first (ADR-011); a failure rejects the whole request with `400`. Each file is then validated independently, and a failing file becomes a `rejected` item instead of failing the request. Duplicate content is not rejected; the review warns about it.
 
 `202 Accepted`:
 

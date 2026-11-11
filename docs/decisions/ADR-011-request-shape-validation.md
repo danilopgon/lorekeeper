@@ -11,7 +11,7 @@ Issue #22 asked whether FluentValidation improves command validation. Campaign v
 | Group | Examples | Needs the database |
 | --- | --- | --- |
 | Domain invariants | Title 1–120 characters, size up to 1 MiB, valid UTF-8, knowledge status value | No |
-| Request shape | Multipart batch not empty, at most 50 files, supported extension per file, metadata entry for each file | No |
+| Request shape | Multipart batch not empty, at most 50 files, `metadata` part present and parseable, one metadata entry per file | No |
 | State and existence | Campaign exists, source belongs to the campaign, no update while a job is running, source not removed | Yes |
 
 ## Alternatives considered
@@ -40,7 +40,7 @@ Use **Option B**, limited to request shape. Close #22 with this decision.
 - Domain invariants stay in value objects and return typed domain results, as `CampaignName` does.
 - State and existence rules stay in handlers, which query through ADR-008 interfaces and return typed results.
 - Request-shape rules live in `IValidator<T>` classes next to the command, invoked explicitly before dispatch or at the start of the handler. They never repeat a value-object rule.
-- Validation failures map to the same `400` Problem Details with stable codes as other expected errors (`06`). Domain and Application results do not reference FluentValidation types.
+- Request-shape failures reject the whole request with `400` Problem Details and stable codes (`06`). Per-file checks (extension, size, UTF-8, empty text, title, category, knowledge status) are not request shape: in a batch import they produce per-item outcomes inside the `202` response. Domain and Application results do not reference FluentValidation types.
 - `CreateCampaignCommand` keeps its current validation; it has no request-shape rule worth a validator.
 - No MediatR pipeline behavior is added.
 

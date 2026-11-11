@@ -25,7 +25,7 @@ The key constraint is atomicity: a job must be created in the same transaction a
 ### Option C — Hangfire
 
 - Benefits: mature, dashboard, automatic retries.
-- Costs/risks: stores jobs through its own storage layer and schema; PostgreSQL storage is a community package; enqueueing inside the application's EF Core transaction is not documented in the core docs we checked (atomic batches are a Hangfire Pro feature), so atomicity would rest on unverified `TransactionScope` enlistment. Jobs serialize method calls, which is fragile under refactoring.
+- Costs/risks: stores jobs through its own storage layer and schema; PostgreSQL storage is a community package; the core docs we checked show atomic creation only for job batches, not enqueueing inside the application's EF Core transaction, so atomicity would rest on unverified `TransactionScope` enlistment in the PostgreSQL storage package. Jobs serialize method calls, which is fragile under refactoring.
 
 ### Option D — TickerQ
 
@@ -46,7 +46,7 @@ Use **Option E**: a job table in PostgreSQL, processed by a hosted `BackgroundSe
 - A `source_ingestion_jobs` table owned by the Sources module, with `campaignId`, `sourceVersionId`, state (`queued`, `processing`, `succeeded`, `failed`), attempt count, next attempt time, lease expiry and a public error code.
 - The command that creates a `SourceVersion` adds its job in the same unit of work (ADR-008).
 - Workers claim jobs with `SELECT … FOR UPDATE SKIP LOCKED` and set a lease. A job whose lease expires returns to `queued`, so a crash never leaves it stuck.
-- **Retries:** up to 3 attempts with growing delay for transient failures (database or provider). Content errors (invalid UTF-8, empty text) fail immediately without retry. After the final failure the operator can retry manually; a manual retry reprocesses the same version.
+- **Retries:** up to 3 attempts with growing delay for transient failures (database or provider). Content errors are rejected before a job is created (`06`); an unexpected processing failure fails immediately without retry. Public job error codes are listed in `06`. After the final failure the operator can retry manually; a manual retry reprocesses the same version.
 - **Idempotency:** processing a version replaces any chunks it already wrote, so a retried job never duplicates chunks.
 - **Removal wins:** a job that finds its source removed discards its work without publishing.
 - State changes notify the in-process event stream used by SSE (ADR-010).
@@ -73,7 +73,7 @@ Use **Option E**: a job table in PostgreSQL, processed by a hosted `BackgroundSe
 
 ## Success criterion
 
-- Integration tests show that a version and its job commit atomically, an expired lease is reclaimed, transient failures retry up to the limit, content errors do not retry, and a removed source is never published.
+- Integration tests show that a version and its job commit atomically, an expired lease is reclaimed, transient failures retry up to the limit, unexpected failures do not retry, and a removed source is never published.
 
 ## Future review
 
