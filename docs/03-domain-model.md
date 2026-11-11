@@ -110,7 +110,8 @@ State `queued` → `processing` → `succeeded` or `failed`, with attempt count 
 - After a successful publication, the superseded version and its chunks are deleted. Only the published version is retained.
 - **Update** is an explicit operation on an existing source. If the new text has the same `contentHash` as the published version, nothing changes.
 - **Duplicates:** an import whose `contentHash` matches a non-removed source in the same campaign is flagged during review and excluded by default; the operator may import it anyway. Hashes are never compared across campaigns.
-- **Removal wins over processing.** Removing a source sets `removedAt` and excludes it from retrieval in one transaction. A job that later finds the source removed discards its work. The source's versions, chunks and jobs are then deleted, leaving a tombstone with `id`, `campaignId`, `title` and `removedAt` so later citations can report that the source is no longer available. Whether the purge runs in the removal transaction or afterwards is decided in the 04A implementation.
+- **Removal wins over processing.** Removing a source sets `removedAt` and excludes it from retrieval in one transaction. A job that later finds the source removed discards its work. The same transaction deletes the source's versions, chunks and jobs, leaving a tombstone with `id`, `campaignId`, `title` and `removedAt` so later citations can report that the source is no longer available.
+- **No overlapping updates.** An update is refused while the source has a version queued or processing; the operator waits for it to finish or fail.
 - Editing `title`, `category` or `knowledgeStatus` does not create a version or reprocess content.
 - Knowledge status never asserts player knowledge, and an unknown status is never presented as confirmed canon.
 

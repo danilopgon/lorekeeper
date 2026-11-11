@@ -5,7 +5,7 @@
 | ID | Story | Priority | Status |
 | --- | --- | --- | --- |
 | US-01 | Create/select a campaign and enter an empty workspace shell | Must | Defined |
-| US-02 | Import, update and remove Markdown/text sources in a campaign | Must | Draft (04A, not ready; see `10`) |
+| US-02 | Import, update and remove Markdown/text sources in a campaign | Must | Defined (04A) |
 
 ## US-01 — Campaign selection and empty workspace shell
 
@@ -73,7 +73,7 @@ Rules live in `03` (Source), contracts in `06` (Sources) and flow in `12`. Decid
 - Notion import (04B), PDF, DOCX and ZIP.
 - Search and retrieval (05A), embeddings (05B), chat and citations (06).
 - Source version history; only the published version is kept.
-- The inspect action from `12`, until its contract is specified.
+- The inspect action from `12`, moved to 05A.
 
 ### Verification
 

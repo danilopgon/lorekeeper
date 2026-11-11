@@ -10,7 +10,7 @@ Apply the blocking Definition of Ready in `08-quality-strategy.md` before every 
 
 - **Done:** Definition, 00, 01, DS, 02.
 - **Next:** the #18 refactor (ADR-008): Campaign moves to a command repository and a read interface, with unchanged behaviour. It is ready and sets the persistence pattern Sources reuses.
-- **Then, not ready:** 04A Sources. Its entry decisions were recorded on 2026-11-11 (see its readiness record); the inspect action is still open.
+- **Then:** 04A Sources, ready since 2026-11-11 (see its readiness record); it starts after #18.
 - **Execution order after that:** 05A → 03 → 05B. 03 runs after 05A because the first useful version needs no AI.
 - **First useful version target:** 05A — the operator can import Markdown/text notes into a campaign and search them with source-backed fragments, without an LLM.
 
@@ -26,8 +26,8 @@ Block IDs are kept for traceability with issues and history; the order column is
 | 1 | DS | Frontend design-system foundation (#8) | 01 | Approved in #8: self-hosted fonts and delivery (2026-10-01); Hallmark audit outcomes (2026-10-30); Spanish UI copy (ADR-005) | Fonts load locally; tokens generate Tailwind v4 utilities; current screens use shared primitives and states; Spanish UI with `lang="es"`; accessibility review recorded | Done |
 | 1 | 02 | Generated OpenAPI contract | 01 | Recorded in 06 and ADR-006 (2026-10-31): build-time OpenAPI document, Development-only Swagger UI, hey-api types and Zod schemas, committed output and contract-diff policy; frontend query/command split | OpenAPI document and TypeScript output generated and committed; CI contract-diff gate fails on stale output; Swagger UI and `/openapi` absent outside Development; campaign feature uses `httpResource` queries and `CampaignCommands` with generated schemas | Done |
 | 2 | #18 | Campaign persistence boundary | 01 | Recorded in ADR-008 (2026-11-11) | Campaign commands use `ICampaignRepository` and queries a read interface; Application references neither EF Core nor Npgsql; Campaign routes, payloads and error codes unchanged | Not started |
-| 3 | 04A | Sources: Markdown/text and pasted text | 01, 02, DS, #18 | Recorded on 2026-11-11 in 02 (US-02), 03, 06, 07, 12 and ADR-008 to ADR-011; open: inspect action | Supported inputs imported per campaign; partial failure, update, removal and campaign isolation verified against PostgreSQL; job queue and SSE verified; OpenTelemetry traces visible in the Aspire dashboard; initial eval fixtures committed | Not started |
-| 4 | 05A | Lexical source search (FTS) | 04A | FTS language/configuration, ranking and snippet/locator contract, whether indexing is a separate stage, removal versus in-flight query, search placement in the workspace (12/DESIGN), initial eval corpus with expected sources | Campaign-scoped search returns fragments with real locators; lexical baseline (Recall@K/MRR) recorded; no cross-campaign leakage | Not started |
+| 3 | 04A | Sources: Markdown/text and pasted text | 01, 02, DS, #18 | Recorded on 2026-11-11 in 02 (US-02), 03, 06, 07, 12 and ADR-008 to ADR-011 | Supported inputs imported per campaign; partial failure, update, removal and campaign isolation verified against PostgreSQL; job queue and SSE verified; OpenTelemetry traces visible in the Aspire dashboard; initial eval fixtures committed | Not started |
+| 4 | 05A | Lexical source search (FTS) | 04A | FTS language/configuration, ranking and snippet/locator contract, whether indexing is a separate stage, removal versus in-flight query, the inspect action moved from 04A, search placement in the workspace (12/DESIGN), initial eval corpus with expected sources | Campaign-scoped search returns fragments with real locators; lexical baseline (Recall@K/MRR) recorded; no cross-campaign leakage | Not started |
 | 5 | 03 | AI ports and deterministic fake | 01 | Recorded in 05 (2026-11-11); concrete models chosen during compatibility verification | Fakes verify orchestration; Ollama adapter compatibility checked; models recorded in 05 | Not started |
 | 6 | 05B | Vector retrieval | 03, 05A | Embedding model/dimensions within pgvector index limits, vector index configuration, candidate limits; whether offline Python comparisons add value; NaN adoption | Vector baseline recorded beside the lexical one on the same corpus; no campaign leakage | Not started |
 | 7 | 06 | Fusion and grounded answer (Chat) | 05B | RRF settings, reranker decision and `IReranker`, budgets, citations and historical citation resolution, contradictions, insufficient evidence, SSE chat event schema (ADR-010) and generation criteria in 02/05/06; hosted-provider data decision in 07; conversation persistence and drafts in 12 | Answers trace to campaign evidence; comparison against baselines recorded | Not started |
@@ -79,7 +79,7 @@ These spikes are optional engineering experiments. None blocks a block unless th
 
 ## Open questions
 
-- **Timestamp format in `06`.** The API returns offsets such as `2026-11-03T12:26:57.321398+00:00`, while the examples in `06` show `Z`. Either correct the examples or make the API emit `Z`. Raised in #34; it does not block 04A.
+- None on the current critical path. The timestamp question raised in #34 was resolved on 2026-11-11: the examples in `06` now match the `+00:00` offset the API emits.
 - Entry decisions listed in the sequence table remain unresolved until recorded in their owning documents.
 
 ## AI engineering extension rule
@@ -104,13 +104,13 @@ OpenTelemetry remains the default system-wide observability stack. Langfuse, Gen
 - **DS — Done.** Decisions approved in #8 (fonts, language and delivery on 2026-10-01; Hallmark audit outcomes on 2026-10-30) and recorded in `DESIGN.md` and ADR-005. Slices 1–3 merged together in #29 on 2026-10-30. Evidence: five self-hosted font faces load from local `/media/*.woff2`; Tailwind v4 `@theme` tokens generate utilities; register and workspace use shared primitives and route states; Spanish copy with `lang="es"`, per-route titles and API error codes mapped to Spanish; accessibility review in #29 (verified contrast pairs, visible keyboard focus, field-associated errors, enlarged tap areas, reduced motion, no overflow at 390 px); format, lint, 27 unit tests, build and 2 E2E flows against PostgreSQL passed.
 - **02 — Done (#31, closed 2026-11-04).** Entry decisions recorded on 2026-10-31: document generation, runtime exposure, generator, output locations and contract-diff policy in `06`; frontend query/command data access in ADR-006 and `docs/conventions/frontend.md`. Delivered in #34. Evidence: build-time OpenAPI document with generated hey-api types and Zod schemas committed; `contract:check` exits 1 after a `CampaignDto` change and the `Contract` CI job passed on #34; `/openapi/v1.json` and Swagger UI return 200 in Development and 404 in Production and Staging (integration tests); campaign feature uses `httpResource` queries and `CampaignCommands`; 48 frontend tests, 66 backend tests, format, lint, Release build, 2 Playwright flows against PostgreSQL and `pnpm audit --prod --audit-level=high` passed. Not verified in #34: `pnpm run dev` with these changes and the Swagger UI in a browser beyond its 200 response. The initial bundle grew from 316 to 418 kB raw (84 to 110 kB transfer), probably from Zod; no breakdown was recorded.
 - **#18 — Ready.** ADR-008 defines the pattern; #18 lists the acceptance criteria; existing Campaign tests define unchanged behaviour. No open decision.
-- **04A — Not started, not ready.** Recorded on 2026-11-11: acceptance criteria (US-02 in `02`), Source invariants and chunking (`03`), Sources contract, limits and SSE events (`06`), private-data policy (`07`), stages and review flow (`12`), persistence (ADR-008), job queue (ADR-009), SSE (ADR-010), validation (ADR-011) and OpenTelemetry (`04`). Definition of Ready check:
-  - Outcome, scope and dependencies: explicit; depends on #18.
-  - Product and domain decisions: resolved except the **inspect action** (what it shows and its contract). Unblock: decide it in `12` and specify it in `06`, or move it out of 04A.
+- **04A — Not started, ready.** Recorded on 2026-11-11: acceptance criteria (US-02 in `02`), Source invariants and chunking (`03`), Sources contract, limits and SSE events (`06`), private-data policy (`07`), stages and review flow (`12`), persistence (ADR-008), job queue (ADR-009), SSE (ADR-010), validation (ADR-011) and OpenTelemetry (`04`). Definition of Ready check:
+  - Outcome, scope and dependencies: explicit; depends on #18. The inspect action moved to 05A.
+  - Product and domain decisions: resolved, including update refused while a version is processing and purge in the removal transaction.
   - Acceptance criteria: US-02 covers success, limits, partial failure, update, removal and isolation.
-  - Contracts and invariants: specified; DTO names, error codes and event names were proposed with the decisions and are reviewed in the PR that records them.
+  - Contracts and invariants: specified; DTO names, error codes and event names approved by the maintainer.
   - Verification and fixtures: listed in US-02; synthetic fixtures only.
-  - Unresolved items on the critical path: the inspect action.
+  - Unresolved items on the critical path: none.
 - **03 — Not started.** Entry decisions recorded in `05` on 2026-11-11; models are chosen during the block's own compatibility check. Sequenced after 05A.
 
 ## Cross-cutting gates

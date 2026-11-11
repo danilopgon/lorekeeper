@@ -1,6 +1,6 @@
 # 12 — Workspace and Ingestion UX: First Approach
 
-**Status:** Accepted initial approach; 04A specified on 2026-11-11 except the inspect action; later slices pending.  
+**Status:** Accepted initial approach; 04A specified on 2026-11-11; later slices pending.  
 **Date:** 2026-09-13
 
 This defines the initial product flow, not a final visual design or an executable API contract. Apply the roadmap Definition of Ready before implementing each slice.
@@ -45,7 +45,7 @@ Content categories: session notes, preparation, characters/places, general refer
 
 User-facing stages show only steps that exist: **En cola → Procesando → Disponible**, with **Error** and Reintentar (decided 2026-11-11; this replaces the earlier Reading → Preparing → Indexing → Available proposal). 05A adds an indexing stage only if its lexical index is not built in the same transaction as the chunks; 05B adds an embedding stage. Jobs follow ADR-009 and progress streams over SSE (ADR-010). Partial batch failure must preserve successful documents and identify failed ones. Expose useful errors without provider credentials or private internal payloads.
 
-Rows show title, origin, state, last successful update and available actions: inspect, update, edit metadata (title, category, knowledge status), remove; retry after failure. The inspect action's content and contract are still open. Show pending/failed updates distinctly from the availability of an older indexed version. Use accessible status announcements, keyboard navigation and loading/empty/error/success states. Colour alone does not communicate status.
+Rows show title, origin, state, last successful update and available actions: inspect, update, edit metadata (title, category, knowledge status), remove; retry after failure. The inspect action arrives with 05A, together with fragment and locator display. Show pending/failed updates distinctly from the availability of an older indexed version. Use accessible status announcements, keyboard navigation and loading/empty/error/success states. Colour alone does not communicate status.
 
 ## Update and removal semantics
 
@@ -69,7 +69,9 @@ Rows show title, origin, state, last successful update and available actions: in
 
 Before **01**: campaign creation fields, selector/navigation behaviour, minimal layout/tokens and screen states.
 
-Before **04A**: recorded on 2026-11-11 in `02` (US-02), `03` (Source), `06` (Sources), `07` and ADR-008 to ADR-011. Still open: the inspect action. Readiness is tracked in `10`.
+Before **04A**: recorded on 2026-11-11 in `02` (US-02), `03` (Source), `06` (Sources), `07` and ADR-008 to ADR-011. The inspect action moved to 05A. Readiness is tracked in `10`.
+
+Before **05A** also: what inspecting a source shows (text, fragments, locators) and its contract.
 
 Before **05A**: where search lives (Sources, Chat or its own route), result fragment and locator display, empty/no-match states and how results link to the source fragment.
 

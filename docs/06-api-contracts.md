@@ -5,7 +5,7 @@
 - Base path: `/api`.
 - Authentication: none for local development in the first slice. A campaign identifier is not an authentication credential. Internet exposure remains blocked until `07-data-security-and-rls.md` selects and verifies an access-control layer.
 - Error format: RFC 7807 Problem Details with a stable `code` extension for expected client-handled failures.
-- Dates and times: UTC ISO 8601 strings.
+- Dates and times: UTC ISO 8601 strings. The API serializes them with a numeric offset (`2026-11-03T12:26:57.321398+00:00`), not `Z`; clients accept both (decided 2026-11-11).
 - Pagination/versioning/idempotency: no pagination, public API versioning or idempotency key is required for the first campaign slice. Add those only when a later slice needs them. Source import is not idempotent by key; the review step flags duplicate content instead (`03`).
 
 ## Source of truth and client generation
@@ -35,8 +35,8 @@ ASP.NET endpoint contracts generate OpenAPI. Block 01 uses a narrow handwritten 
 {
   "id": "opaque-id",
   "name": "Ash Crown",
-  "createdAt": "2026-09-15T12:00:00Z",
-  "updatedAt": "2026-09-15T12:00:00Z"
+  "createdAt": "2026-09-15T12:00:00+00:00",
+  "updatedAt": "2026-09-15T12:00:00+00:00"
 }
 ```
 
@@ -72,8 +72,8 @@ No body.
   {
     "id": "opaque-id",
     "name": "Ash Crown",
-    "createdAt": "2026-09-15T12:00:00Z",
-    "updatedAt": "2026-09-15T12:00:00Z"
+    "createdAt": "2026-09-15T12:00:00+00:00",
+    "updatedAt": "2026-09-15T12:00:00+00:00"
   }
 ]
 ```
@@ -105,8 +105,8 @@ Status: `201 Created`
 {
   "id": "opaque-id",
   "name": "Ash Crown",
-  "createdAt": "2026-09-15T12:00:00Z",
-  "updatedAt": "2026-09-15T12:00:00Z"
+  "createdAt": "2026-09-15T12:00:00+00:00",
+  "updatedAt": "2026-09-15T12:00:00+00:00"
 }
 ```
 
@@ -133,8 +133,8 @@ No body.
 {
   "id": "opaque-id",
   "name": "Ash Crown",
-  "createdAt": "2026-09-15T12:00:00Z",
-  "updatedAt": "2026-09-15T12:00:00Z"
+  "createdAt": "2026-09-15T12:00:00+00:00",
+  "updatedAt": "2026-09-15T12:00:00+00:00"
 }
 ```
 
@@ -178,14 +178,14 @@ Ingestion is job-based (ADR-009) and progress streams over SSE (ADR-010). Rules 
   "category": "session_notes",
   "knowledgeStatus": "occurred",
   "availability": "available",
-  "lastPublishedAt": "2026-11-11T10:00:00Z",
+  "lastPublishedAt": "2026-11-11T10:00:00+00:00",
   "processing": {
     "state": "failed",
     "errorCode": "source_processing_failed",
     "attempts": 3
   },
-  "createdAt": "2026-11-10T09:00:00Z",
-  "updatedAt": "2026-11-11T10:05:00Z"
+  "createdAt": "2026-11-10T09:00:00+00:00",
+  "updatedAt": "2026-11-11T10:05:00+00:00"
 }
 ```
 
@@ -284,7 +284,7 @@ A comment line (`: ping`) is sent every 15 seconds to keep idle connections open
 
 ### Inspect
 
-`12` lists an inspect action for each source. Its contract is not specified yet; see the 04A readiness record in `10`.
+The inspect action from `12` moved to block 05A on 2026-11-11, together with fragment and locator display. 04A has no inspect endpoint.
 
 ## External integrations
 
