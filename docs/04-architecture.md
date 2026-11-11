@@ -87,15 +87,25 @@ The `ai/` workbench is not an application runtime boundary by default and is not
 ## Pragmatic CQRS
 
 ```text
-Command → Handler → Domain change → Unit of Work
-Query   → Handler → Read model / projection
+Command → Handler → Domain change → Module repository (owns SaveChanges)
+Query   → Handler → Module read interface → DTO projection
 ```
 
-- Commands express intent and enforce invariants.
-- Queries can use purpose-built projections and need not hydrate aggregates.
+- Commands express intent and enforce invariants. They load and save aggregates through a module-specific repository owned by Application and implemented with EF Core in Infrastructure, which also translates PostgreSQL errors into application results (ADR-008).
+- Queries use a module-specific read interface that returns purpose-built projections and never hydrates aggregates (ADR-008).
+- Validation has three homes (ADR-011): domain invariants in value objects, request shape in explicit FluentValidation validators, and state or existence rules in handlers.
 - A feature folder owns request, result, validation, handler and tests.
 - Campaign create/list/get messages implement `IRequest<TResponse>` and handlers implement `IRequestHandler<TRequest, TResponse>`; Campaign controllers inject `ISender` and retain HTTP-to-message mapping, while expected application results use a focused Campaign Problem Details mapper. ASP.NET Core's centrally registered `Api.Common.Presentation.ExceptionHandling.UnexpectedExceptionHandler` owns unexpected `unexpected_error` responses.
-- Add mediator dispatch to another module only through an ADR with a demonstrated benefit. Do not introduce pipeline behaviors, repositories, generic base handlers or wrapper interfaces without a demonstrated need.
+- Add mediator dispatch to another module only through an ADR with a demonstrated benefit. Do not introduce pipeline behaviors, generic repositories, generic base handlers or wrapper interfaces without a demonstrated need.
+
+## Background work and streaming
+
+- Source ingestion runs as jobs in a PostgreSQL table owned by the Sources module, claimed by a hosted `BackgroundService` with `FOR UPDATE SKIP LOCKED` and a lease (ADR-009). A job is created in the same unit of work as the source version it processes.
+- Server-to-browser streams use Server-Sent Events (ADR-010). The client loads state with a GET, then subscribes; it refetches state on every reconnection. Workers publish through an in-process channel, which assumes a single API instance.
+
+## Observability
+
+Block 04A adds the Aspire `ServiceDefaults` project to the API and enables OpenTelemetry traces, metrics and logs for ASP.NET Core, HttpClient, EF Core/Npgsql and the ingestion jobs. Locally they appear in the Aspire dashboard (ADR-007, whose review trigger is background work). Telemetry never records note content, source titles or prompts; see `07`. AI calls add `Microsoft.Extensions.AI` OpenTelemetry instrumentation from block 03 onward.
 
 ## Angular rules
 
@@ -162,7 +172,7 @@ ASP.NET Problem Details, structured logging, request correlation, OpenTelemetry,
 
 - No microservices without an independently deployable need.
 - No Python runtime service solely to adopt AI ecosystem tooling.
-- No generic repository over EF Core.
+- No generic repository over EF Core; module-specific repositories follow ADR-008.
 - No service locator or framework types inside Domain.
 - No speculative shared library.
 - No direct SDK calls from handlers or Angular.

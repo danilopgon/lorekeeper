@@ -7,11 +7,21 @@
 | Campaign | One campaign workspace in the personal Lorekeeper installation. It scopes future sources, retrieval and chat context. | A user account, tenant, team, permission boundary or AI conversation. |
 | Active campaign | The campaign identified by the current URL, such as `/campaigns/{campaignId}/chat` or `/campaigns/{campaignId}/sources`. | A hidden session default or browser-local preference that can override the URL. |
 | Workspace shell | The campaign-scoped Chat or Sources route and layout before ingestion or AI behaviours exist. | Working ingestion, retrieval, source management or answer generation. |
+| Source | One imported document in a campaign, with a stable identity across updates. | A file name: importing a file with the same name creates a new source unless the operator chooses Update. |
+| Source version | One immutable snapshot of a source's text. | An edit in place: updating creates a new version. |
+| Published version | The version of a source that retrieval reads. | The newest version: a pending or failed update is not published. |
+| Chunk | A fragment of one version, cut on structural boundaries, with real line locators. | A whole document or a paragraph of another version. |
+| Content category | Optional label for what a note is about (session notes, preparation, characters/places, general reference). | Knowledge status. |
+| Knowledge status | Whether a source records preparation or events that occurred, or is unknown. | Player knowledge, which is only claimed when source text supports it (`05`, `DESIGN.md`). |
 
 ## Entity map
 
 ```text
 Campaign
+└── Source ──(publishedVersionId)──┐
+    └── SourceVersion  ◄───────────┘
+        ├── SourceChunk
+        └── SourceIngestionJob
 ```
 
 ## Campaign
@@ -38,19 +48,86 @@ Campaign
 - Campaign deletion is excluded from the first implementation slice. Do not implement soft delete, hard delete, archival or cascade policies until a later slice defines them.
 - Ingestion, source lifecycle, AI chat, retrieval, citations and conversation persistence are outside this first slice and have no domain transitions here.
 
+## Source (block 04A)
+
+Decided on 2026-11-11. Block 04A implements it; Campaign deletion stays out of scope.
+
+### Source
+
+**Purpose:** Stable identity of one imported document inside one campaign.  
+**Lifecycle:** Created by an import or paste → available once its first version is published → updated by explicit Update → removed.
+
+| Field | Rule |
+| --- | --- |
+| `id` | Server-generated UUID. |
+| `campaignId` | Required. Never changes. |
+| `title` | Required; trimmed; 1–120 characters. Proposed from the first heading or the file name, editable at review and afterwards. Not unique. |
+| `origin` | `file` or `paste`. Never changes. |
+| `category` | Optional: `session_notes`, `preparation`, `characters_places`, `general_reference`. Absent means unclassified. |
+| `knowledgeStatus` | `unknown` (default), `preparation` or `occurred`. Editable. |
+| `publishedVersionId` | The version retrieval reads, or none before the first successful publication. |
+| `removedAt` | Set when the source is removed. |
+
+### SourceVersion
+
+**Purpose:** Immutable snapshot of a source's text.
+
+| Field | Rule |
+| --- | --- |
+| `id`, `campaignId`, `sourceId` | Required; `campaignId` equals the source's. |
+| `originalText` | The decoded UTF-8 text with any BOM removed, unchanged otherwise. At most 1 MiB encoded. Never empty or whitespace only. |
+| `contentHash` | SHA-256, as lowercase hex, of `originalText` encoded as UTF-8. Line endings are not normalised, so the same note saved with CRLF and with LF hashes differently. |
+| `frontmatter` | YAML frontmatter, if the Markdown file starts with one. Stored, not indexed. |
+| `fileName` | Original file name for `file` origin. Metadata only. |
+| `createdAt` | Server-owned UTC. |
+
+### SourceChunk
+
+| Field | Rule |
+| --- | --- |
+| `id`, `campaignId`, `sourceVersionId` | Required; `campaignId` equals the version's. |
+| `ordinal` | Position in the version, from 0. |
+| `headingPath` | Ordered headings above the chunk, for example `Sesión 3 > Taberna`. Empty for text without headings. |
+| `startLine`, `endLine` | 1-based, inclusive lines of `originalText`. These are the real locators shown in citations. |
+| `text` | The exact slice of `originalText` between those lines. |
+
+Chunking rules:
+
+- Markdown (`.md`, `.markdown`): every heading from `#` to `######` starts a chunk. A section longer than the configured limit (initially 2,000 characters) is split at paragraph boundaries. Fenced code blocks and tables are never split. Frontmatter is excluded.
+- Text (`.txt` and pasted text): split at paragraph boundaries with the same limit.
+- Content is never rewritten or normalised.
+
+### SourceIngestionJob
+
+State `queued` → `processing` → `succeeded` or `failed`, with attempt count and public error code. Mechanics in ADR-009.
+
+### Invariants
+
+- Every source, version, chunk and job carries the same `campaignId` as its parent; composite foreign keys enforce it.
+- A version is immutable after creation. Its chunks are replaced only while it is being processed, never after publication.
+- Retrieval reads only chunks of a source's published version, and never of a removed source.
+- **Publication is atomic.** When a version's job succeeds, writing its chunks and moving `publishedVersionId` to it happen in one transaction. A failed or pending version leaves the previous published version untouched.
+- After a successful publication, the superseded version and its chunks are deleted. Only the published version is retained.
+- **Update** is an explicit operation on an existing source. If the new text has the same `contentHash` as the published version, nothing changes.
+- **Duplicates:** an import whose `contentHash` matches a non-removed source in the same campaign is flagged during review and excluded by default; the operator may import it anyway. Hashes are never compared across campaigns.
+- **Removal wins over processing.** Removing a source sets `removedAt` and excludes it from retrieval in one transaction. A job that later finds the source removed discards its work. The same transaction deletes the source's versions, chunks and jobs, leaving a tombstone with `id`, `campaignId`, `title` and `removedAt` so later citations can report that the source is no longer available.
+- **No overlapping updates.** An update is refused while the source has a version queued or processing; the operator waits for it to finish or fail.
+- Editing `title`, `category` or `knowledgeStatus` does not create a version or reprocess content.
+- Knowledge status never asserts player knowledge, and an unknown status is never presented as confirmed canon.
+
 ## Accepted campaign boundary
 
 - `Campaign` identifies one campaign in the personal installation. There is no account/tenant aggregate in this release.
 - A configured source belongs to one campaign. A canonical document belongs to that source and campaign; a chunk belongs to that document and the same campaign.
 - Carry `campaignId` through ingestion, persistence, retrieval, context building, citations and any cached/retained query results.
 - Source identity/deduplication must include campaign scope; the same external identifier in another campaign must not cause collisions or overwrite data.
-- Database keys/foreign keys and application validation must prevent inconsistent campaign relationships. Exact source/document/chunk schema remains a block 04A prerequisite.
+- Database keys/foreign keys and application validation must prevent inconsistent campaign relationships. The source, version and chunk schema is defined above.
 - Query input requires an explicit campaign. Campaign deletion and source removal policies must be defined before implementing either operation.
 
 ## Open domain decisions
 
-Block 01 resolves campaign persistence and route identity: campaigns use server-generated UUIDs exposed as lowercase canonical strings, timestamps are server-owned UTC values, and malformed or unknown route IDs show explicit invalid/not-found states without fallback. The first-slice workspace shells remain deliberately unavailable for ingestion and AI behavior. Before block 04A: source/document/chunk schema, source IDs, source lifecycle and update/removal semantics. Before block 04/06: how preparation, actual events and player knowledge are represented, including unknown status. Never infer player discovery merely from a DM note. Before block 06: handling contradictory evidence and temporal questions.
+Block 01 resolves campaign persistence and route identity: campaigns use server-generated UUIDs exposed as lowercase canonical strings, timestamps are server-owned UTC values, and malformed or unknown route IDs show explicit invalid/not-found states without fallback. The first-slice workspace shells remain deliberately unavailable for ingestion and AI behavior. Block 04A source identity, versions, chunks, removal and knowledge status are defined above (2026-11-11). Player knowledge is not stored: block 06 claims it only when source text supports it. Before block 06: handling contradictory evidence and temporal questions, and how a citation resolves once its version has been superseded.
 
 ## Initial workspace/ingestion approach
 
-Sources need explicit replacement/version semantics: old content remains available during an update and is replaced only after full successful publication. Define source identity, version lifecycle, retention and citation references before those behaviours are implemented. Optional content category is separate from knowledge status. See [UX approach](12-workspace-and-ingestion-ux.md).
+The source rules above implement the replacement semantics of the [UX approach](12-workspace-and-ingestion-ux.md). Optional content category stays separate from knowledge status.

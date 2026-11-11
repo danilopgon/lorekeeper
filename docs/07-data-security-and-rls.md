@@ -27,10 +27,16 @@ Do not add application accounts, roles or campaign ownership merely to satisfy t
 
 Until the configuration and smoke evidence exist, remote exposure is **Blocked**, regardless of roadmap progress. This does not block local ingestion/retrieval work. Public anonymous access to real campaign data is not an acceptable interim deployment.
 
-## Decisions before real data ingestion
+## Private data in ingestion and evaluation
 
-Document what campaign content is sent to Notion/AI providers, retention/removal policy and log redaction before ingesting private notes. Synthetic fixtures may be used while these decisions are open.
+Decided on 2026-11-11 for blocks 04A and 03. Notion (04B) and any hosted AI provider still need their own decision before they receive private notes.
+
+- **What leaves the machine:** nothing in 04A. Block 03 develops against a local Ollama, so embedding and chat calls stay on the operator's machine. Sending note content to a hosted provider such as NaN requires an explicit decision before block 06 (`05`).
+- **Logs and telemetry:** record IDs, sizes, hashes, counts, durations, model names, token counts and error codes. Never record note content, source titles, file names, prompts or completions.
+- **Removal:** removing a source deletes its versions, chunks and jobs. A tombstone keeps only `id`, `campaignId`, `title` and `removedAt` for later citations. Superseded versions are deleted after a successful update (`03`).
+- **Fixtures:** committed tests and evaluation fixtures are synthetic.
+- **Local evaluation with real notes:** allowed only from a git-ignored folder, against local providers only, recording aggregate metrics and never content.
 
 ## Secrets and resilience
 
-Keep credentials outside Git; examples contain placeholders only. Do not log private prompts or tokens by default. Define request-size limits, provider budgets, timeouts and abuse controls at the corresponding implementation/deployment gates.
+Keep credentials outside Git; examples contain placeholders only. Do not log private prompts or tokens by default. Define request-size limits, provider budgets, timeouts and abuse controls at the corresponding implementation/deployment gates. Source upload limits are in `06`; AI provider timeouts and retries are in `05`.

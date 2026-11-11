@@ -19,3 +19,7 @@ Create ADRs for provider/stack choices, architectural boundaries, public contrac
 - [ADR-005 — Spanish UI copy for the personal installation](ADR-005-spanish-ui-copy.md)
 - [ADR-006 — Native Angular CQRS data access in the frontend](ADR-006-frontend-cqrs-data-access.md)
 - [ADR-007 — Aspire AppHost for local development orchestration](ADR-007-aspire-local-orchestration.md)
+- [ADR-008 — Repositories for commands and dedicated read interfaces for queries](ADR-008-persistence-repositories-and-read-queries.md)
+- [ADR-009 — PostgreSQL-backed job queue for source ingestion](ADR-009-postgresql-ingestion-job-queue.md)
+- [ADR-010 — Server-Sent Events as the server-to-browser transport](ADR-010-server-sent-events-transport.md)
+- [ADR-011 — FluentValidation for request shape only](ADR-011-request-shape-validation.md)

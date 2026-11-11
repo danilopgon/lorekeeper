@@ -26,6 +26,17 @@ Infrastructure adapters
 
 Provider selection, model names, endpoints and credentials come from validated configuration. The domain does not know which provider is active.
 
+### Block 03 provider policy
+
+Decided on 2026-11-11.
+
+- **Scope:** block 03 delivers `IEmbeddingGenerator` and `IChatModel`, their deterministic fakes and one OpenAI-compatible adapter. `IReranker` moves to block 06, together with the reranker decision.
+- **Development provider:** a native [Ollama](https://ollama.com/) installation on the operator's machine, reached through configuration (`09`). The Aspire AppHost does not start it; if it does not respond, the adapter fails with an explicit error.
+- **Models:** chosen while verifying compatibility in 03, against these criteria: they fit together in the development GPU (8 GB of VRAM), they handle Spanish, and the embedding dimension stays indexable by pgvector (up to 2,000 with `vector`, up to 4,000 with `halfvec`).
+- **Hosted provider:** [NaN](https://nan.builders/docs) is the candidate OpenAI-compatible provider for production quality. Its embedding model returns 4,096 dimensions, above pgvector's index limits, so using it requires a reduced output dimension; check that its API supports one. Whether to adopt it is decided with the 05B baseline, before block 06 is ready, and requires the data decision in `07`.
+- **Failure policy:** 30-second timeout for embeddings and 120 seconds for chat, both configurable. Up to 2 retries with growing delay, only for transient failures (timeout, `429`, `5xx`). Never switch provider silently. A failed embedding job ends in a retryable `Error` (ADR-009); a failed chat request shows an explicit error.
+- **Telemetry:** record provider, model, latency, token counts and retry path through `Microsoft.Extensions.AI` OpenTelemetry instrumentation; never prompts, completions or note content (`07`).
+
 Local-model libraries such as Hugging Face, SentenceTransformers and PyTorch are implementation options, not baseline dependencies. Prefer using them first in offline experiments; promote them to runtime only when evaluation demonstrates a useful quality/cost/latency trade-off.
 
 ## Retrieval pipeline
@@ -52,7 +63,8 @@ grounded response + sources
 
 - Sources are adapters behind a common document contract.
 - Preserve headings, paths, entity type, timestamps and ownership as metadata.
-- Chunk on semantic boundaries before token-size fallback splitting.
+- Chunk on structural boundaries before size fallback splitting; the 04A rules are in `03`.
+- Store the embedding model and dimension with every vector, so changing model means re-embedding rather than mixing incompatible vectors.
 - Track external ID, last-modified time and content hash for idempotent incremental ingestion.
 - Rechunk and re-embed only changed documents.
 - Deletion from a source has an explicit tombstone/removal policy.
@@ -115,6 +127,10 @@ forbidden_facts:
 
 Retrieval evals are deterministic CI candidates. Model-graded generation evals run separately when cost or variance makes them unsuitable as a blocking gate.
 
+Committed fixtures are synthetic and therefore cleaner than real notes, so their metrics may be optimistic. Write them to imitate real mess (abbreviations, broken Markdown, overlapping NPC names, preparation mixed with recaps). A local, git-ignored run over the operator's real notes is allowed under the rules in `07`.
+
+Tooling to inspect and compare eval runs is decided in block 07. Candidates: Genkit Developer UI (traces and dataset evals; would need a TypeScript wrapper that calls the API, never a second pipeline) and Langfuse (prompt and model traces, eval views, costs; accepts OTLP). Runtime traces already reach the Aspire dashboard through OpenTelemetry (`04`).
+
 ## Python experimentation workbench
 
 The product eval gate remains owned by the repository and must be reproducible without depending on ad-hoc notebooks. A Python workbench under `ai/` may complement it for ecosystem-specific experiments and analysis.
@@ -137,11 +153,12 @@ OpenTelemetry remains the system-wide observability baseline. An LLM-focused pla
 
 ## Required decisions by block
 
-- **03:** NaN adapter configuration, supported chat/embedding models, dimensions, budgets, timeouts, retries and failure behaviour; verify compatibility before locking settings.
-- **04:** Notion root per campaign, supported block types, canonical schema, structural chunking limits, tables, source removal, idempotency and job lifecycle. Preserve knowledge status; unknown is not confirmed canon.
+- **03:** decided in [Block 03 provider policy](#block-03-provider-policy); concrete models are chosen while verifying compatibility.
+- **04A:** decided in `03` (Source) and ADR-009. Preserve knowledge status; unknown is not confirmed canon.
+- **04B:** Notion root per campaign, supported block types, tables, remote deletion and sync.
 - **Before 05A:** fixed corpus and expected-source questions, including overlapping NPC names in different campaigns. Record baseline results before adding regression thresholds.
 - **05A:** FTS language/configuration, ranking, snippet and locator contract, candidate limits.
-- **05B:** vector representation/index compatibility, embedding model and candidate limits. Decide whether Python experiments are useful for comparing embedding alternatives; they are not required for the product path.
+- **05B:** vector representation/index compatibility (`vector` or `halfvec`, dimension within pgvector's index limit), embedding model and candidate limits, and whether to adopt NaN. Decide whether Python experiments are useful for comparing embedding alternatives; they are not required for the product path.
 - **06:** RRF settings, reranker decision, context budget/truncation, citation schema, contradictory/insufficient evidence and response transport. Compare provider/local/no-reranker options with committed evaluation cases before adding runtime complexity. Define whether any structured current-state context is in scope rather than assuming all Lazy Lands features exist here.
 - **07:** measured thresholds and tolerances; distinguish frozen reproducible fixtures from live-provider evals. Decide whether an AI-specific observability platform adds sufficient value beyond the OpenTelemetry baseline.
 

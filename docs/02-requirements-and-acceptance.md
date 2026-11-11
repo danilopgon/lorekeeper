@@ -5,6 +5,7 @@
 | ID | Story | Priority | Status |
 | --- | --- | --- | --- |
 | US-01 | Create/select a campaign and enter an empty workspace shell | Must | Defined |
+| US-02 | Import, update and remove Markdown/text sources in a campaign | Must | Defined (04A) |
 
 ## US-01 — Campaign selection and empty workspace shell
 
@@ -40,6 +41,48 @@
 - Frontend component or route tests cover `/campaigns`, `/campaigns/:campaignId/chat` and `/campaigns/:campaignId/sources` empty/loading/error/success states.
 - A focused E2E smoke test covers creating a campaign, selecting it and navigating to Chat and Sources shells.
 - No ingestion or AI commands/actions are exposed in this slice.
+
+## US-02 — Markdown/text sources
+
+**As a** personal Game Master operator  
+**I want** to import my Markdown and text notes into a campaign, keep them up to date and remove them  
+**So that** later search and answers work over my own notes, scoped to that campaign.
+
+Rules live in `03` (Source), contracts in `06` (Sources) and flow in `12`. Decided on 2026-11-11.
+
+### Acceptance criteria
+
+1. Given a campaign, when the operator selects `.md`, `.markdown` or `.txt` files, then the review lists each file with a proposed title (first heading, otherwise file name), format, optional category, knowledge status (default `unknown`) and destination campaign before anything is imported.
+2. Given the review, when a file has an unsupported extension, is larger than 1 MiB, is not valid UTF-8 or is empty, then it is marked invalid with a Spanish reason and is not sent.
+3. Given the review, when a file's content matches a non-removed source in the same campaign, then it is flagged as a duplicate naming that source and excluded by default; the operator may include it anyway. Matching content in another campaign is never flagged.
+4. Given more than 50 selected files, then the review refuses the selection and says the limit.
+5. Given the operator confirms, when the import is accepted, then each document appears in the source list as `En cola`, then `Procesando`, then `Disponible` or `Error`, without reloading the page.
+6. Given a batch where some documents fail, then the successful ones become available, the failed ones show their error and a Reintentar action, and retrying does not duplicate the successful ones.
+7. Given pasted text with a title, then it follows the same flow; an empty title, empty text or text over 1 MiB is rejected with a field error.
+8. Given an available source, when the operator updates it with new content, then the previous version stays searchable until the new one is available, and the source list shows the pending update separately from the available version.
+9. Given an update whose processing fails, then the previous version stays available and the failure is shown with Reintentar.
+10. Given an update with content identical to the published version, then nothing is reprocessed and the operator is told nothing changed.
+11. Given a source, when the operator edits its title, category or knowledge status, then the change is saved without reprocessing.
+12. Given a source, when the operator removes it, including while it is processing, then it disappears from the list and is never published or retrieved afterwards.
+13. Given an import confirmed in campaign A, when the operator navigates to campaign B before it finishes, then B never shows A's sources or events, and the import still completes in A.
+14. Given a lost event-stream connection, when it reconnects, then the list reloads and shows the current state.
+15. Loading, empty, error and success states are explicit; status is conveyed by text, not colour alone; progress changes are announced to assistive technology; every action is keyboard operable.
+
+### Not included
+
+- Notion import (04B), PDF, DOCX and ZIP.
+- Search and retrieval (05A), embeddings (05B), chat and citations (06).
+- Source version history; only the published version is kept.
+- The inspect action from `12`, moved to 05A.
+
+### Verification
+
+- Domain unit tests: title, size, encoding, hash and chunking rules, including headings, long sections, code blocks, tables and frontmatter.
+- Validator unit tests for request shape (ADR-011).
+- Integration tests against PostgreSQL: atomic version and job creation, publication, failed-update preservation, identical-content update, removal during processing, retry without duplicates, lease recovery and campaign isolation with overlapping titles.
+- Contract tests through the generated OpenAPI document.
+- Component tests for review, list states and SSE reconnection.
+- Playwright: import a batch with one invalid file, see both outcomes, update a source and remove it.
 
 ## Accepted baseline requirements
 

@@ -5,8 +5,8 @@
 - Base path: `/api`.
 - Authentication: none for local development in the first slice. A campaign identifier is not an authentication credential. Internet exposure remains blocked until `07-data-security-and-rls.md` selects and verifies an access-control layer.
 - Error format: RFC 7807 Problem Details with a stable `code` extension for expected client-handled failures.
-- Dates and times: UTC ISO 8601 strings.
-- Pagination/versioning/idempotency: no pagination, public API versioning or idempotency key is required for the first campaign slice. Add those only when a later slice needs them.
+- Dates and times: UTC ISO 8601 strings. The API serializes them with a numeric offset (`2026-11-03T12:26:57.321398+00:00`), not `Z`; clients accept both (decided 2026-11-11).
+- Pagination/versioning/idempotency: no pagination, public API versioning or idempotency key is required for the first campaign slice. Add those only when a later slice needs them. Source import is not idempotent by key; the review step flags duplicate content instead (`03`).
 
 ## Source of truth and client generation
 
@@ -35,8 +35,8 @@ ASP.NET endpoint contracts generate OpenAPI. Block 01 uses a narrow handwritten 
 {
   "id": "opaque-id",
   "name": "Ash Crown",
-  "createdAt": "2026-09-15T12:00:00Z",
-  "updatedAt": "2026-09-15T12:00:00Z"
+  "createdAt": "2026-09-15T12:00:00+00:00",
+  "updatedAt": "2026-09-15T12:00:00+00:00"
 }
 ```
 
@@ -72,8 +72,8 @@ No body.
   {
     "id": "opaque-id",
     "name": "Ash Crown",
-    "createdAt": "2026-09-15T12:00:00Z",
-    "updatedAt": "2026-09-15T12:00:00Z"
+    "createdAt": "2026-09-15T12:00:00+00:00",
+    "updatedAt": "2026-09-15T12:00:00+00:00"
   }
 ]
 ```
@@ -105,8 +105,8 @@ Status: `201 Created`
 {
   "id": "opaque-id",
   "name": "Ash Crown",
-  "createdAt": "2026-09-15T12:00:00Z",
-  "updatedAt": "2026-09-15T12:00:00Z"
+  "createdAt": "2026-09-15T12:00:00+00:00",
+  "updatedAt": "2026-09-15T12:00:00+00:00"
 }
 ```
 
@@ -133,8 +133,8 @@ No body.
 {
   "id": "opaque-id",
   "name": "Ash Crown",
-  "createdAt": "2026-09-15T12:00:00Z",
-  "updatedAt": "2026-09-15T12:00:00Z"
+  "createdAt": "2026-09-15T12:00:00+00:00",
+  "updatedAt": "2026-09-15T12:00:00+00:00"
 }
 ```
 
@@ -146,22 +146,156 @@ No body.
 | 404 | No campaign exists for `campaignId` | `campaign_not_found` |
 | 500 | Unexpected server failure | `unexpected_error` |
 
-## Explicitly absent from the first slice
+## Explicitly absent
 
 - No `DELETE /api/campaigns/{campaignId}` endpoint.
-- No source, ingestion, upload, pasted text, Notion, indexing, retrieval, chat or citation endpoints.
+- No Notion, retrieval, search, chat or citation endpoints until their blocks specify them.
 - No implicit active-campaign endpoint; the active campaign is represented by the URL.
+
+## Sources (block 04A)
+
+Ingestion is job-based (ADR-009) and progress streams over SSE (ADR-010). Rules and invariants live in `03`. Every route below is under `/api/campaigns/{campaignId}/sources` and returns `campaign_id_invalid` (400) or `campaign_not_found` (404) like `GET /api/campaigns/{campaignId}`. A `sourceId` from another campaign is reported as `source_not_found`.
+
+### Limits
+
+| Limit | Value |
+| --- | --- |
+| Accepted files | `.md`, `.markdown`, `.txt`, UTF-8 with optional BOM |
+| Text per file or paste | 1 MiB (1,048,576 bytes) once encoded as UTF-8 |
+| Files per import request | 1–50 |
+| Import request body | 52 MiB, set explicitly on that endpoint (above Kestrel's 30 MB default) |
+| Title | 1–120 characters after trimming |
+| Hashes per content-match request | 1–50 |
+
+### `SourceDto`
+
+```json
+{
+  "id": "opaque-id",
+  "campaignId": "opaque-id",
+  "title": "Sesión 3",
+  "origin": "file",
+  "category": "session_notes",
+  "knowledgeStatus": "occurred",
+  "availability": "available",
+  "lastPublishedAt": "2026-11-11T10:00:00+00:00",
+  "processing": {
+    "state": "failed",
+    "errorCode": "source_processing_failed",
+    "attempts": 3
+  },
+  "createdAt": "2026-11-10T09:00:00+00:00",
+  "updatedAt": "2026-11-11T10:05:00+00:00"
+}
+```
+
+- `origin`: `file` or `paste`.
+- `category`: `session_notes`, `preparation`, `characters_places`, `general_reference` or `null`.
+- `knowledgeStatus`: `unknown`, `preparation` or `occurred`.
+- `availability`: `available` when a version is published, otherwise `unavailable`.
+- `lastPublishedAt`: when the published version became available, or `null`.
+- `processing`: the pending version's job (`queued`, `processing` or `failed`), or `null` when nothing is pending. `errorCode` is set only when `failed`: `source_processing_unavailable` (transient failures persisted after the automatic retries) or `source_processing_failed` (unexpected failure that is not retried). Content errors are rejected before a job exists, so they never appear here. A source can be `available` and have a failed `processing` at once: the old version stays usable after a failed update.
+
+### `GET /sources`
+
+Lists non-removed sources, newest first. `200` with `SourceDto[]`.
+
+### `POST /sources/content-matches`
+
+Answers which content hashes already exist in this campaign, for the import review. The browser computes each hash exactly as `03` defines `contentHash`.
+
+```json
+{ "hashes": ["9f86d0…"] }
+```
+
+`200`:
+
+```json
+{ "matches": [{ "hash": "9f86d0…", "sourceId": "opaque-id", "title": "Sesión 3" }] }
+```
+
+Errors: `400 source_hashes_invalid` when the list is empty, longer than 50 or contains a value that is not 64 lowercase hex characters.
+
+### `POST /sources/imports`
+
+Imports a batch of files. `multipart/form-data` with:
+
+- `files`: 1–50 file parts.
+- `metadata`: one JSON part, an array with one entry per file in the same order: `{ "title": "…", "category": null, "knowledgeStatus": "unknown" }`.
+
+The server validates request shape first (ADR-011); a failure rejects the whole request with `400`. Each file is then validated independently, and a failing file becomes a `rejected` item instead of failing the request. Duplicate content is not rejected; the review warns about it.
+
+`202 Accepted`:
+
+```json
+{
+  "items": [
+    { "index": 0, "fileName": "sesion-3.md", "outcome": "accepted", "source": { "…": "SourceDto" }, "errorCode": null },
+    { "index": 1, "fileName": "mapa.pdf", "outcome": "rejected", "source": null, "errorCode": "source_file_type_unsupported" }
+  ]
+}
+```
+
+Request errors (`400`, nothing imported): `source_batch_empty`, `source_batch_too_large`, `source_metadata_invalid` (missing, unparsable or count mismatch). Body above 52 MiB: `413`.
+
+Per-item `errorCode`: `source_file_type_unsupported`, `source_too_large`, `source_encoding_invalid`, `source_empty`, `source_title_invalid`, `source_category_invalid`, `source_knowledge_status_invalid`.
+
+### `POST /sources/pastes`
+
+```json
+{ "title": "Ideas para la sesión 4", "text": "…", "category": "preparation", "knowledgeStatus": "preparation" }
+```
+
+`202` with `SourceDto`. Errors (`400`): `source_title_invalid`, `source_empty`, `source_too_large`, `source_category_invalid`, `source_knowledge_status_invalid`.
+
+### `PUT /sources/{sourceId}/content`
+
+Explicit update. `multipart/form-data` with either a `file` part or a `text` field. The title is not changed.
+
+- `202` with `SourceDto` when a new version is queued. A previously failed pending version is discarded.
+- `200` with `SourceDto` when the content hash equals the published version's; nothing changes.
+
+Errors: `400 source_id_invalid`, `404 source_not_found`, `409 source_processing` (a version is `queued` or `processing`), plus the content codes of `POST /sources/pastes` and `source_file_type_unsupported`.
+
+### `PATCH /sources/{sourceId}`
+
+Edits metadata without creating a version. Any subset of `title`, `category` (`null` clears it) and `knowledgeStatus`.
+
+`200` with `SourceDto`. Errors: `400 source_id_invalid`, `source_title_invalid`, `source_category_invalid`, `source_knowledge_status_invalid`; `404 source_not_found`.
+
+### `POST /sources/{sourceId}/retry`
+
+Manually retries the failed pending version. `202` with `SourceDto`. Errors: `400 source_id_invalid`, `404 source_not_found`, `409 source_retry_unavailable` (nothing has failed).
+
+### `DELETE /sources/{sourceId}`
+
+Removes the source (`03`: removal wins over processing). `204`. Errors: `400 source_id_invalid`, `404 source_not_found` (including already removed).
+
+### `GET /sources/events`
+
+`text/event-stream` for one campaign. The client loads `GET /sources` first and again after every reconnection; events are not replayed.
+
+| Event | Data |
+| --- | --- |
+| `source-changed` | `SourceDto` |
+| `source-removed` | `{ "id": "opaque-id", "campaignId": "opaque-id" }` |
+
+A comment line (`: ping`) is sent every 15 seconds to keep idle connections open.
+
+### Inspect
+
+The inspect action from `12` moved to block 05A on 2026-11-11, together with fragment and locator display. 04A has no inspect endpoint.
 
 ## External integrations
 
-Document provider contract, timeout, retry, mapping and fallback. Provider responses are not domain models. No external provider integration is used by the first campaign/workspace slice.
+Document provider contract, timeout, retry, mapping and fallback. Provider responses are not domain models. Block 04A calls no external provider. The AI provider policy for block 03 is in `05`.
 
 ## Campaign contract requirements
 
 Campaign-dependent requests carry an explicit `campaignId` in the agreed route or request contract. No implicit campaign fallback. Validate that nested source/document IDs belong to that campaign for reads and writes. A campaign identifier is not an authentication credential.
 
-The first slice's campaign endpoint/DTO/error contracts are specified above for block 01. Block 02 automates generation; it does not postpone contract design. Decide synchronous versus job-based ingestion before block 04 and full-response versus streaming contracts before block 06.
+Block 02 automates contract generation; it does not postpone contract design. Ingestion is job-based (ADR-009). Chat streams over SSE (ADR-010); its event schema is specified before block 06.
 
 ## Initial workspace/ingestion approach
 
-Before 04A, specify import review/confirmation, upload/pasted-text validation, per-document progress/errors/retry, source update and removal contracts. Decide job polling/event transport explicitly. Before 06, specify conversation scope and source-fragment/version resolution. The [UX approach](12-workspace-and-ingestion-ux.md) defines behaviour, not final endpoint schemas.
+The Sources contract above covers import review, validation, per-document progress, errors, retry, update and removal. Before 06, specify conversation scope and source-fragment/version resolution. The [UX approach](12-workspace-and-ingestion-ux.md) defines behaviour.

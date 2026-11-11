@@ -20,6 +20,10 @@ Document variable names and purpose in `.env.example` or platform configuration.
 | --- | --- | --- |
 | `[NAME]` | Web/API | `[purpose]` |
 
+Block 03 adds the AI provider settings (`05`). Exact names are fixed in that block; they cover the OpenAI-compatible endpoint (locally Ollama at `http://localhost:11434/v1`), an optional API key, the embedding model and the chat model. The API key is never committed.
+
+Local AI development needs a native Ollama installation, started outside Aspire. Block 04A adds no new variable; its limits are code-level settings documented in `06`.
+
 ## Deployment shape
 
 Baseline application shape:
