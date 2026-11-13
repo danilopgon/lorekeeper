@@ -1,3 +1,4 @@
+using Api.Modules.Campaigns.Application;
 using Api.Modules.Campaigns.Application.CreateCampaign;
 using Api.Modules.Campaigns.Infrastructure;
 using MediatR;
@@ -15,6 +16,9 @@ public static class CampaignsModule
                 ?? throw new InvalidOperationException("Connection string 'Campaigns' is not configured.");
             options.UseNpgsql(connectionString);
         });
+
+        services.AddScoped<ICampaignRepository, CampaignRepository>();
+        services.AddScoped<ICampaignQueries, CampaignQueries>();
 
         services.AddMediatR(configuration => configuration.RegisterServicesFromAssemblyContaining<CreateCampaignHandler>());
 

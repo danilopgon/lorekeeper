@@ -1,11 +1,9 @@
 using Api.Modules.Campaigns.Domain;
-using Api.Modules.Campaigns.Infrastructure;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace Api.Modules.Campaigns.Application.GetCampaign;
 
-public sealed class GetCampaignHandler(CampaignsDbContext dbContext) : IRequestHandler<GetCampaignQuery, GetCampaignResult>
+public sealed class GetCampaignHandler(ICampaignQueries campaigns) : IRequestHandler<GetCampaignQuery, GetCampaignResult>
 {
     public async Task<GetCampaignResult> Handle(GetCampaignQuery request, CancellationToken cancellationToken)
     {
@@ -15,17 +13,11 @@ public sealed class GetCampaignHandler(CampaignsDbContext dbContext) : IRequestH
             return GetCampaignResult.InvalidId();
         }
 
-        var campaign = await dbContext.Campaigns
-            .AsNoTracking()
-            .SingleOrDefaultAsync(candidate => candidate.Id == parsed.Value, cancellationToken);
+        var campaign = await campaigns.GetByIdAsync(parsed.Value, cancellationToken);
 
         return campaign is null
             ? GetCampaignResult.NotFound()
-            : GetCampaignResult.Found(new CampaignDto(
-                campaign.Id.ToString("D"),
-                campaign.Name.Value,
-                campaign.CreatedAt,
-                campaign.UpdatedAt));
+            : GetCampaignResult.Found(campaign);
     }
 }
 
