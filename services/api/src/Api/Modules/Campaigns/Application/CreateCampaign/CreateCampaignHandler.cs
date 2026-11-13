@@ -1,11 +1,9 @@
 using Api.Modules.Campaigns.Domain;
-using Api.Modules.Campaigns.Infrastructure;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace Api.Modules.Campaigns.Application.CreateCampaign;
 
-public sealed class CreateCampaignHandler(CampaignsDbContext dbContext) : IRequestHandler<CreateCampaignCommand, CreateCampaignResult>
+public sealed class CreateCampaignHandler(ICampaignRepository campaigns) : IRequestHandler<CreateCampaignCommand, CreateCampaignResult>
 {
     public async Task<CreateCampaignResult> Handle(CreateCampaignCommand request, CancellationToken cancellationToken)
     {
@@ -16,13 +14,10 @@ public sealed class CreateCampaignHandler(CampaignsDbContext dbContext) : IReque
         }
 
         var campaign = Campaign.Create(name.Value!, DateTimeOffset.UtcNow);
-        dbContext.Campaigns.Add(campaign);
+        campaigns.Add(campaign);
 
-        try
-        {
-            await dbContext.SaveChangesAsync(cancellationToken);
-        }
-        catch (DbUpdateException exception) when (CampaignPersistenceErrors.From(exception) == CampaignPersistenceError.NameConflict)
+        var saved = await campaigns.SaveChangesAsync(cancellationToken);
+        if (saved == CampaignSaveResult.NameConflict)
         {
             return CreateCampaignResult.NameConflict();
         }

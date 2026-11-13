@@ -2,6 +2,8 @@
 
 **Status:** Accepted
 
+**Refined by:** ADR-008. Campaign commands persist through `ICampaignRepository` and queries read through `ICampaignQueries`; the repository exclusion below no longer applies to Campaign. The other exclusions stand.
+
 **Date:** 2026-09-29
 
 **Area:** Backend
