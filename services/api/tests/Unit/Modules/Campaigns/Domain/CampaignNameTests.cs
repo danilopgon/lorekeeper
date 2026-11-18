@@ -62,4 +62,10 @@ public class CampaignNameTests
         result.IsSuccess.Should().BeFalse();
         result.Error!.Code.Should().Be(CampaignName.InvalidCode);
     }
+
+    [Fact]
+    public void CreateRejectsNamesWithNullCharacters()
+    {
+        CampaignName.Create("Ash" + (char)0 + "Crown").Error!.Code.Should().Be(CampaignName.InvalidCode);
+    }
 }

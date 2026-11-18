@@ -6,6 +6,8 @@
 
 **Refined by:** ADR-012. Handlers return `Result<T>` and expected failures map to Problem Details in one shared place, not in a Campaign mapper.
 
+**Amended 2026-11-18:** MediatR is the baseline dispatch for every module, not only Campaign; a new module needs no ADR to use it. Controllers inject `ISender`, MediatR is registered once in the composition root, and an architecture test fails if a handler skips MediatR or a controller injects a handler. The exclusions below stand.
+
 **Date:** 2026-09-25
 
 **Area:** Backend

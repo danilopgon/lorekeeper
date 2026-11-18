@@ -9,7 +9,7 @@ public class HealthEndpointTests
     [Fact]
     public async Task HealthEndpointReturnsOk()
     {
-        await using var factory = new WebApplicationFactory<Program>();
+        await using var factory = new WebApplicationFactory<Program>().WithoutIngestionWorker();
         using var client = factory.CreateClient();
 
         using var response = await client.GetAsync("/health");

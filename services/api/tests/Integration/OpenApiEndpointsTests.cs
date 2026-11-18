@@ -82,7 +82,7 @@ public class OpenApiEndpointsTests
 
     private static async Task<HttpResponseMessage> GetInEnvironment(string environment, string path)
     {
-        await using var factory = new WebApplicationFactory<Program>()
+        await using var factory = new WebApplicationFactory<Program>().WithoutIngestionWorker()
             .WithWebHostBuilder(builder => builder.UseEnvironment(environment));
         using var client = factory.CreateClient();
 

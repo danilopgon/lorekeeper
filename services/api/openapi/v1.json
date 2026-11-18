@@ -17,6 +17,153 @@
         }
       }
     },
+    "/api/campaigns/{campaignId}/sources/pastes": {
+      "post": {
+        "tags": [
+          "Sources"
+        ],
+        "summary": "Paste text as a source",
+        "description": "Creates a source from pasted text and queues it for processing.",
+        "operationId": "PasteSource",
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/PasteSourceRequest"
+                  }
+                ]
+              }
+            },
+            "text/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/PasteSourceRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/PasteSourceRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/campaigns/{campaignId}/sources": {
+      "get": {
+        "tags": [
+          "Sources"
+        ],
+        "summary": "List sources",
+        "description": "Returns the campaign's non-removed sources, newest first.",
+        "operationId": "ListSources",
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SourceDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/campaigns": {
       "get": {
         "tags": [
@@ -216,6 +363,46 @@
           }
         }
       },
+      "KnowledgeStatusDto": {
+        "enum": [
+          "unknown",
+          "preparation",
+          "occurred"
+        ]
+      },
+      "PasteSourceRequest": {
+        "required": [
+          "title",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "text": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "category": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "knowledgeStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "ProblemDetails": {
         "type": "object",
         "properties": {
@@ -265,12 +452,140 @@
             }
           }
         }
+      },
+      "SourceAvailabilityDto": {
+        "enum": [
+          "available",
+          "unavailable"
+        ]
+      },
+      "SourceCategoryDto": {
+        "enum": [
+          "session_notes",
+          "preparation",
+          "characters_places",
+          "general_reference"
+        ]
+      },
+      "SourceDto": {
+        "required": [
+          "id",
+          "campaignId",
+          "title",
+          "origin",
+          "category",
+          "knowledgeStatus",
+          "availability",
+          "lastPublishedAt",
+          "processing",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "campaignId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/SourceOriginDto"
+          },
+          "category": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SourceCategoryDto"
+              }
+            ]
+          },
+          "knowledgeStatus": {
+            "$ref": "#/components/schemas/KnowledgeStatusDto"
+          },
+          "availability": {
+            "$ref": "#/components/schemas/SourceAvailabilityDto"
+          },
+          "lastPublishedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "processing": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SourceProcessingDto"
+              }
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "SourceOriginDto": {
+        "enum": [
+          "file",
+          "paste"
+        ]
+      },
+      "SourceProcessingDto": {
+        "required": [
+          "state",
+          "errorCode",
+          "attempts"
+        ],
+        "type": "object",
+        "properties": {
+          "state": {
+            "$ref": "#/components/schemas/SourceProcessingStateDto"
+          },
+          "errorCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "attempts": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "SourceProcessingStateDto": {
+        "enum": [
+          "queued",
+          "processing",
+          "failed"
+        ]
       }
     }
   },
   "tags": [
     {
       "name": "Api"
+    },
+    {
+      "name": "Sources"
     },
     {
       "name": "Campaigns"

@@ -58,7 +58,10 @@ public sealed class CampaignsControllerTests
 
     private static void AssertCampaignControllerRoutes(IReadOnlyDictionary<string, RouteEndpoint> routeEndpoints)
     {
-        routeEndpoints.Keys.Should().BeEquivalentTo("ListCampaigns", "CreateCampaign", "GetCampaign");
+        routeEndpoints
+            .Where(static endpoint => endpoint.Value.Metadata.GetMetadata<ControllerActionDescriptor>()?.ControllerTypeInfo.Namespace == "Api.Modules.Campaigns.Presentation")
+            .Select(static endpoint => endpoint.Key)
+            .Should().BeEquivalentTo("ListCampaigns", "CreateCampaign", "GetCampaign");
         routeEndpoints["ListCampaigns"].RoutePattern.RawText.Should().Be("api/campaigns");
         routeEndpoints["CreateCampaign"].RoutePattern.RawText.Should().Be("api/campaigns");
         routeEndpoints["GetCampaign"].RoutePattern.RawText.Should().Be("api/campaigns/{campaignId}");
