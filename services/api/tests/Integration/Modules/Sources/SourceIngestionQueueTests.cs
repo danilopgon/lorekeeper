@@ -1,8 +1,11 @@
+using Api.Modules.Sources.Application;
 using Api.Modules.Sources.Application.ProcessSourceVersion;
 using Api.Modules.Sources.Domain;
 using Api.Modules.Sources.Infrastructure.Persistence;
 using Api.Modules.Sources.Infrastructure.Ingestion;
+using Api.SharedKernel;
 using FluentAssertions;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
@@ -17,10 +20,11 @@ public sealed class SourceIngestionQueueTests : IAsyncLifetime
     public async Task InitializeAsync() =>
         _api = await SourcesApi.StartAsync(runWorker: false, services =>
         {
-            services.AddScoped<ProcessSourceVersionHandler>();
-            services.AddScoped<ISourceVersionProcessor>(provider =>
+            services.AddScoped<IRequestHandler<ProcessSourceVersionCommand, Result<ProcessSourceVersionOutcome>>>(provider =>
             {
-                _processor.Real = provider.GetRequiredService<ProcessSourceVersionHandler>();
+                _processor.Real = new ProcessSourceVersionHandler(
+                    provider.GetRequiredService<ISourceRepository>(),
+                    provider.GetRequiredService<TimeProvider>());
                 return _processor;
             });
         });
@@ -96,9 +100,9 @@ public sealed class SourceIngestionQueueTests : IAsyncLifetime
         var now = DateTimeOffset.UtcNow;
 
         await using var transaction = await firstDb.Database.BeginTransactionAsync();
-        var claimedFirst = await new IngestionJobQueue(firstDb).ClaimNextAsync(now, TimeSpan.FromMinutes(5), CancellationToken.None);
-        var claimedSecond = await new IngestionJobQueue(secondDb).ClaimNextAsync(now, TimeSpan.FromMinutes(5), CancellationToken.None);
-        var claimedThird = await new IngestionJobQueue(secondDb).ClaimNextAsync(now, TimeSpan.FromMinutes(5), CancellationToken.None);
+        var claimedFirst = await new IngestionJobQueue(firstDb).ClaimNextAsync(now, TimeSpan.FromMinutes(5), maxAttempts: 3, CancellationToken.None);
+        var claimedSecond = await new IngestionJobQueue(secondDb).ClaimNextAsync(now, TimeSpan.FromMinutes(5), maxAttempts: 3, CancellationToken.None);
+        var claimedThird = await new IngestionJobQueue(secondDb).ClaimNextAsync(now, TimeSpan.FromMinutes(5), maxAttempts: 3, CancellationToken.None);
 
         claimedFirst.Should().NotBeNull();
         claimedSecond.Should().NotBeNull();
@@ -114,9 +118,9 @@ public sealed class SourceIngestionQueueTests : IAsyncLifetime
         await using (var scope = _api.Services.CreateAsyncScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<SourcesDbContext>();
-            var claimed = await new IngestionJobQueue(db).ClaimNextAsync(DateTimeOffset.UtcNow, TimeSpan.FromMinutes(5), CancellationToken.None);
+            var claimed = await new IngestionJobQueue(db).ClaimNextAsync(DateTimeOffset.UtcNow, TimeSpan.FromMinutes(5), maxAttempts: 3, CancellationToken.None);
             claimed!.Attempts.Should().Be(1);
-            (await new IngestionJobQueue(db).ClaimNextAsync(DateTimeOffset.UtcNow, TimeSpan.FromMinutes(5), CancellationToken.None))
+            (await new IngestionJobQueue(db).ClaimNextAsync(DateTimeOffset.UtcNow, TimeSpan.FromMinutes(5), maxAttempts: 3, CancellationToken.None))
                 .Should().BeNull("the lease is still valid");
             await db.Database.ExecuteSqlRawAsync("UPDATE source_ingestion_jobs SET lease_expires_at = now() - interval '1 second'");
         }
@@ -186,6 +190,24 @@ public sealed class SourceIngestionQueueTests : IAsyncLifetime
         chunks.Should().ContainSingle().Which.Text.Should().Be("Uno\n\nDos");
     }
 
+    [Fact]
+    public async Task AnExpiredLeaseOnTheLastAttemptFailsInsteadOfBeingClaimedAgain()
+    {
+        var campaignId = await _api.CreateCampaignAsync("Ash Crown");
+        var sourceId = (await _api.PasteAsync(campaignId, "Ideas", "Texto"))["id"]!.GetValue<string>();
+        await using (var scope = _api.Services.CreateAsyncScope())
+        {
+            await scope.ServiceProvider.GetRequiredService<SourcesDbContext>().Database.ExecuteSqlRawAsync(
+                "UPDATE source_ingestion_jobs SET state = 'processing', attempts = 3, lease_expires_at = now() - interval '1 second'");
+        }
+
+        (await Runner().RunNextAsync(CancellationToken.None)).Should().BeFalse("an exhausted job is never claimed again");
+
+        (await JobAsync()).Should().BeEquivalentTo(new { State = IngestionJobState.Failed, Attempts = 3, ErrorCode = "source_processing_unavailable" });
+        var source = await _api.WaitForSourceAsync(campaignId, sourceId, _ => true);
+        source["processing"]!["state"]!.GetValue<string>().Should().Be("failed");
+    }
+
     private SourceIngestionRunner Runner() => _api.Services.GetRequiredService<SourceIngestionRunner>();
 
     private async Task<SourceIngestionJob> JobAsync()
@@ -194,13 +216,13 @@ public sealed class SourceIngestionQueueTests : IAsyncLifetime
         return await scope.ServiceProvider.GetRequiredService<SourcesDbContext>().Jobs.AsNoTracking().SingleAsync();
     }
 
-    private sealed class ScriptedProcessor : ISourceVersionProcessor
+    private sealed class ScriptedProcessor : IRequestHandler<ProcessSourceVersionCommand, Result<ProcessSourceVersionOutcome>>
     {
-        public ISourceVersionProcessor? Real { get; set; }
+        public ProcessSourceVersionHandler? Real { get; set; }
 
         public Func<Exception>? Failure { get; set; }
 
-        public Task<ProcessSourceVersionOutcome> ProcessAsync(ClaimedIngestionJob job, CancellationToken cancellationToken) =>
-            Failure is { } failure ? throw failure() : Real!.ProcessAsync(job, cancellationToken);
+        public Task<Result<ProcessSourceVersionOutcome>> Handle(ProcessSourceVersionCommand command, CancellationToken cancellationToken) =>
+            Failure is { } failure ? throw failure() : Real!.Handle(command, cancellationToken);
     }
 }

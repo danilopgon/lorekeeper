@@ -7,8 +7,10 @@ namespace Api.Modules.Sources.Infrastructure.Ingestion;
 
 public sealed class IngestionJobQueue(SourcesDbContext dbContext)
 {
-    public async Task<ClaimedIngestionJob?> ClaimNextAsync(DateTimeOffset now, TimeSpan lease, CancellationToken cancellationToken)
+    public async Task<ClaimedIngestionJob?> ClaimNextAsync(DateTimeOffset now, TimeSpan lease, int maxAttempts, CancellationToken cancellationToken)
     {
+        await FailExhaustedExpiredLeasesAsync(now, maxAttempts, cancellationToken);
+
         var claimed = await dbContext.Database.SqlQuery<ClaimedRow>(
             $"""
             UPDATE source_ingestion_jobs
@@ -31,6 +33,19 @@ public sealed class IngestionJobQueue(SourcesDbContext dbContext)
             ? null
             : new ClaimedIngestionJob(claimed[0].JobId, claimed[0].CampaignId, claimed[0].SourceVersionId, claimed[0].Attempts);
     }
+
+    /// <summary>A worker that crashed on its last attempt leaves the job processing; reclaiming it would exceed the retry limit.</summary>
+    private Task FailExhaustedExpiredLeasesAsync(DateTimeOffset now, int maxAttempts, CancellationToken cancellationToken) =>
+        dbContext.Database.ExecuteSqlInterpolatedAsync(
+            $"""
+            UPDATE source_ingestion_jobs
+            SET state = 'failed',
+                lease_expires_at = NULL,
+                error_code = {SourceIngestionJob.UnavailableCode},
+                updated_at = {now}
+            WHERE state = 'processing' AND lease_expires_at < {now} AND attempts >= {maxAttempts}
+            """,
+            cancellationToken);
 
     public Task RecordFailureAsync(ClaimedIngestionJob job, IngestionFailureOutcome outcome, DateTimeOffset now, CancellationToken cancellationToken)
     {

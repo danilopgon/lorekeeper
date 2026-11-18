@@ -464,8 +464,7 @@
           "session_notes",
           "preparation",
           "characters_places",
-          "general_reference",
-          null
+          "general_reference"
         ]
       },
       "SourceDto": {

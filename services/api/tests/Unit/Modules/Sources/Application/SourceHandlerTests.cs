@@ -102,7 +102,7 @@ public sealed class SourceHandlerTests
         var work = WorkFor("Uno\n\nDos");
         _repository.GetProcessingWorkAsync(CampaignId, work.Job.Id, Arg.Any<CancellationToken>()).Returns(work);
 
-        var outcome = await ProcessHandler().ProcessAsync(Claimed(work.Job), CancellationToken.None);
+        var outcome = await Process(work.Job);
 
         outcome.Should().Be(ProcessSourceVersionOutcome.Published);
         work.Source.PublishedVersionId.Should().Be(work.Version.Id);
@@ -116,7 +116,7 @@ public sealed class SourceHandlerTests
     {
         var job = WorkFor("texto").Job;
 
-        var outcome = await ProcessHandler().ProcessAsync(Claimed(job), CancellationToken.None);
+        var outcome = await Process(job);
 
         outcome.Should().Be(ProcessSourceVersionOutcome.Discarded);
         await _repository.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
@@ -129,23 +129,50 @@ public sealed class SourceHandlerTests
         _repository.GetProcessingWorkAsync(CampaignId, work.Job.Id, Arg.Any<CancellationToken>()).Returns(work);
         _repository.SaveChangesAsync(Arg.Any<CancellationToken>()).Returns(SourceSaveOutcome.Discarded);
 
-        var outcome = await ProcessHandler().ProcessAsync(Claimed(work.Job), CancellationToken.None);
+        var outcome = await Process(work.Job);
 
         outcome.Should().Be(ProcessSourceVersionOutcome.Discarded);
     }
 
     private PasteSourceHandler PasteHandler() => new(_campaigns, _repository, _queries, _time);
 
-    private ProcessSourceVersionHandler ProcessHandler() => new(_repository, _time);
+    [Fact]
+    public async Task AStaleClaimIsDiscardedWithoutTouchingChunksOrPublication()
+    {
+        var work = WorkFor("texto");
+        MarkClaimed(work.Job, attempts: 2);
+        _repository.GetProcessingWorkAsync(CampaignId, work.Job.Id, Arg.Any<CancellationToken>()).Returns(work);
+
+        var outcome = await Process(work.Job, claimedAttempt: 1);
+
+        outcome.Should().Be(ProcessSourceVersionOutcome.Discarded);
+        work.Source.PublishedVersionId.Should().BeNull();
+        _repository.DidNotReceiveWithAnyArgs().ReplaceChunks(default!, default!);
+        await _repository.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    private async Task<ProcessSourceVersionOutcome> Process(SourceIngestionJob job, int claimedAttempt = 1) =>
+        (await new ProcessSourceVersionHandler(_repository, _time)
+            .Handle(new ProcessSourceVersionCommand(new ClaimedIngestionJob(job.Id, job.CampaignId, job.SourceVersionId, claimedAttempt)), CancellationToken.None))
+        .Value;
+
+    /// <summary>Mirrors the queue's SQL claim, which has no domain method.</summary>
+    private static void MarkClaimed(SourceIngestionJob job, int attempts)
+    {
+        typeof(SourceIngestionJob).GetProperty(nameof(SourceIngestionJob.State))!.SetValue(job, IngestionJobState.Processing);
+        typeof(SourceIngestionJob).GetProperty(nameof(SourceIngestionJob.Attempts))!.SetValue(job, attempts);
+    }
 
     private SourceProcessingWork WorkFor(string text)
     {
         var source = Source.Create(CampaignId, SourceMetadata.Parse("Notas", null, null).Value, SourceOrigin.Paste, _time.GetUtcNow());
         var version = SourceVersion.Create(source, SourceText.Create(text).Value, null, _time.GetUtcNow());
-        return new SourceProcessingWork(source, version, SourceIngestionJob.Create(version, _time.GetUtcNow()), []);
+        var job = SourceIngestionJob.Create(version, _time.GetUtcNow());
+        MarkClaimed(job, attempts: 1);
+        return new SourceProcessingWork(source, version, job, []);
     }
 
-    private static ClaimedIngestionJob Claimed(SourceIngestionJob job) => new(job.Id, job.CampaignId, job.SourceVersionId, 1);
+
 
     private SourceDto SourceDtoFor(Guid id) => new(
         id.ToString("D"),

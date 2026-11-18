@@ -1,19 +1,18 @@
 using Api.Modules.Sources.Domain;
 using Api.Modules.Sources.Domain.Chunking;
+using Api.SharedKernel;
+using MediatR;
 
 namespace Api.Modules.Sources.Application.ProcessSourceVersion;
 
-public interface ISourceVersionProcessor
+public sealed class ProcessSourceVersionHandler(ISourceRepository sources, TimeProvider timeProvider)
+    : IRequestHandler<ProcessSourceVersionCommand, Result<ProcessSourceVersionOutcome>>
 {
-    Task<ProcessSourceVersionOutcome> ProcessAsync(ClaimedIngestionJob job, CancellationToken cancellationToken);
-}
-
-public sealed class ProcessSourceVersionHandler(ISourceRepository sources, TimeProvider timeProvider) : ISourceVersionProcessor
-{
-    public async Task<ProcessSourceVersionOutcome> ProcessAsync(ClaimedIngestionJob job, CancellationToken cancellationToken)
+    public async Task<Result<ProcessSourceVersionOutcome>> Handle(ProcessSourceVersionCommand command, CancellationToken cancellationToken)
     {
-        var work = await sources.GetProcessingWorkAsync(job.CampaignId, job.JobId, cancellationToken);
-        if (work is null || work.Source.IsRemoved)
+        var claim = command.Job;
+        var work = await sources.GetProcessingWorkAsync(claim.CampaignId, claim.JobId, cancellationToken);
+        if (work is null || work.Source.IsRemoved || !IsCurrentClaim(work.Job, claim))
         {
             return ProcessSourceVersionOutcome.Discarded;
         }
@@ -30,7 +29,13 @@ public sealed class ProcessSourceVersionHandler(ISourceRepository sources, TimeP
             ? ProcessSourceVersionOutcome.Published
             : ProcessSourceVersionOutcome.Discarded;
     }
+
+    /// <summary>A worker whose lease expired and was reclaimed must not touch the job's later attempt or its publication.</summary>
+    private static bool IsCurrentClaim(SourceIngestionJob job, ClaimedIngestionJob claim) =>
+        job.State == IngestionJobState.Processing && job.Attempts == claim.Attempts;
 }
+
+public sealed record ProcessSourceVersionCommand(ClaimedIngestionJob Job) : IRequest<Result<ProcessSourceVersionOutcome>>;
 
 public sealed record ClaimedIngestionJob(Guid JobId, Guid CampaignId, Guid SourceVersionId, int Attempts);
 

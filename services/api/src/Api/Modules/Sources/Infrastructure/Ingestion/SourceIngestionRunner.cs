@@ -1,6 +1,7 @@
 using System.Net.Sockets;
 using Api.Modules.Sources.Application.ProcessSourceVersion;
 using Api.Modules.Sources.Domain;
+using MediatR;
 using Microsoft.Extensions.Options;
 using Npgsql;
 
@@ -30,7 +31,7 @@ public sealed class SourceIngestionRunner(
         await using (var claimScope = scopeFactory.CreateAsyncScope())
         {
             var queue = claimScope.ServiceProvider.GetRequiredService<IngestionJobQueue>();
-            job = await queue.ClaimNextAsync(timeProvider.GetUtcNow(), options.Value.Lease, cancellationToken);
+            job = await queue.ClaimNextAsync(timeProvider.GetUtcNow(), options.Value.Lease, options.Value.MaxAttempts, cancellationToken);
         }
 
         if (job is null)
@@ -41,8 +42,8 @@ public sealed class SourceIngestionRunner(
         try
         {
             await using var processScope = scopeFactory.CreateAsyncScope();
-            var processor = processScope.ServiceProvider.GetRequiredService<ISourceVersionProcessor>();
-            var outcome = await processor.ProcessAsync(job, cancellationToken);
+            var sender = processScope.ServiceProvider.GetRequiredService<ISender>();
+            var outcome = (await sender.Send(new ProcessSourceVersionCommand(job), cancellationToken)).Value;
             logger.LogInformation("Ingestion job {JobId} finished as {Outcome} after {Attempts} attempt(s).", job.JobId, outcome, job.Attempts);
         }
         catch (Exception exception) when (!cancellationToken.IsCancellationRequested)

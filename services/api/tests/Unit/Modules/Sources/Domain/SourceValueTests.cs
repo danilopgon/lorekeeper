@@ -24,6 +24,12 @@ public sealed class SourceValueTests
         SourceTitle.Create(astral + "a").Error!.Code.Should().Be("source_title_invalid");
     }
 
+    [Fact]
+    public void TitleRejectsNullCharacters()
+    {
+        SourceTitle.Create("A" + (char)0 + "B").Error!.Code.Should().Be("source_title_invalid");
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]
