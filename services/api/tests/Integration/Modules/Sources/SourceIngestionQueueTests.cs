@@ -31,8 +31,12 @@ public sealed class SourceIngestionQueueTests : IAsyncLifetime
     public async Task APasteCommitsItsVersionAndQueuedJobTogether()
     {
         var campaignId = await _api.CreateCampaignAsync("Ash Crown");
-        await _api.PasteAsync(campaignId, "Ideas", "Texto");
+        var accepted = await _api.PasteAsync(campaignId, "Ideas", "Texto");
 
+        accepted["availability"]!.GetValue<string>().Should().Be("unavailable");
+        accepted["lastPublishedAt"].Should().BeNull();
+        accepted["processing"]!["state"]!.GetValue<string>().Should().Be("queued");
+        accepted["processing"]!["attempts"]!.GetValue<int>().Should().Be(0);
         await using var scope = _api.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<SourcesDbContext>();
         var version = await db.Versions.SingleAsync();

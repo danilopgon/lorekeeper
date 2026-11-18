@@ -246,7 +246,7 @@ Per-item `errorCode`: `source_file_type_unsupported`, `source_too_large`, `sourc
 { "title": "Ideas para la sesión 4", "text": "…", "category": "preparation", "knowledgeStatus": "preparation" }
 ```
 
-`title` and `text` are required; `category` and `knowledgeStatus` may be omitted (`null` and `unknown`). `202` with `SourceDto`. Errors (`400`): `source_title_invalid`, `source_empty`, `source_too_large`, `source_encoding_invalid` (text that cannot be encoded as UTF-8, such as a lone surrogate), `source_category_invalid`, `source_knowledge_status_invalid`. The response `code` is the first failing field in that order, and `errors` lists every failing field.
+`title` and `text` are required; `category` and `knowledgeStatus` may be omitted (`null` and `unknown`). `202` with `SourceDto`. Errors (`400`): `source_title_invalid`, `source_empty`, `source_too_large`, `source_encoding_invalid` (text that cannot be encoded as UTF-8, such as a lone surrogate, or that contains U+0000), `source_category_invalid`, `source_knowledge_status_invalid`. The response `code` is the first failing field in that order, and `errors` lists every failing field.
 
 ### `PUT /sources/{sourceId}/content`
 

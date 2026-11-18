@@ -33,6 +33,11 @@ public sealed record SourceText
             return DomainResult<SourceText>.Failure(EmptyCode);
         }
 
+        if (text.Contains('\0', StringComparison.Ordinal))
+        {
+            return DomainResult<SourceText>.Failure(EncodingInvalidCode);
+        }
+
         byte[] bytes;
         try
         {

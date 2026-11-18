@@ -32,9 +32,6 @@ public sealed class SourcesEndpointsTests : IAsyncLifetime
         accepted["origin"]!.GetValue<string>().Should().Be("paste");
         accepted["category"]!.GetValue<string>().Should().Be("preparation");
         accepted["knowledgeStatus"]!.GetValue<string>().Should().Be("preparation");
-        accepted["availability"]!.GetValue<string>().Should().Be("unavailable");
-        accepted["lastPublishedAt"].Should().BeNull();
-        accepted["processing"]!["state"]!.GetValue<string>().Should().BeOneOf("queued", "processing");
 
         var sourceId = accepted["id"]!.GetValue<string>();
         var available = await _api.WaitForSourceAsync(campaignId, sourceId, source => source["availability"]!.GetValue<string>() == "available");
@@ -111,14 +108,19 @@ public sealed class SourcesEndpointsTests : IAsyncLifetime
         (await _api.ListAsync(campaignId)).Should().BeEmpty();
     }
 
-    [Fact]
-    public async Task EmptyTextIsRejected()
+    [Theory]
+    [InlineData("  \n ", "source_empty")]
+    [InlineData("antes\0después", "source_encoding_invalid")]
+    public async Task UnstorableTextIsRejectedAsAFieldError(string text, string code)
     {
         var campaignId = await _api.CreateCampaignAsync("Ash Crown");
 
-        using var response = await _api.Client.PostAsJsonAsync($"/api/campaigns/{campaignId}/sources/pastes", new { title = "Ideas", text = "  \n " });
+        using var response = await _api.Client.PostAsJsonAsync($"/api/campaigns/{campaignId}/sources/pastes", new { title = "Ideas", text });
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        (await response.Content.ReadFromJsonAsync<JsonObject>())!["code"]!.GetValue<string>().Should().Be("source_empty");
+        var problem = (await response.Content.ReadFromJsonAsync<JsonObject>())!;
+        problem["code"]!.GetValue<string>().Should().Be(code);
+        problem["errors"]!["text"]![0]!.GetValue<string>().Should().Be(code);
+        (await _api.ListAsync(campaignId)).Should().BeEmpty();
     }
 }

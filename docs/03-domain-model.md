@@ -75,7 +75,7 @@ Decided on 2026-11-11. Block 04A implements it; Campaign deletion stays out of s
 | Field | Rule |
 | --- | --- |
 | `id`, `campaignId`, `sourceId` | Required; `campaignId` equals the source's. |
-| `originalText` | The decoded UTF-8 text with any BOM removed, unchanged otherwise. At most 1 MiB encoded. Never empty or whitespace only. |
+| `originalText` | The decoded UTF-8 text with any BOM removed, unchanged otherwise. At most 1 MiB encoded. Never empty or whitespace only. Never contains U+0000, which PostgreSQL text cannot store (`source_encoding_invalid`). |
 | `contentHash` | SHA-256, as lowercase hex, of `originalText` encoded as UTF-8. Line endings are not normalised, so the same note saved with CRLF and with LF hashes differently. |
 | `frontmatter` | YAML frontmatter, if the Markdown file starts with one. Stored, not indexed. |
 | `fileName` | Original file name for `file` origin. Metadata only. |

@@ -52,9 +52,10 @@ public sealed class SourceValueTests
     }
 
     [Fact]
-    public void TextWithALoneSurrogateIsNotValidUtf8()
+    public void TextThatCannotBeStoredAsUtf8TextIsRejected()
     {
         SourceText.Create("texto \uD800").ErrorCode.Should().Be("source_encoding_invalid");
+        SourceText.Create("antes\0después").ErrorCode.Should().Be("source_encoding_invalid");
     }
 
     [Fact]
