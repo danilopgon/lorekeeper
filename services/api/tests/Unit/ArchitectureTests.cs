@@ -63,12 +63,12 @@ public sealed partial class ArchitectureTests
         var handlersOutsideMediatR = ApplicationTypes()
             .Where(type => type.GetMethod("Handle", BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly) is not null)
             .Where(type => !type.GetInterfaces().Any(IsRequestHandler))
-            .Select(type => $"{type.FullName} has Handle but does not implement IRequestHandler<,> (ADR-013)");
+            .Select(type => $"{type.FullName} has Handle but does not implement IRequestHandler<,> (ADR-003)");
         var controllersInjectingHandlers = ApiTypes
             .Where(type => type.Namespace?.EndsWith(".Presentation", StringComparison.Ordinal) == true)
             .SelectMany(type => type.GetConstructors().SelectMany(constructor => constructor.GetParameters())
                 .Where(parameter => parameter.ParameterType.GetInterfaces().Any(IsRequestHandler))
-                .Select(parameter => $"{type.FullName} injects {parameter.ParameterType.Name}; inject ISender instead (ADR-013)"));
+                .Select(parameter => $"{type.FullName} injects {parameter.ParameterType.Name}; inject ISender instead (ADR-003)"));
 
         handlersOutsideMediatR.Concat(controllersInjectingHandlers).Should().BeEmpty();
     }

@@ -24,4 +24,3 @@ Create ADRs for provider/stack choices, architectural boundaries, public contrac
 - [ADR-010 — Server-Sent Events as the server-to-browser transport](ADR-010-server-sent-events-transport.md)
 - [ADR-011 — FluentValidation for request shape only](ADR-011-request-shape-validation.md)
 - [ADR-012 — Result type with typed errors, mapped to Problem Details in one place](ADR-012-result-type-and-central-error-mapping.md)
-- [ADR-013 — MediatR dispatch for every module](ADR-013-mediatr-dispatch-for-every-module.md)
