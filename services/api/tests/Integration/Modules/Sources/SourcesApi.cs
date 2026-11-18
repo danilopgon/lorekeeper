@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
-using Api.Modules.Sources.Infrastructure.Ingestion;
 using Testcontainers.PostgreSql;
 
 namespace Integration.Modules.Sources;
@@ -38,8 +37,7 @@ internal sealed class SourcesApi : IAsyncDisposable
             {
                 if (!runWorker)
                 {
-                    var worker = services.Single(descriptor => descriptor.ImplementationType == typeof(SourceIngestionWorker));
-                    services.Remove(worker);
+                    ApiFactory.RemoveIngestionWorker(services);
                 }
 
                 configureServices?.Invoke(services);

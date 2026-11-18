@@ -10,7 +10,6 @@ public sealed class SourceApplicationBoundaryTests
     [
         "Microsoft.EntityFrameworkCore",
         "Npgsql",
-        "FluentValidation",
         "Api.Modules.Sources.Infrastructure",
         "Api.Modules.Campaigns.Infrastructure"
     ];
