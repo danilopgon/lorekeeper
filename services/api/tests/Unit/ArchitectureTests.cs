@@ -1,4 +1,6 @@
 using System.Reflection;
+using System.Text.RegularExpressions;
+using MediatR;
 using Api.SharedKernel;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -7,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Unit;
 
-public sealed class ArchitectureTests
+public sealed partial class ArchitectureTests
 {
     private static readonly Type[] ApiTypes = typeof(Program).Assembly.GetTypes();
 
@@ -16,7 +18,7 @@ public sealed class ArchitectureTests
     {
         var violations = ApiTypes
             .Where(IsPersistenceType)
-            .Where(type => type.Namespace?.Contains(".Infrastructure.Persistence", StringComparison.Ordinal) != true)
+            .Where(type => type.Namespace is null || !ModulePersistenceNamespace().IsMatch(type.Namespace))
             .Select(type => $"{type.FullName} must live under Modules/<Module>/Infrastructure/Persistence/")
             .ToList();
 
@@ -37,15 +39,26 @@ public sealed class ArchitectureTests
     [Fact]
     public void HandlersReturnResults()
     {
-        var violations = ApplicationTypes()
+        var publicHandles = ApplicationTypes()
             .SelectMany(type => type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly))
             .Where(method => method.Name == "Handle")
-            .Where(method => !ReturnsResult(method.ReturnType))
-            .Select(method => $"{method.DeclaringType!.FullName}.Handle returns {method.ReturnType.Name}; return Task<Result<T>> (ADR-012)")
+            .Select(method => (Handler: method.DeclaringType!, Response: method.ReturnType));
+        var mediatRHandlers = ApiTypes
+            .SelectMany(type => type.GetInterfaces()
+                .Where(contract => contract.IsGenericType && contract.GetGenericTypeDefinition() == typeof(IRequestHandler<,>))
+                .Select(contract => (Handler: type, Response: typeof(Task<>).MakeGenericType(contract.GetGenericArguments()[1]))));
+
+        var violations = publicHandles.Concat(mediatRHandlers)
+            .Where(handler => !ReturnsResult(handler.Response))
+            .Select(handler => $"{handler.Handler.FullName} handles into {handler.Response}; return Task<Result<T>> (ADR-012)")
+            .Distinct()
             .ToList();
 
         violations.Should().BeEmpty();
     }
+
+    [GeneratedRegex(@"\AApi\.Modules\.[^.]+\.Infrastructure\.Persistence(\.|\z)")]
+    private static partial Regex ModulePersistenceNamespace();
 
     private static IEnumerable<Type> ApplicationTypes() =>
         ApiTypes.Where(type => type.Namespace?.Contains(".Application", StringComparison.Ordinal) == true
