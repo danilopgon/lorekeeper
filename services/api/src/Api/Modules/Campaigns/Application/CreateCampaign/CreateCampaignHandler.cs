@@ -1,49 +1,35 @@
 using Api.Modules.Campaigns.Domain;
+using Api.SharedKernel;
 using MediatR;
 
 namespace Api.Modules.Campaigns.Application.CreateCampaign;
 
-public sealed class CreateCampaignHandler(ICampaignRepository campaigns) : IRequestHandler<CreateCampaignCommand, CreateCampaignResult>
+public sealed class CreateCampaignHandler(ICampaignRepository campaigns) : IRequestHandler<CreateCampaignCommand, Result<CampaignDto>>
 {
-    public async Task<CreateCampaignResult> Handle(CreateCampaignCommand request, CancellationToken cancellationToken)
+    public static Error NameConflict { get; } = Error.Conflict("campaign_name_conflict", "Campaign name already exists.").ForField("name");
+
+    public async Task<Result<CampaignDto>> Handle(CreateCampaignCommand request, CancellationToken cancellationToken)
     {
         var name = CampaignName.Create(request.Name);
         if (!name.IsSuccess)
         {
-            return CreateCampaignResult.InvalidName();
+            return name.Error!.ForField("name");
         }
 
-        var campaign = Campaign.Create(name.Value!, DateTimeOffset.UtcNow);
+        var campaign = Campaign.Create(name.Value, DateTimeOffset.UtcNow);
         campaigns.Add(campaign);
 
-        var saved = await campaigns.SaveChangesAsync(cancellationToken);
-        if (saved == CampaignSaveResult.NameConflict)
+        if (await campaigns.SaveChangesAsync(cancellationToken) == CampaignSaveOutcome.NameConflict)
         {
-            return CreateCampaignResult.NameConflict();
+            return NameConflict;
         }
 
-        return CreateCampaignResult.Created(new CampaignDto(
+        return new CampaignDto(
             campaign.Id.ToString("D"),
             campaign.Name.Value,
             campaign.CreatedAt,
-            campaign.UpdatedAt));
+            campaign.UpdatedAt);
     }
 }
 
-public sealed record CreateCampaignCommand(string? Name) : IRequest<CreateCampaignResult>;
-
-public sealed record CreateCampaignResult(CreateCampaignStatus Status, CampaignDto? Campaign)
-{
-    public static CreateCampaignResult Created(CampaignDto campaign) => new(CreateCampaignStatus.Created, campaign);
-
-    public static CreateCampaignResult InvalidName() => new(CreateCampaignStatus.InvalidName, null);
-
-    public static CreateCampaignResult NameConflict() => new(CreateCampaignStatus.NameConflict, null);
-}
-
-public enum CreateCampaignStatus
-{
-    Created,
-    InvalidName,
-    NameConflict
-}
+public sealed record CreateCampaignCommand(string? Name) : IRequest<Result<CampaignDto>>;

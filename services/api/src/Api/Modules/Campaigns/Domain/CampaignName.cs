@@ -1,4 +1,3 @@
-using System.Text;
 using Api.SharedKernel;
 
 namespace Api.Modules.Campaigns.Domain;
@@ -12,27 +11,15 @@ public sealed record CampaignName
 
     public string Value { get; }
 
-    public static DomainResult<CampaignName> Create(string? value)
+    public static Result<CampaignName> Create(string? value)
     {
         var trimmed = value?.Trim();
 
-        if (string.IsNullOrEmpty(trimmed) || CountUnicodeScalars(trimmed) > MaxLength)
+        if (string.IsNullOrEmpty(trimmed) || UnicodeScalars.Count(trimmed) > MaxLength)
         {
-            return DomainResult<CampaignName>.Failure(InvalidCode);
+            return Error.Validation(InvalidCode, "Campaign name is invalid.");
         }
 
-        return DomainResult<CampaignName>.Success(new CampaignName(trimmed));
-    }
-
-    private static int CountUnicodeScalars(string value)
-    {
-        var count = 0;
-
-        foreach (var _ in value.EnumerateRunes())
-        {
-            count++;
-        }
-
-        return count;
+        return new CampaignName(trimmed);
     }
 }

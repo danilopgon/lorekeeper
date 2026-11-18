@@ -1,7 +1,7 @@
 using Api.Modules.Sources.Domain;
 using Microsoft.EntityFrameworkCore;
 
-namespace Api.Modules.Sources.Infrastructure;
+namespace Api.Modules.Sources.Infrastructure.Persistence;
 
 public sealed class SourcesDbContext(DbContextOptions<SourcesDbContext> options) : DbContext(options)
 {
@@ -16,6 +16,6 @@ public sealed class SourcesDbContext(DbContextOptions<SourcesDbContext> options)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(
             typeof(SourcesDbContext).Assembly,
-            type => type.Namespace == typeof(SourcesDbContext).Namespace);
+            type => type.Namespace == typeof(Configurations.SourceEntityTypeConfiguration).Namespace);
     }
 }

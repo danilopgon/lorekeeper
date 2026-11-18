@@ -5,11 +5,14 @@ namespace Api.Modules.Campaigns.Domain;
 public static class CampaignIdParser
 {
     public const string InvalidCode = "campaign_id_invalid";
+    public const string NotFoundCode = "campaign_not_found";
 
-    public static DomainResult<Guid> Parse(string? value) =>
+    public static Error NotFound { get; } = Error.NotFound(NotFoundCode, "Campaign was not found.");
+
+    public static Result<Guid> Parse(string? value) =>
         CanonicalUuid.TryParse(value, out var id)
-            ? DomainResult<Guid>.Success(id)
-            : DomainResult<Guid>.Failure(InvalidCode);
+            ? id
+            : Error.Validation(InvalidCode, "Campaign id is invalid.");
 
     public static string Format(Guid id) => CanonicalUuid.Format(id);
 }

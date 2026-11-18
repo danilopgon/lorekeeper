@@ -1,6 +1,6 @@
 using Api.Modules.Sources.Application.ProcessSourceVersion;
 using Api.Modules.Sources.Domain;
-using Api.Modules.Sources.Infrastructure;
+using Api.Modules.Sources.Infrastructure.Persistence;
 using Api.Modules.Sources.Infrastructure.Ingestion;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;

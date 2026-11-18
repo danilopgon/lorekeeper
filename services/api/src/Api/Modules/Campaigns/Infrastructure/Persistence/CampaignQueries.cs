@@ -2,7 +2,7 @@ using Api.Modules.Campaigns.Application;
 using Api.Modules.Campaigns.Domain;
 using Microsoft.EntityFrameworkCore;
 
-namespace Api.Modules.Campaigns.Infrastructure;
+namespace Api.Modules.Campaigns.Infrastructure.Persistence;
 
 public sealed class CampaignQueries(CampaignsDbContext dbContext) : ICampaignQueries
 {

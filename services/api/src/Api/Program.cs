@@ -1,5 +1,6 @@
 using Api.Modules.Campaigns;
 using Api.Modules.Sources;
+using Api.Common.Persistence;
 using Api.Common.Presentation.ExceptionHandling;
 using Api.Common.Presentation.OpenApi;
 
@@ -13,6 +14,12 @@ builder.Services.AddCampaignsModule(builder.Configuration);
 builder.Services.AddSourcesModule(builder.Configuration);
 
 var app = builder.Build();
+
+if (args is [ModuleDatabases.MigrateCommand])
+{
+    await app.Services.MigrateModuleDatabasesAsync();
+    return;
+}
 
 app.UseExceptionHandler();
 

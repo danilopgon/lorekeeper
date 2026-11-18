@@ -1,6 +1,7 @@
 # ADR-008 — Repositories for commands and dedicated read interfaces for queries
 
 **Status:** Accepted
+**Refined by:** ADR-012 (handlers turn repository outcomes into typed `Error`s); persistence code lives in `Infrastructure/Persistence/` (`04`).
 **Date:** 2026-11-11
 **Area:** backend
 

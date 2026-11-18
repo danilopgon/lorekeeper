@@ -1,11 +1,11 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Signal } from '@angular/core';
 import { environment } from '../../../../environments/environment';
-import { CampaignDto } from '../../../shared/api/generated';
+import { CampaignDto } from '../../../shared/api/generated/campaigns';
 import {
   zGetCampaignResponse,
   zListCampaignsResponse,
-} from '../../../shared/api/generated/zod.gen';
+} from '../../../shared/api/generated/campaigns/zod.gen';
 
 const campaignsUrl = `${environment.apiBaseUrl}/api/campaigns`;
 

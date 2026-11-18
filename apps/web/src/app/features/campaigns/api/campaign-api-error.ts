@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { zProblemDetails } from '../../../shared/api/generated/zod.gen';
+import { zProblemDetails } from '../../../shared/api/generated/campaigns/zod.gen';
 
 /** Typed UI-facing error states produced by the campaign API layer. */
 export type CampaignApiError =

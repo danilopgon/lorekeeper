@@ -1,5 +1,6 @@
 using Api.Modules.Sources.Application.ProcessSourceVersion;
 using Api.Modules.Sources.Domain;
+using Api.Modules.Sources.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace Api.Modules.Sources.Infrastructure.Ingestion;

@@ -1,8 +1,9 @@
+using Api.Common.Persistence;
 using Api.Modules.Sources.Application;
 using Api.Modules.Sources.Application.ListSources;
 using Api.Modules.Sources.Application.PasteSource;
 using Api.Modules.Sources.Application.ProcessSourceVersion;
-using Api.Modules.Sources.Infrastructure;
+using Api.Modules.Sources.Infrastructure.Persistence;
 using Api.Modules.Sources.Infrastructure.Ingestion;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -20,6 +21,7 @@ public static class SourcesModule
             options.UseNpgsql(connectionString, npgsql => npgsql.MigrationsHistoryTable(SourcesDbContext.MigrationsHistoryTable));
         });
 
+        services.AddModuleDatabase<SourcesDbContext>();
         services.TryAddSingleton(TimeProvider.System);
         services.AddScoped<ISourceRepository, SourceRepository>();
         services.AddScoped<ISourceQueries, SourceQueries>();

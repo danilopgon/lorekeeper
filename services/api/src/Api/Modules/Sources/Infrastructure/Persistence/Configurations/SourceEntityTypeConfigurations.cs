@@ -1,8 +1,9 @@
 using Api.Modules.Sources.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Api.Modules.Sources.Infrastructure.Persistence;
 
-namespace Api.Modules.Sources.Infrastructure;
+namespace Api.Modules.Sources.Infrastructure.Persistence.Configurations;
 
 internal sealed class SourceEntityTypeConfiguration : IEntityTypeConfiguration<Source>
 {

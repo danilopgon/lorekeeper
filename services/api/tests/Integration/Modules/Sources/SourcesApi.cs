@@ -1,3 +1,4 @@
+using Api.Common.Persistence;
 using System.Net.Http.Json;
 using System.Text.Json.Nodes;
 using FluentAssertions;
@@ -44,7 +45,7 @@ internal sealed class SourcesApi : IAsyncDisposable
             });
         });
 
-        await TestDatabase.MigrateAsync(api._factory.Services);
+        await api._factory.Services.MigrateModuleDatabasesAsync();
         api.Client = api._factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
         return api;
     }

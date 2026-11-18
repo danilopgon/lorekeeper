@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json.Nodes;
-using Api.Modules.Sources.Infrastructure;
+using Api.Modules.Sources.Infrastructure.Persistence;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

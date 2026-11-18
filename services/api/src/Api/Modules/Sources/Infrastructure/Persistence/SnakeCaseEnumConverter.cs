@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
-namespace Api.Modules.Sources.Infrastructure;
+namespace Api.Modules.Sources.Infrastructure.Persistence;
 
 internal sealed class SnakeCaseEnumConverter<TEnum>() : ValueConverter<TEnum, string>(
     value => Names[value],

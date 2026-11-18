@@ -19,7 +19,7 @@ ASP.NET endpoint contracts generate OpenAPI. Block 01 uses a narrow handwritten 
 | Error schema | Campaign 4xx responses declare `application/problem+json` with `ProblemDetails`, which adds the optional `code` and `errors` extensions. They are optional because framework validation failures, such as malformed JSON, return a 400 without them; the frontend maps those to its recoverable state. |
 | Runtime exposure | `/openapi/v1.json` and Swagger UI at `/swagger` (`Swashbuckle.AspNetCore.SwaggerUI`, reading that document) are mapped only when the environment is `Development`. No other environment serves either. |
 | TypeScript generator | `@hey-api/openapi-ts` with the `@hey-api/typescript` and `zod` plugins only: types and Zod schemas, no SDK, client or framework plugin. Pinned to an exact version while it is 0.x. Date-time schemas accept numeric offsets because `DateTimeOffset` may serialize as `+00:00`. |
-| Generated output | `apps/web/src/app/shared/api/generated/`, committed. |
+| Generated output | `apps/web/src/app/shared/api/generated/<tag>/`, one folder per OpenAPI tag of the `/api` routes (for example `campaigns/`), committed. `apps/web/openapi-ts.config.ts` derives the folders from the document, so a new module needs no config change. |
 | Frontend use | Queries and commands consume the generated types and schemas as defined in [ADR-006](decisions/ADR-006-frontend-cqrs-data-access.md). |
 | Contract-diff policy | The `Contract` CI job runs `pnpm run contract:check`, which rebuilds the API, regenerates the document and the TypeScript output, and fails if either differs from the committed files. Contract changes are therefore reviewed as diffs in the PR. |
 

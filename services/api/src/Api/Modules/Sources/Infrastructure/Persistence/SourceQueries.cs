@@ -3,7 +3,7 @@ using Api.Modules.Sources.Domain;
 using Api.SharedKernel;
 using Microsoft.EntityFrameworkCore;
 
-namespace Api.Modules.Sources.Infrastructure;
+namespace Api.Modules.Sources.Infrastructure.Persistence;
 
 public sealed class SourceQueries(SourcesDbContext dbContext) : ISourceQueries
 {

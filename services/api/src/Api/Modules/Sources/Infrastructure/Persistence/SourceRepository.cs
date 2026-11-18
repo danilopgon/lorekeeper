@@ -2,7 +2,7 @@ using Api.Modules.Sources.Application;
 using Api.Modules.Sources.Domain;
 using Microsoft.EntityFrameworkCore;
 
-namespace Api.Modules.Sources.Infrastructure;
+namespace Api.Modules.Sources.Infrastructure.Persistence;
 
 public sealed class SourceRepository(SourcesDbContext dbContext) : ISourceRepository
 {

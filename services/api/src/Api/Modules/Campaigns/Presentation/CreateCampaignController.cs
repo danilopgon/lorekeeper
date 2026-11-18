@@ -1,3 +1,4 @@
+using Api.Common.Presentation;
 using Api.Modules.Campaigns.Application;
 using Api.Modules.Campaigns.Application.CreateCampaign;
 using MediatR;
@@ -22,13 +23,9 @@ public sealed class CreateCampaignController(ISender sender) : ControllerBase
     {
         var result = await sender.Send(new CreateCampaignCommand(request?.Name), cancellationToken);
 
-        return result.Status switch
-        {
-            CreateCampaignStatus.Created => Created($"/api/campaigns/{result.Campaign!.Id}", result.Campaign),
-            CreateCampaignStatus.InvalidName => CampaignProblemDetails.InvalidName(),
-            CreateCampaignStatus.NameConflict => CampaignProblemDetails.NameConflict(),
-            _ => throw new InvalidOperationException($"Unexpected create campaign status '{result.Status}'.")
-        };
+        return result.Match<ActionResult<CampaignDto>>(
+            campaign => Created($"/api/campaigns/{campaign.Id}", campaign),
+            error => error.ToProblem());
     }
 
     public sealed record CreateCampaignRequest(string? Name);
