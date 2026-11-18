@@ -1,5 +1,6 @@
 using Api.Modules.Campaigns.Domain;
-using Api.Modules.Campaigns.Infrastructure;
+using Api.Modules.Campaigns.Infrastructure.Persistence;
+using Api.Common.Persistence;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -102,10 +103,7 @@ public sealed class CampaignsPersistenceTests : IAsyncLifetime
         await _postgres.StartAsync();
         _factory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder => builder.UseSetting("ConnectionStrings:Campaigns", _postgres.GetConnectionString()));
-        await using var scope = CreateScope();
-        var context = GetContext(scope);
-        await context.Database.EnsureDeletedAsync();
-        await context.Database.EnsureCreatedAsync();
+        await _factory.Services.MigrateModuleDatabasesAsync();
     }
 
     public async Task DisposeAsync()

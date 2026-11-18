@@ -1,6 +1,7 @@
+using Api.Common.Persistence;
 using Api.Modules.Campaigns.Application;
 using Api.Modules.Campaigns.Application.CreateCampaign;
-using Api.Modules.Campaigns.Infrastructure;
+using Api.Modules.Campaigns.Infrastructure.Persistence;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,6 +18,7 @@ public static class CampaignsModule
             options.UseNpgsql(connectionString);
         });
 
+        services.AddModuleDatabase<CampaignsDbContext>();
         services.AddScoped<ICampaignRepository, CampaignRepository>();
         services.AddScoped<ICampaignQueries, CampaignQueries>();
 

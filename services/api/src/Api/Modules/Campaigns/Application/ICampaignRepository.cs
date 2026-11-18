@@ -6,10 +6,10 @@ public interface ICampaignRepository
 {
     void Add(Campaign campaign);
 
-    Task<CampaignSaveResult> SaveChangesAsync(CancellationToken cancellationToken);
+    Task<CampaignSaveOutcome> SaveChangesAsync(CancellationToken cancellationToken);
 }
 
-public enum CampaignSaveResult
+public enum CampaignSaveOutcome
 {
     Saved,
     NameConflict

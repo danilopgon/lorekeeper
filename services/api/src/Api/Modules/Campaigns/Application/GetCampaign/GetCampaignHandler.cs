@@ -1,40 +1,28 @@
 using Api.Modules.Campaigns.Domain;
+using Api.SharedKernel;
 using MediatR;
 
 namespace Api.Modules.Campaigns.Application.GetCampaign;
 
-public sealed class GetCampaignHandler(ICampaignQueries campaigns) : IRequestHandler<GetCampaignQuery, GetCampaignResult>
+public sealed class GetCampaignHandler(ICampaignQueries campaigns) : IRequestHandler<GetCampaignQuery, Result<CampaignDto>>
 {
-    public async Task<GetCampaignResult> Handle(GetCampaignQuery request, CancellationToken cancellationToken)
+    public async Task<Result<CampaignDto>> Handle(GetCampaignQuery request, CancellationToken cancellationToken)
     {
-        var parsed = CampaignIdParser.Parse(request.CampaignId);
-        if (!parsed.IsSuccess)
+        var campaignId = CampaignIdParser.Parse(request.CampaignId);
+        if (!campaignId.IsSuccess)
         {
-            return GetCampaignResult.InvalidId();
+            return campaignId.Error!;
         }
 
-        var campaign = await campaigns.GetByIdAsync(parsed.Value, cancellationToken);
+        var campaign = await campaigns.GetByIdAsync(campaignId.Value, cancellationToken);
 
-        return campaign is null
-            ? GetCampaignResult.NotFound()
-            : GetCampaignResult.Found(campaign);
+        if (campaign is null)
+        {
+            return CampaignIdParser.NotFound;
+        }
+
+        return campaign;
     }
 }
 
-public sealed record GetCampaignQuery(string CampaignId) : IRequest<GetCampaignResult>;
-
-public sealed record GetCampaignResult(GetCampaignStatus Status, CampaignDto? Campaign)
-{
-    public static GetCampaignResult Found(CampaignDto campaign) => new(GetCampaignStatus.Found, campaign);
-
-    public static GetCampaignResult InvalidId() => new(GetCampaignStatus.InvalidId, null);
-
-    public static GetCampaignResult NotFound() => new(GetCampaignStatus.NotFound, null);
-}
-
-public enum GetCampaignStatus
-{
-    Found,
-    InvalidId,
-    NotFound
-}
+public sealed record GetCampaignQuery(string CampaignId) : IRequest<Result<CampaignDto>>;

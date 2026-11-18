@@ -2,7 +2,7 @@ using Api.Modules.Campaigns.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Api.Modules.Campaigns.Infrastructure;
+namespace Api.Modules.Campaigns.Infrastructure.Persistence.Configurations;
 
 public sealed class CampaignEntityTypeConfiguration : IEntityTypeConfiguration<Campaign>
 {

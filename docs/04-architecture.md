@@ -35,7 +35,8 @@ services/api/
 ├── src/
 │   ├── Api/                  # composition root, middleware, endpoints
 │   ├── Common/               # proven cross-module application concerns
-│   │   └── Presentation/     # shared HTTP infrastructure
+│   │   ├── Persistence/      # module database registry and the `migrate` command
+│   │   └── Presentation/     # shared HTTP infrastructure, including Error → Problem Details
 │   ├── Modules/
 │   │   └── [Module]/
 │   │       ├── Presentation/        # HTTP-operation-oriented MVC controllers and transport mapping
@@ -44,7 +45,12 @@ services/api/
 │   │       │   └── Features/
 │   │       │       └── [UseCase]/
 │   │       └── Infrastructure/
-│   └── SharedKernel/         # genuinely transversal primitives only
+│   │           ├── Persistence/     # DbContext, repository, read queries, Configurations/, Migrations/
+│   │           └── [Adapter]/       # other adapters, such as ingestion workers
+│   └── SharedKernel/         # genuinely transversal primitives only, such as Result<T> and Error
+│
+│   An architecture test fails if a DbContext, EF configuration or migration lives outside a
+│   module's Infrastructure/Persistence/, or if a handler does not return Result<T>.
 └── tests/
     ├── Unit/
     └── Integration/
@@ -81,7 +87,7 @@ The `ai/` workbench is not an application runtime boundary by default and is not
 - Modules communicate through explicit contracts, not another module's EF entities.
 - Domain and Application do not depend on EF Core, ASP.NET or provider SDKs.
 - Infrastructure implements ports defined by the owning module.
-- HTTP adapters live in a module `Presentation/` layer when a module has multiple HTTP operations. Controllers stay cohesive around an HTTP resource, translate HTTP transport DTOs into commands/queries, dispatch through `ISender` where the module adopts MediatR, and map results into public contracts. Campaign-specific expected-result-to-ProblemDetails mapping stays in Campaign Presentation. Proven cross-module HTTP infrastructure, such as unexpected-exception handling, belongs under `Api/Common/Presentation`; register controller and Problem Details infrastructure centrally in the API composition root. Avoid generic controller frameworks.
+- HTTP adapters live in a module `Presentation/` layer when a module has multiple HTTP operations. Controllers stay cohesive around an HTTP resource, translate HTTP transport DTOs into commands/queries, dispatch through `ISender` where the module adopts MediatR, and map results into public contracts. Expected failures map to Problem Details through the shared `Api.Common.Presentation.ErrorProblemDetails` (ADR-012). Proven cross-module HTTP infrastructure, such as that mapping and unexpected-exception handling, belongs under `Api/Common/Presentation`; register controller and Problem Details infrastructure centrally in the API composition root. Avoid generic controller frameworks.
 - Use project-owned ports for time, IDs, storage and providers when the boundary matters; do not wrap every framework API by reflex.
 
 ## Pragmatic CQRS
@@ -95,7 +101,7 @@ Query   → Handler → Module read interface → DTO projection
 - Queries use a module-specific read interface that returns purpose-built projections and never hydrates aggregates (ADR-008).
 - Validation has three homes (ADR-011): domain invariants in value objects, request shape in explicit FluentValidation validators, and state or existence rules in handlers.
 - A feature folder owns request, result, validation, handler and tests.
-- Campaign create/list/get messages implement `IRequest<TResponse>` and handlers implement `IRequestHandler<TRequest, TResponse>`; Campaign controllers inject `ISender` and retain HTTP-to-message mapping, while expected application results use a focused Campaign Problem Details mapper. ASP.NET Core's centrally registered `Api.Common.Presentation.ExceptionHandling.UnexpectedExceptionHandler` owns unexpected `unexpected_error` responses.
+- Campaign create/list/get messages implement `IRequest<TResponse>` and handlers implement `IRequestHandler<TRequest, TResponse>`; handlers return `Result<T>` (ADR-012) and Campaign controllers inject `ISender`, retain HTTP-to-message mapping and turn results into responses with `Match`. ASP.NET Core's centrally registered `Api.Common.Presentation.ExceptionHandling.UnexpectedExceptionHandler` owns unexpected `unexpected_error` responses.
 - Add mediator dispatch to another module only through an ADR with a demonstrated benefit. Do not introduce pipeline behaviors, generic repositories, generic base handlers or wrapper interfaces without a demonstrated need.
 
 ## Background work and streaming

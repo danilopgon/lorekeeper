@@ -27,6 +27,6 @@ public class CampaignIdParserTests
         var result = CampaignIdParser.Parse(input);
 
         result.IsSuccess.Should().BeFalse();
-        result.ErrorCode.Should().Be(CampaignIdParser.InvalidCode);
+        result.Error!.Code.Should().Be(CampaignIdParser.InvalidCode);
     }
 }

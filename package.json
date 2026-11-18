@@ -14,7 +14,7 @@
     "db:stop": "docker compose stop postgres",
     "db:logs": "docker compose logs -f postgres",
     "tools:restore": "dotnet tool restore",
-    "api:migrate": "dotnet tool run dotnet-ef database update --project services/api/src/Api/Api.csproj --startup-project services/api/src/Api/Api.csproj",
+    "api:migrate": "dotnet run --project services/api/src/Api/Api.csproj -- migrate",
     "format": "pnpm --filter web format",
     "format:check": "pnpm --filter web format:check",
     "lint": "pnpm --filter web lint",

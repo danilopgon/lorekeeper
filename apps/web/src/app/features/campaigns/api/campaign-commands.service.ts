@@ -2,8 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { CampaignDto, CreateCampaignRequest } from '../../../shared/api/generated';
-import { zCreateCampaignResponse } from '../../../shared/api/generated/zod.gen';
+import { CampaignDto, CreateCampaignRequest } from '../../../shared/api/generated/campaigns';
+import { zCreateCampaignResponse } from '../../../shared/api/generated/campaigns/zod.gen';
 import { toCampaignApiError } from './campaign-api-error';
 
 /** Campaign write operations; failures reject with a `CampaignApiError`. */

@@ -1,3 +1,4 @@
+using Api.Common.Presentation;
 using Api.Modules.Campaigns.Application;
 using Api.Modules.Campaigns.Application.GetCampaign;
 using Api.Modules.Campaigns.Application.ListCampaigns;
@@ -17,8 +18,9 @@ public sealed class CampaignsGetController(ISender sender) : ControllerBase
     [ProducesResponseType(typeof(IReadOnlyList<CampaignDto>), StatusCodes.Status200OK, "application/json")]
     public async Task<ActionResult<IReadOnlyList<CampaignDto>>> ListCampaigns(CancellationToken cancellationToken)
     {
-        var campaigns = await sender.Send(new ListCampaignsQuery(), cancellationToken);
-        return Ok(campaigns);
+        var result = await sender.Send(new ListCampaignsQuery(), cancellationToken);
+
+        return result.Match<ActionResult<IReadOnlyList<CampaignDto>>>(campaigns => Ok(campaigns), error => error.ToProblem());
     }
 
     [HttpGet("{campaignId}", Name = "GetCampaign")]
@@ -31,12 +33,6 @@ public sealed class CampaignsGetController(ISender sender) : ControllerBase
     {
         var result = await sender.Send(new GetCampaignQuery(campaignId), cancellationToken);
 
-        return result.Status switch
-        {
-            GetCampaignStatus.Found => Ok(result.Campaign),
-            GetCampaignStatus.InvalidId => CampaignProblemDetails.InvalidId(),
-            GetCampaignStatus.NotFound => CampaignProblemDetails.NotFound(),
-            _ => throw new InvalidOperationException($"Unexpected get campaign status '{result.Status}'.")
-        };
+        return result.Match<ActionResult<CampaignDto>>(campaign => Ok(campaign), error => error.ToProblem());
     }
 }

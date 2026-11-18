@@ -10,6 +10,7 @@ Apply the blocking Definition of Ready in `08-quality-strategy.md` before every 
 
 - **Done:** Definition, 00, 01, DS, 02, #18.
 - **Next:** 04A Sources, ready since 2026-11-11 (see its readiness record). It reuses the persistence pattern #18 set for Campaign (ADR-008).
+- **Before 04A part 1 merges:** the #44 refactor from the #43 review: `Result<T>` with central Problem Details mapping (ADR-012), `Infrastructure/Persistence/` layout, the API `migrate` command and per-domain generated contract. Behaviour and HTTP contract unchanged.
 - **Execution order after that:** 05A → 03 → 05B. 03 runs after 05A because the first useful version needs no AI.
 - **First useful version target:** 05A — the operator can import Markdown/text notes into a campaign and search them with source-backed fragments, without an LLM.
 
