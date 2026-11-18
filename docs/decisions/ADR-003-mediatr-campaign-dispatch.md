@@ -4,6 +4,8 @@
 
 **Refined by:** ADR-008. Campaign commands persist through `ICampaignRepository` and queries read through `ICampaignQueries`; the repository exclusion below no longer applies to Campaign. The other exclusions stand.
 
+**Refined by:** ADR-012. Handlers return `Result<T>` and expected failures map to Problem Details in one shared place, not in a Campaign mapper.
+
 **Date:** 2026-09-25
 
 **Area:** Backend

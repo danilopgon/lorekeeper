@@ -25,7 +25,7 @@ public class CampaignNameTests
         var result = CampaignName.Create(input);
 
         result.IsSuccess.Should().BeFalse();
-        result.ErrorCode.Should().Be(CampaignName.InvalidCode);
+        result.Error!.Code.Should().Be(CampaignName.InvalidCode);
     }
 
     [Fact]
@@ -51,7 +51,7 @@ public class CampaignNameTests
         var result = CampaignName.Create($" {new string('A', CampaignName.MaxLength + 1)} ");
 
         result.IsSuccess.Should().BeFalse();
-        result.ErrorCode.Should().Be(CampaignName.InvalidCode);
+        result.Error!.Code.Should().Be(CampaignName.InvalidCode);
     }
 
     [Fact]
@@ -60,6 +60,6 @@ public class CampaignNameTests
         var result = CampaignName.Create(string.Concat(Enumerable.Repeat("🏰", CampaignName.MaxLength + 1)));
 
         result.IsSuccess.Should().BeFalse();
-        result.ErrorCode.Should().Be(CampaignName.InvalidCode);
+        result.Error!.Code.Should().Be(CampaignName.InvalidCode);
     }
 }

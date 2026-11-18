@@ -47,7 +47,7 @@ Use **Option D**, for local development only. It covers process control without 
 
 ## Proposed design
 
-- `services/api/src/AppHost` orchestrates PostgreSQL 17, an EF Core migration step, the API and the Angular dev server. `aspire.config.json` points the CLI at it from the repository root.
+- `services/api/src/AppHost` orchestrates PostgreSQL 17, a migration step, the API and the Angular dev server. Since 2026-11-18 (#44) the migration step runs the API itself with the `migrate` argument, which applies every module's DbContext in registration order and exits; `pnpm run api:migrate` runs the same command. `aspire.config.json` points the CLI at it from the repository root.
 - `pnpm run dev` stops the Compose database and runs `aspire run`.
 - The AppHost reuses the Compose volume `lorekeeper_postgres-data`, so both flows see the same data. **Never run both at once on that volume**: stop one before starting the other.
 - The Angular dev server keeps port 4200 and its proxy; the API keeps port 5044 through its `http` launch profile.

@@ -3,7 +3,8 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Api.Modules.Campaigns.Infrastructure;
+using Api.Modules.Campaigns.Infrastructure.Persistence;
+using Api.Common.Persistence;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -196,10 +197,7 @@ public sealed class CampaignEndpointsTests : IAsyncLifetime
         await _postgres.StartAsync();
         _factory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder => builder.UseSetting("ConnectionStrings:Campaigns", _postgres.GetConnectionString()));
-        await using var scope = _factory.Services.CreateAsyncScope();
-        var context = scope.ServiceProvider.GetRequiredService<CampaignsDbContext>();
-        await context.Database.EnsureDeletedAsync();
-        await context.Database.EnsureCreatedAsync();
+        await _factory.Services.MigrateModuleDatabasesAsync();
         _client = _factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
     }
 

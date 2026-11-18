@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
-namespace Api.Modules.Campaigns.Infrastructure;
+namespace Api.Modules.Campaigns.Infrastructure.Persistence;
 
 public enum CampaignPersistenceError
 {

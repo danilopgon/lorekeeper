@@ -1,16 +1,18 @@
 using Api.Modules.Campaigns.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace Api.Modules.Campaigns.Infrastructure.Migrations;
+namespace Api.Modules.Campaigns.Infrastructure.Persistence.Migrations;
 
 [DbContext(typeof(CampaignsDbContext))]
-public partial class CampaignsDbContextModelSnapshot : ModelSnapshot
+[Migration("20260918000000_InitialCampaigns")]
+public partial class InitialCampaigns
 {
-    protected override void BuildModel(ModelBuilder modelBuilder)
+    protected override void BuildTargetModel(ModelBuilder modelBuilder)
     {
         modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
 

@@ -8,10 +8,8 @@ var postgres = builder.AddPostgres("postgres", dbUser, dbPassword)
     .WithDataVolume("lorekeeper_postgres-data");
 var campaigns = postgres.AddDatabase("Campaigns", "lorekeeper");
 
-var migrate = builder.AddExecutable("migrate", "dotnet", "../../../..",
-        "tool", "run", "dotnet-ef", "database", "update",
-        "--project", "services/api/src/Api/Api.csproj",
-        "--startup-project", "services/api/src/Api/Api.csproj")
+var migrate = builder.AddProject<Projects.Api>("migrate", options => options.ExcludeLaunchProfile = true)
+    .WithArgs("migrate")
     .WithReference(campaigns)
     .WaitFor(campaigns);
 

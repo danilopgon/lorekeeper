@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Api.Modules.Campaigns.Infrastructure.Migrations;
+namespace Api.Modules.Campaigns.Infrastructure.Persistence.Migrations;
 
 public partial class InitialCampaigns : Migration
 {

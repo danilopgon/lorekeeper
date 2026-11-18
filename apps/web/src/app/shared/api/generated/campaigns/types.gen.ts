@@ -27,20 +27,6 @@ export type ProblemDetails = {
     };
 };
 
-export type GetHealthData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/health';
-};
-
-export type GetHealthResponses = {
-    /**
-     * OK
-     */
-    200: unknown;
-};
-
 export type ListCampaignsData = {
     body?: never;
     path?: never;
