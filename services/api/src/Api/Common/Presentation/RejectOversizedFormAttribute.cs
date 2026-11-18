@@ -21,10 +21,14 @@ public sealed class RejectOversizedFormAttribute : Attribute, IAsyncResourceFilt
             {
                 await request.ReadFormAsync(context.HttpContext.RequestAborted);
             }
-            catch (Exception exception) when (exception is InvalidDataException or BadHttpRequestException { StatusCode: StatusCodes.Status413PayloadTooLarge })
+            catch (BadHttpRequestException exception) when (exception.StatusCode == StatusCodes.Status413PayloadTooLarge)
             {
                 context.Result = TooLarge();
                 return;
+            }
+            catch (Exception exception) when (exception is InvalidDataException or IOException)
+            {
+                // A malformed body is not a size problem: model binding reports it as 400.
             }
         }
 

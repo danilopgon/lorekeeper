@@ -48,6 +48,18 @@ public sealed class ImportSourcesEndpointsTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task AMalformedMultipartBodyIsABadRequestNotATooLargeOne()
+    {
+        var campaignId = await _api.CreateCampaignAsync("Ash Crown");
+        var body = new StringContent("--frontera\r\nContent-Disposition: form-data; name=\"metadata\"\r\n\r\n[]", Encoding.UTF8);
+        body.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data; boundary=frontera");
+
+        using var response = await _api.Client.PostAsync($"/api/campaigns/{campaignId}/sources/imports", body);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest, await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
     public async Task EachFileIsAcceptedOrRejectedOnItsOwnAndAcceptedOnesBecomeAvailable()
     {
         var campaignId = await _api.CreateCampaignAsync("Ash Crown");

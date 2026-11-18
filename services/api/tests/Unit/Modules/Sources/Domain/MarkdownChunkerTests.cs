@@ -76,6 +76,16 @@ public sealed class MarkdownChunkerTests
     }
 
     [Fact]
+    public void AnInlineSpanOfThreeBackticksIsNotAFence()
+    {
+        var chunks = MarkdownChunker.Chunk("# A\n\nVer ```Mirela``` aquí.\n\n# B\n\ntexto");
+
+        chunks.Select(chunk => string.Join(" > ", chunk.HeadingPath)).Should().Equal("A", "B");
+        MarkdownSyntax.AsFenceOpening("```csharp").Should().Be("```");
+        MarkdownSyntax.AsFenceOpening("~~~ con `tilde`").Should().Be("~~~");
+    }
+
+    [Fact]
     public void TablesStayWholeAndLongSectionsSplitAtParagraphs()
     {
         const string table = "| a | b |\n|---|---|\n| 1 | 2 |\n| 3 | 4 |";

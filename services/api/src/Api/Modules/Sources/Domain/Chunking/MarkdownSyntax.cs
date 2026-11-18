@@ -20,11 +20,20 @@ public static partial class MarkdownSyntax
         return new Heading(match.Groups["level"].Length, text);
     }
 
-    /// <summary>The opening of a fenced code block: up to three spaces, then at least three backticks or tildes.</summary>
+    /// <summary>
+    /// The opening of a fenced code block: up to three spaces, then at least three backticks or tildes.
+    /// After backticks the info string may not contain a backtick, so <c>```code```</c> is an inline span, not a fence.
+    /// </summary>
     public static string? AsFenceOpening(string line)
     {
         var match = FenceOpening().Match(line);
-        return match.Success ? match.Groups["fence"].Value : null;
+        if (!match.Success)
+        {
+            return null;
+        }
+
+        var fence = match.Groups["fence"].Value;
+        return fence[0] == '`' && match.Groups["info"].Value.Contains('`', StringComparison.Ordinal) ? null : fence;
     }
 
     /// <summary>Whether <paramref name="line"/> closes a fence opened with <paramref name="opening"/>: the same character, at least as many times, nothing else.</summary>
@@ -73,7 +82,7 @@ public static partial class MarkdownSyntax
     [GeneratedRegex(@"(?:\A|[ \t]+)#+[ \t]*\z")]
     private static partial Regex ClosingHashes();
 
-    [GeneratedRegex(@"\A {0,3}(?<fence>`{3,}|~{3,})")]
+    [GeneratedRegex(@"\A {0,3}(?<fence>`{3,}|~{3,})(?<info>.*)\z")]
     private static partial Regex FenceOpening();
 
     [GeneratedRegex(@"\A {0,3}(?<fence>`{3,}|~{3,})[ \t]*\z")]
