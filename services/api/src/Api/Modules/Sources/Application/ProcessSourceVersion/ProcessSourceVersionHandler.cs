@@ -26,7 +26,7 @@ public sealed class ProcessSourceVersionHandler(ISourceRepository sources, TimeP
         work.Source.Publish(work.Version, now);
         work.Job.Succeed(now);
 
-        return await sources.SaveChangesAsync(cancellationToken) == SourceSaveResult.Saved
+        return await sources.SaveChangesAsync(cancellationToken) == SourceSaveOutcome.Saved
             ? ProcessSourceVersionOutcome.Published
             : ProcessSourceVersionOutcome.Discarded;
     }

@@ -45,16 +45,16 @@ public sealed class SourceRepository(SourcesDbContext dbContext) : ISourceReposi
         dbContext.Chunks.AddRange(chunks);
     }
 
-    public async Task<SourceSaveResult> SaveChangesAsync(CancellationToken cancellationToken)
+    public async Task<SourceSaveOutcome> SaveChangesAsync(CancellationToken cancellationToken)
     {
         try
         {
             await dbContext.SaveChangesAsync(cancellationToken);
-            return SourceSaveResult.Saved;
+            return SourceSaveOutcome.Saved;
         }
         catch (DbUpdateConcurrencyException)
         {
-            return SourceSaveResult.Discarded;
+            return SourceSaveOutcome.Discarded;
         }
     }
 }

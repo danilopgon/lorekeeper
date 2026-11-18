@@ -51,8 +51,8 @@ public sealed class SourceIngestionQueueTests : IAsyncLifetime
     {
         await using var scope = _api.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<SourcesDbContext>();
-        var source = Source.Create(Guid.NewGuid(), SourceTitle.Create("Huérfana").Value!, SourceOrigin.Paste, null, KnowledgeStatus.Unknown, DateTimeOffset.UtcNow);
-        var version = SourceVersion.Create(source, SourceText.Create("texto").Value!, null, DateTimeOffset.UtcNow);
+        var source = Source.Create(Guid.NewGuid(), SourceMetadata.Parse("Huérfana", null, null).Value, SourceOrigin.Paste, DateTimeOffset.UtcNow);
+        var version = SourceVersion.Create(source, SourceText.Create("texto").Value, null, DateTimeOffset.UtcNow);
         db.AddRange(source, version, SourceIngestionJob.Create(version, DateTimeOffset.UtcNow));
 
         var act = () => db.SaveChangesAsync();

@@ -1,5 +1,7 @@
+using Api.Common.Presentation;
 using Api.Modules.Sources.Application;
 using Api.Modules.Sources.Application.PasteSource;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Modules.Sources.Presentation;
@@ -7,7 +9,7 @@ namespace Api.Modules.Sources.Presentation;
 [ApiController]
 [Route("api/campaigns/{campaignId}/sources/pastes")]
 [Tags("Sources")]
-public sealed class PasteSourceController(PasteSourceHandler pasteSource) : ControllerBase
+public sealed class PasteSourceController(ISender sender) : ControllerBase
 {
     [HttpPost(Name = "PasteSource")]
     [EndpointSummary("Paste text as a source")]
@@ -20,18 +22,11 @@ public sealed class PasteSourceController(PasteSourceHandler pasteSource) : Cont
         [FromBody] PasteSourceRequest? request,
         CancellationToken cancellationToken)
     {
-        var result = await pasteSource.Handle(
+        var result = await sender.Send(
             new PasteSourceCommand(campaignId, request?.Title, request?.Text, request?.Category, request?.KnowledgeStatus),
             cancellationToken);
 
-        return result.Status switch
-        {
-            PasteSourceStatus.Accepted => Accepted(result.Source),
-            PasteSourceStatus.Invalid => SourceProblemDetails.Invalid(result.Errors),
-            PasteSourceStatus.CampaignIdInvalid => SourceProblemDetails.CampaignIdInvalid(),
-            PasteSourceStatus.CampaignNotFound => SourceProblemDetails.CampaignNotFound(),
-            _ => throw new InvalidOperationException($"Unexpected paste source status '{result.Status}'.")
-        };
+        return result.Match<ActionResult<SourceDto>>(source => Accepted(source), error => error.ToProblem());
     }
 
     public sealed record PasteSourceRequest(string? Title, string? Text)

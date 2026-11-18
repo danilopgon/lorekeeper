@@ -24,18 +24,18 @@ public sealed record SourceText
 
     public string ContentHash { get; }
 
-    public static DomainResult<SourceText> Create(string? value)
+    public static Result<SourceText> Create(string? value)
     {
         var text = value is not null && value.StartsWith(ByteOrderMark) ? value[1..] : value;
 
         if (string.IsNullOrWhiteSpace(text))
         {
-            return DomainResult<SourceText>.Failure(EmptyCode);
+            return Error.Validation(EmptyCode, "Source text is empty.");
         }
 
         if (text.Contains('\0', StringComparison.Ordinal))
         {
-            return DomainResult<SourceText>.Failure(EncodingInvalidCode);
+            return Error.Validation(EncodingInvalidCode, "Source text cannot be stored as UTF-8 text.");
         }
 
         byte[] bytes;
@@ -45,15 +45,15 @@ public sealed record SourceText
         }
         catch (EncoderFallbackException)
         {
-            return DomainResult<SourceText>.Failure(EncodingInvalidCode);
+            return Error.Validation(EncodingInvalidCode, "Source text cannot be stored as UTF-8 text.");
         }
 
         if (bytes.Length > MaxBytes)
         {
-            return DomainResult<SourceText>.Failure(TooLargeCode);
+            return Error.Validation(TooLargeCode, "Source text is larger than 1 MiB.");
         }
 
-        return DomainResult<SourceText>.Success(new SourceText(text, Hash(bytes)));
+        return new SourceText(text, Hash(bytes));
     }
 
     private static string Hash(byte[] utf8) => Convert.ToHexStringLower(SHA256.HashData(utf8));

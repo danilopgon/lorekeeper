@@ -57,4 +57,45 @@ public sealed class PlainTextChunkerTests
 
         PlainTextChunker.Chunk($"{astral}\n\n{astral}", maxLength: 22).Should().ContainSingle();
     }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("\n\n")]
+    [InlineData("  \r\n\t\r\n")]
+    public void TextWithoutContentHasNoChunks(string text)
+    {
+        PlainTextChunker.Chunk(text).Should().BeEmpty();
+    }
+
+    [Fact]
+    public void ASingleLineWithoutALineBreakIsOneChunk()
+    {
+        var chunk = PlainTextChunker.Chunk("solo una línea").Single();
+
+        chunk.Should().BeEquivalentTo(new { StartLine = 1, EndLine = 1, Text = "solo una línea" });
+    }
+
+    [Fact]
+    public void LinesWithOnlyWhitespaceSeparateParagraphs()
+    {
+        var chunks = PlainTextChunker.Chunk("uno\n   \t\ndos", maxLength: 3);
+
+        chunks.Select(chunk => chunk.Text).Should().Equal("uno", "dos");
+    }
+
+    [Fact]
+    public void ALoneCarriageReturnIsContentNotALineBreak()
+    {
+        var chunk = PlainTextChunker.Chunk("a\rb\nc").Single();
+
+        chunk.EndLine.Should().Be(2);
+        chunk.Text.Should().Be("a\rb\nc");
+    }
+
+    [Fact]
+    public void ParagraphsThatExactlyFitTheLimitStayTogether()
+    {
+        PlainTextChunker.Chunk("abc\n\ndef", maxLength: 8).Should().ContainSingle();
+        PlainTextChunker.Chunk("abc\n\ndef", maxLength: 7).Should().HaveCount(2);
+    }
 }

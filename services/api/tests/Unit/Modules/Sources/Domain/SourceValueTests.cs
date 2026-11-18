@@ -11,7 +11,7 @@ public sealed class SourceValueTests
     [InlineData("   ")]
     public void TitleIsRequired(string? value)
     {
-        SourceTitle.Create(value).ErrorCode.Should().Be("source_title_invalid");
+        SourceTitle.Create(value).Error!.Code.Should().Be("source_title_invalid");
     }
 
     [Fact]
@@ -21,7 +21,7 @@ public sealed class SourceValueTests
 
         SourceTitle.Create("  Sesión 3  ").Value!.Value.Should().Be("Sesión 3");
         SourceTitle.Create(astral).IsSuccess.Should().BeTrue();
-        SourceTitle.Create(astral + "a").ErrorCode.Should().Be("source_title_invalid");
+        SourceTitle.Create(astral + "a").Error!.Code.Should().Be("source_title_invalid");
     }
 
     [Theory]
@@ -31,7 +31,7 @@ public sealed class SourceValueTests
     [InlineData("﻿  ")]
     public void TextMustNotBeEmptyOrWhitespace(string? value)
     {
-        SourceText.Create(value).ErrorCode.Should().Be("source_empty");
+        SourceText.Create(value).Error!.Code.Should().Be("source_empty");
     }
 
     [Fact]
@@ -48,14 +48,14 @@ public sealed class SourceValueTests
         var atLimit = new string('a', SourceText.MaxBytes - 2) + "ñ";
 
         SourceText.Create(atLimit).IsSuccess.Should().BeTrue();
-        SourceText.Create(atLimit + "a").ErrorCode.Should().Be("source_too_large");
+        SourceText.Create(atLimit + "a").Error!.Code.Should().Be("source_too_large");
     }
 
     [Fact]
     public void TextThatCannotBeStoredAsUtf8TextIsRejected()
     {
-        SourceText.Create("texto \uD800").ErrorCode.Should().Be("source_encoding_invalid");
-        SourceText.Create("antes\0después").ErrorCode.Should().Be("source_encoding_invalid");
+        SourceText.Create("texto \uD800").Error!.Code.Should().Be("source_encoding_invalid");
+        SourceText.Create("antes\0después").Error!.Code.Should().Be("source_encoding_invalid");
     }
 
     [Fact]
@@ -82,7 +82,7 @@ public sealed class SourceValueTests
     [InlineData("rumours")]
     public void UnknownCategoriesAreRejected(string value)
     {
-        SourceClassification.ParseCategory(value).ErrorCode.Should().Be("source_category_invalid");
+        SourceClassification.ParseCategory(value).Error!.Code.Should().Be("source_category_invalid");
     }
 
     [Fact]
@@ -90,6 +90,6 @@ public sealed class SourceValueTests
     {
         SourceClassification.ParseKnowledgeStatus(null).Value.Should().Be(KnowledgeStatus.Unknown);
         SourceClassification.ParseKnowledgeStatus("occurred").Value.Should().Be(KnowledgeStatus.Occurred);
-        SourceClassification.ParseKnowledgeStatus("canon").ErrorCode.Should().Be("source_knowledge_status_invalid");
+        SourceClassification.ParseKnowledgeStatus("canon").Error!.Code.Should().Be("source_knowledge_status_invalid");
     }
 }

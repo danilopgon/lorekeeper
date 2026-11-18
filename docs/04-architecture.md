@@ -101,8 +101,8 @@ Query   → Handler → Module read interface → DTO projection
 - Queries use a module-specific read interface that returns purpose-built projections and never hydrates aggregates (ADR-008).
 - Validation has three homes (ADR-011): domain invariants in value objects, request shape in explicit FluentValidation validators, and state or existence rules in handlers.
 - A feature folder owns request, result, validation, handler and tests.
-- Campaign create/list/get messages implement `IRequest<TResponse>` and handlers implement `IRequestHandler<TRequest, TResponse>`; handlers return `Result<T>` (ADR-012) and Campaign controllers inject `ISender`, retain HTTP-to-message mapping and turn results into responses with `Match`. ASP.NET Core's centrally registered `Api.Common.Presentation.ExceptionHandling.UnexpectedExceptionHandler` owns unexpected `unexpected_error` responses.
-- Add mediator dispatch to another module only through an ADR with a demonstrated benefit. Do not introduce pipeline behaviors, generic repositories, generic base handlers or wrapper interfaces without a demonstrated need.
+- Use-case messages implement `IRequest<TResponse>` and handlers implement `IRequestHandler<TRequest, TResponse>`; handlers return `Result<T>` (ADR-012) and controllers inject `ISender`, retain HTTP-to-message mapping and turn results into responses with `Match`. ASP.NET Core's centrally registered `Api.Common.Presentation.ExceptionHandling.UnexpectedExceptionHandler` owns unexpected `unexpected_error` responses.
+- Every module dispatches HTTP use cases through MediatR (ADR-013): MediatR is registered once in the composition root and controllers inject `ISender`. Do not introduce pipeline behaviors, generic repositories, generic base handlers or wrapper interfaces without a demonstrated need.
 
 ## Background work and streaming
 

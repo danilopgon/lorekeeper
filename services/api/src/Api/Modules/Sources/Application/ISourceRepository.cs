@@ -10,12 +10,12 @@ public interface ISourceRepository
 
     void ReplaceChunks(SourceProcessingWork work, IEnumerable<SourceChunk> chunks);
 
-    Task<SourceSaveResult> SaveChangesAsync(CancellationToken cancellationToken);
+    Task<SourceSaveOutcome> SaveChangesAsync(CancellationToken cancellationToken);
 }
 
 public sealed record SourceProcessingWork(Source Source, SourceVersion Version, SourceIngestionJob Job, IReadOnlyList<SourceChunk> ExistingChunks);
 
-public enum SourceSaveResult
+public enum SourceSaveOutcome
 {
     Saved,
     Discarded

@@ -40,14 +40,8 @@ public sealed class Source
 
     public bool IsRemoved => RemovedAt is not null;
 
-    public static Source Create(
-        Guid campaignId,
-        SourceTitle title,
-        SourceOrigin origin,
-        SourceCategory? category,
-        KnowledgeStatus knowledgeStatus,
-        DateTimeOffset now) =>
-        new(Guid.NewGuid(), campaignId, title, origin, category, knowledgeStatus, now.ToUniversalTime());
+    public static Source Create(Guid campaignId, SourceMetadata metadata, SourceOrigin origin, DateTimeOffset now) =>
+        new(Guid.NewGuid(), campaignId, metadata.Title, origin, metadata.Category, metadata.KnowledgeStatus, now.ToUniversalTime());
 
     public void Publish(SourceVersion version, DateTimeOffset now)
     {

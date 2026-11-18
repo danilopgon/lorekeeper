@@ -25,8 +25,6 @@ public static class SourcesModule
         services.TryAddSingleton(TimeProvider.System);
         services.AddScoped<ISourceRepository, SourceRepository>();
         services.AddScoped<ISourceQueries, SourceQueries>();
-        services.AddScoped<PasteSourceHandler>();
-        services.AddScoped<ListSourcesHandler>();
         services.AddScoped<ISourceVersionProcessor, ProcessSourceVersionHandler>();
 
         services.Configure<SourceIngestionOptions>(configuration.GetSection(SourceIngestionOptions.SectionName));

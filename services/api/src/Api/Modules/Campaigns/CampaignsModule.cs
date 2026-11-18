@@ -22,7 +22,6 @@ public static class CampaignsModule
         services.AddScoped<ICampaignRepository, CampaignRepository>();
         services.AddScoped<ICampaignQueries, CampaignQueries>();
 
-        services.AddMediatR(configuration => configuration.RegisterServicesFromAssemblyContaining<CreateCampaignHandler>());
 
         return services;
     }

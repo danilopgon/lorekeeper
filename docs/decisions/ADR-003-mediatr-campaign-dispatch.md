@@ -6,6 +6,8 @@
 
 **Refined by:** ADR-012. Handlers return `Result<T>` and expected failures map to Problem Details in one shared place, not in a Campaign mapper.
 
+**Refined by:** ADR-013. MediatR dispatch now applies to every module, not only Campaign. The exclusions below stand.
+
 **Date:** 2026-09-25
 
 **Area:** Backend

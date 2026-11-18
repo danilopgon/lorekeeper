@@ -2,6 +2,7 @@ using Api.SharedKernel;
 
 namespace Api.Modules.Sources.Domain.Chunking;
 
+/// <summary>Cuts plain text into chunks of whole paragraphs, each at most <c>maxLength</c> scalars unless one paragraph alone is longer.</summary>
 public static class PlainTextChunker
 {
     public const int DefaultMaxLength = 2_000;
@@ -9,54 +10,47 @@ public static class PlainTextChunker
     public static IReadOnlyList<ChunkDraft> Chunk(string text, int maxLength = DefaultMaxLength)
     {
         var lines = new SourceLines(text);
-        var chunks = new List<ChunkDraft>();
-        (int Start, int End)? current = null;
+        var chunks = new List<LineRange>();
 
         foreach (var paragraph in Paragraphs(lines))
         {
-            if (current is { } open && UnicodeScalars.Count(lines.Slice(open.Start, paragraph.End)) > maxLength)
+            if (chunks.Count > 0 && Fits(lines, chunks[^1] with { End = paragraph.End }, maxLength))
             {
-                chunks.Add(Draft(lines, chunks.Count, open));
-                current = null;
+                chunks[^1] = chunks[^1] with { End = paragraph.End };
             }
-
-            current = current is { } extended ? (extended.Start, paragraph.End) : paragraph;
+            else
+            {
+                chunks.Add(paragraph);
+            }
         }
 
-        if (current is { } last)
-        {
-            chunks.Add(Draft(lines, chunks.Count, last));
-        }
-
-        return chunks;
+        return chunks
+            .Select((range, ordinal) => new ChunkDraft(ordinal, [], range.Start, range.End, lines.Slice(range)))
+            .ToList();
     }
 
-    private static IEnumerable<(int Start, int End)> Paragraphs(SourceLines lines)
-    {
-        int? start = null;
+    private static bool Fits(SourceLines lines, LineRange range, int maxLength) =>
+        UnicodeScalars.Count(lines.Slice(range)) <= maxLength;
 
-        for (var line = 1; line <= lines.Count; line++)
+    private static IEnumerable<LineRange> Paragraphs(SourceLines lines)
+    {
+        var line = 1;
+
+        while (line <= lines.Count)
         {
             if (lines.IsBlank(line))
             {
-                if (start is { } open)
-                {
-                    yield return (open, line - 1);
-                    start = null;
-                }
-
+                line++;
                 continue;
             }
 
-            start ??= line;
-        }
+            var start = line;
+            while (line <= lines.Count && !lines.IsBlank(line))
+            {
+                line++;
+            }
 
-        if (start is { } trailing)
-        {
-            yield return (trailing, lines.Count);
+            yield return new LineRange(start, line - 1);
         }
     }
-
-    private static ChunkDraft Draft(SourceLines lines, int ordinal, (int Start, int End) range) =>
-        new(ordinal, [], range.Start, range.End, lines.Slice(range.Start, range.End));
 }

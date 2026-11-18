@@ -57,6 +57,25 @@ public sealed partial class ArchitectureTests
         violations.Should().BeEmpty();
     }
 
+    [Fact]
+    public void UseCasesAreDispatchedThroughMediatR()
+    {
+        var handlersOutsideMediatR = ApplicationTypes()
+            .Where(type => type.GetMethod("Handle", BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly) is not null)
+            .Where(type => !type.GetInterfaces().Any(IsRequestHandler))
+            .Select(type => $"{type.FullName} has Handle but does not implement IRequestHandler<,> (ADR-013)");
+        var controllersInjectingHandlers = ApiTypes
+            .Where(type => type.Namespace?.EndsWith(".Presentation", StringComparison.Ordinal) == true)
+            .SelectMany(type => type.GetConstructors().SelectMany(constructor => constructor.GetParameters())
+                .Where(parameter => parameter.ParameterType.GetInterfaces().Any(IsRequestHandler))
+                .Select(parameter => $"{type.FullName} injects {parameter.ParameterType.Name}; inject ISender instead (ADR-013)"));
+
+        handlersOutsideMediatR.Concat(controllersInjectingHandlers).Should().BeEmpty();
+    }
+
+    private static bool IsRequestHandler(Type contract) =>
+        contract.IsGenericType && contract.GetGenericTypeDefinition() == typeof(IRequestHandler<,>);
+
     [GeneratedRegex(@"\AApi\.Modules\.[^.]+\.Infrastructure\.Persistence(\.|\z)")]
     private static partial Regex ModulePersistenceNamespace();
 

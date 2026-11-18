@@ -43,27 +43,27 @@ public static class SourceClassification
         ["occurred"] = KnowledgeStatus.Occurred
     };
 
-    public static DomainResult<SourceCategory?> ParseCategory(string? value)
+    public static Result<SourceCategory?> ParseCategory(string? value)
     {
         if (value is null)
         {
-            return DomainResult<SourceCategory?>.Success(null);
+            return Result<SourceCategory?>.Success(null);
         }
 
         return Categories.TryGetValue(value, out var category)
-            ? DomainResult<SourceCategory?>.Success(category)
-            : DomainResult<SourceCategory?>.Failure(CategoryInvalidCode);
+            ? Result<SourceCategory?>.Success(category)
+            : Error.Validation(CategoryInvalidCode, "Source category is invalid.");
     }
 
-    public static DomainResult<KnowledgeStatus> ParseKnowledgeStatus(string? value)
+    public static Result<KnowledgeStatus> ParseKnowledgeStatus(string? value)
     {
         if (value is null)
         {
-            return DomainResult<KnowledgeStatus>.Success(KnowledgeStatus.Unknown);
+            return KnowledgeStatus.Unknown;
         }
 
         return KnowledgeStatuses.TryGetValue(value, out var status)
-            ? DomainResult<KnowledgeStatus>.Success(status)
-            : DomainResult<KnowledgeStatus>.Failure(KnowledgeStatusInvalidCode);
+            ? Result<KnowledgeStatus>.Success(status)
+            : Error.Validation(KnowledgeStatusInvalidCode, "Source knowledge status is invalid.");
     }
 }

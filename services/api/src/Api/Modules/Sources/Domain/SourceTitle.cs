@@ -11,15 +11,15 @@ public sealed record SourceTitle
 
     public string Value { get; }
 
-    public static DomainResult<SourceTitle> Create(string? value)
+    public static Result<SourceTitle> Create(string? value)
     {
         var trimmed = value?.Trim();
 
         if (string.IsNullOrEmpty(trimmed) || UnicodeScalars.Count(trimmed) > MaxLength)
         {
-            return DomainResult<SourceTitle>.Failure(InvalidCode);
+            return Error.Validation(InvalidCode, "Source title is invalid.");
         }
 
-        return DomainResult<SourceTitle>.Success(new SourceTitle(trimmed));
+        return new SourceTitle(trimmed);
     }
 }

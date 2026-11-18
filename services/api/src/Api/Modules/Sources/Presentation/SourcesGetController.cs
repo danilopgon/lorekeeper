@@ -1,5 +1,7 @@
+using Api.Common.Presentation;
 using Api.Modules.Sources.Application;
 using Api.Modules.Sources.Application.ListSources;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Modules.Sources.Presentation;
@@ -7,7 +9,7 @@ namespace Api.Modules.Sources.Presentation;
 [ApiController]
 [Route("api/campaigns/{campaignId}/sources")]
 [Tags("Sources")]
-public sealed class SourcesGetController(ListSourcesHandler listSources) : ControllerBase
+public sealed class SourcesGetController(ISender sender) : ControllerBase
 {
     [HttpGet(Name = "ListSources")]
     [EndpointSummary("List sources")]
@@ -17,14 +19,8 @@ public sealed class SourcesGetController(ListSourcesHandler listSources) : Contr
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
     public async Task<ActionResult<IReadOnlyList<SourceDto>>> ListSources(string campaignId, CancellationToken cancellationToken)
     {
-        var result = await listSources.Handle(new ListSourcesQuery(campaignId), cancellationToken);
+        var result = await sender.Send(new ListSourcesQuery(campaignId), cancellationToken);
 
-        return result.Status switch
-        {
-            ListSourcesStatus.Found => Ok(result.Sources),
-            ListSourcesStatus.CampaignIdInvalid => SourceProblemDetails.CampaignIdInvalid(),
-            ListSourcesStatus.CampaignNotFound => SourceProblemDetails.CampaignNotFound(),
-            _ => throw new InvalidOperationException($"Unexpected list sources status '{result.Status}'.")
-        };
+        return result.Match<ActionResult<IReadOnlyList<SourceDto>>>(sources => Ok(sources), error => error.ToProblem());
     }
 }

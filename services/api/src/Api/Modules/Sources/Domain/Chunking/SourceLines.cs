@@ -1,49 +1,56 @@
 namespace Api.Modules.Sources.Domain.Chunking;
 
-/// <summary>Lines of a text with their offsets, so chunks can be cut as exact slices of the original.</summary>
+/// <summary>The lines of a text, numbered from 1, so chunks are exact slices of the original.</summary>
 public sealed class SourceLines
 {
     private readonly string _text;
-    private readonly List<(int Start, int End)> _lines;
+    private readonly List<Line> _lines;
 
     public SourceLines(string text)
     {
         _text = text;
-        _lines = [];
-
-        var start = 0;
-        for (var index = 0; index < text.Length; index++)
-        {
-            if (text[index] != '\n')
-            {
-                continue;
-            }
-
-            var end = index > start && text[index - 1] == '\r' ? index - 1 : index;
-            _lines.Add((start, end));
-            start = index + 1;
-        }
-
-        if (start < text.Length)
-        {
-            _lines.Add((start, text.Length));
-        }
+        _lines = Split(text);
     }
 
     public int Count => _lines.Count;
 
-    /// <summary>Content of a 1-based line, without its terminator.</summary>
-    public string this[int lineNumber]
+    public bool IsBlank(int lineNumber) => string.IsNullOrWhiteSpace(Content(_lines[lineNumber - 1]));
+
+    /// <summary>The original text from the start of <paramref name="range"/>'s first line to the end of its last, without the final line break.</summary>
+    public string Slice(LineRange range) => _text[_lines[range.Start - 1].Start.._lines[range.End - 1].End];
+
+    private string Content(Line line) => _text[line.Start..line.End];
+
+    private static List<Line> Split(string text)
     {
-        get
+        var lines = new List<Line>();
+        var start = 0;
+
+        while (start < text.Length)
         {
-            var (start, end) = _lines[lineNumber - 1];
-            return _text[start..end];
+            var newline = text.IndexOf('\n', start);
+            var next = newline < 0 ? text.Length : newline + 1;
+            lines.Add(new Line(start, EndWithoutLineBreak(text, start, next)));
+            start = next;
         }
+
+        return lines;
     }
 
-    public bool IsBlank(int lineNumber) => string.IsNullOrWhiteSpace(this[lineNumber]);
+    private static int EndWithoutLineBreak(string text, int start, int next)
+    {
+        if (next == start || text[next - 1] != '\n')
+        {
+            return next;
+        }
 
-    /// <summary>Exact slice of the original text from the start of one line to the end of another, both 1-based and inclusive.</summary>
-    public string Slice(int startLine, int endLine) => _text[_lines[startLine - 1].Start.._lines[endLine - 1].End];
+        var end = next - 1;
+        return end > start && text[end - 1] == '\r' ? end - 1 : end;
+    }
+
+    /// <summary>Offsets of one line's content in the text; <see cref="End"/> excludes the line break.</summary>
+    private readonly record struct Line(int Start, int End);
 }
+
+/// <summary>A run of lines, 1-based and inclusive at both ends.</summary>
+public readonly record struct LineRange(int Start, int End);

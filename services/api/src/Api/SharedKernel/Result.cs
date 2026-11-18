@@ -58,6 +58,10 @@ public sealed class Result<T>
 
     public static implicit operator Result<T>(Error error) => Failure(error);
 
+    /// <summary>The field errors of a failure, attributing a field-less error to <paramref name="field"/>; empty on success.</summary>
+    public IReadOnlyList<FieldError> FieldErrors(string field) =>
+        IsSuccess ? [] : Error!.Fields.Count > 0 ? Error.Fields : [new FieldError(field, Error.Code)];
+
     public TOut Match<TOut>(Func<T, TOut> onSuccess, Func<Error, TOut> onFailure) =>
         IsSuccess ? onSuccess(_value!) : onFailure(Error!);
 }

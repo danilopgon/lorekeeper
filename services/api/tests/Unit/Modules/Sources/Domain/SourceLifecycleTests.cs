@@ -11,7 +11,7 @@ public sealed class SourceLifecycleTests
     public void ANewSourceIsUnpublishedAndItsVersionAndJobShareItsCampaign()
     {
         var source = NewSource(Guid.NewGuid());
-        var version = SourceVersion.Create(source, SourceText.Create("texto").Value!, null, Now);
+        var version = SourceVersion.Create(source, SourceText.Create("texto").Value, null, Now);
         var job = SourceIngestionJob.Create(version, Now);
 
         source.PublishedVersionId.Should().BeNull();
@@ -25,7 +25,7 @@ public sealed class SourceLifecycleTests
     public void PublishingPointsTheSourceAtTheVersion()
     {
         var source = NewSource(Guid.NewGuid());
-        var version = SourceVersion.Create(source, SourceText.Create("texto").Value!, null, Now);
+        var version = SourceVersion.Create(source, SourceText.Create("texto").Value, null, Now);
         var later = Now.AddMinutes(1);
 
         source.Publish(version, later);
@@ -39,7 +39,7 @@ public sealed class SourceLifecycleTests
     public void ASourceCannotPublishAnotherSourcesVersion()
     {
         var campaignId = Guid.NewGuid();
-        var other = SourceVersion.Create(NewSource(campaignId), SourceText.Create("otro").Value!, null, Now);
+        var other = SourceVersion.Create(NewSource(campaignId), SourceText.Create("otro").Value, null, Now);
 
         var act = () => NewSource(campaignId).Publish(other, Now);
 
@@ -70,5 +70,5 @@ public sealed class SourceLifecycleTests
     }
 
     private static Source NewSource(Guid campaignId) =>
-        Source.Create(campaignId, SourceTitle.Create("Sesión 3").Value!, SourceOrigin.Paste, null, KnowledgeStatus.Unknown, Now);
+        Source.Create(campaignId, SourceMetadata.Parse("Sesión 3", null, null).Value, SourceOrigin.Paste, Now);
 }

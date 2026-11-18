@@ -10,6 +10,7 @@ builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<UnexpectedExceptionHandler>();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi(options => options.AddSchemaTransformer<ProblemDetailsSchemaTransformer>());
+builder.Services.AddMediatR(configuration => configuration.RegisterServicesFromAssemblyContaining<Program>());
 builder.Services.AddCampaignsModule(builder.Configuration);
 builder.Services.AddSourcesModule(builder.Configuration);
 
