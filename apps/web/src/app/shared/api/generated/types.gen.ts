@@ -15,6 +15,15 @@ export type CreateCampaignRequest = {
     name: null | string;
 };
 
+export type KnowledgeStatusDto = 'unknown' | 'preparation' | 'occurred';
+
+export type PasteSourceRequest = {
+    title: null | string;
+    text: null | string;
+    category?: null | string;
+    knowledgeStatus?: null | string;
+};
+
 export type ProblemDetails = {
     type?: null | string;
     title?: null | string;
@@ -26,6 +35,34 @@ export type ProblemDetails = {
         [key: string]: Array<string>;
     };
 };
+
+export type SourceAvailabilityDto = 'available' | 'unavailable';
+
+export type SourceCategoryDto = 'session_notes' | 'preparation' | 'characters_places' | 'general_reference';
+
+export type SourceDto = {
+    id: string;
+    campaignId: string;
+    title: string;
+    origin: SourceOriginDto;
+    category: null | SourceCategoryDto;
+    knowledgeStatus: KnowledgeStatusDto;
+    availability: SourceAvailabilityDto;
+    lastPublishedAt: null | string;
+    processing: null | SourceProcessingDto;
+    createdAt: string;
+    updatedAt: string;
+};
+
+export type SourceOriginDto = 'file' | 'paste';
+
+export type SourceProcessingDto = {
+    state: SourceProcessingStateDto;
+    errorCode: null | string;
+    attempts: number | string;
+};
+
+export type SourceProcessingStateDto = 'queued' | 'processing' | 'failed';
 
 export type GetHealthData = {
     body?: never;
@@ -40,6 +77,68 @@ export type GetHealthResponses = {
      */
     200: unknown;
 };
+
+export type PasteSourceData = {
+    body?: null | PasteSourceRequest;
+    path: {
+        campaignId: string;
+    };
+    query?: never;
+    url: '/api/campaigns/{campaignId}/sources/pastes';
+};
+
+export type PasteSourceErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type PasteSourceError = PasteSourceErrors[keyof PasteSourceErrors];
+
+export type PasteSourceResponses = {
+    /**
+     * Accepted
+     */
+    202: SourceDto;
+};
+
+export type PasteSourceResponse = PasteSourceResponses[keyof PasteSourceResponses];
+
+export type ListSourcesData = {
+    body?: never;
+    path: {
+        campaignId: string;
+    };
+    query?: never;
+    url: '/api/campaigns/{campaignId}/sources';
+};
+
+export type ListSourcesErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type ListSourcesError = ListSourcesErrors[keyof ListSourcesErrors];
+
+export type ListSourcesResponses = {
+    /**
+     * OK
+     */
+    200: Array<SourceDto>;
+};
+
+export type ListSourcesResponse = ListSourcesResponses[keyof ListSourcesResponses];
 
 export type ListCampaignsData = {
     body?: never;

@@ -1,4 +1,5 @@
 using System.Text;
+using Api.SharedKernel;
 
 namespace Api.Modules.Campaigns.Domain;
 

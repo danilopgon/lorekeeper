@@ -102,10 +102,7 @@ public sealed class CampaignsPersistenceTests : IAsyncLifetime
         await _postgres.StartAsync();
         _factory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder => builder.UseSetting("ConnectionStrings:Campaigns", _postgres.GetConnectionString()));
-        await using var scope = CreateScope();
-        var context = GetContext(scope);
-        await context.Database.EnsureDeletedAsync();
-        await context.Database.EnsureCreatedAsync();
+        await TestDatabase.MigrateAsync(_factory.Services);
     }
 
     public async Task DisposeAsync()

@@ -1,4 +1,5 @@
 using Api.Modules.Campaigns;
+using Api.Modules.Sources;
 using Api.Common.Presentation.ExceptionHandling;
 using Api.Common.Presentation.OpenApi;
 
@@ -9,6 +10,7 @@ builder.Services.AddExceptionHandler<UnexpectedExceptionHandler>();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi(options => options.AddSchemaTransformer<ProblemDetailsSchemaTransformer>());
 builder.Services.AddCampaignsModule(builder.Configuration);
+builder.Services.AddSourcesModule(builder.Configuration);
 
 var app = builder.Build();
 

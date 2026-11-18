@@ -1,4 +1,4 @@
-namespace Api.Modules.Campaigns.Domain;
+namespace Api.SharedKernel;
 
 public sealed record DomainResult<T>(T? Value, string? ErrorCode)
 {

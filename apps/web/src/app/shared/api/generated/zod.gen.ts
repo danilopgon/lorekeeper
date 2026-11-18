@@ -13,6 +13,19 @@ export const zCreateCampaignRequest = z.object({
     name: z.string().nullable()
 });
 
+export const zKnowledgeStatusDto = z.enum([
+    'unknown',
+    'preparation',
+    'occurred'
+]);
+
+export const zPasteSourceRequest = z.object({
+    title: z.string().nullable(),
+    text: z.string().nullable(),
+    category: z.string().nullish(),
+    knowledgeStatus: z.string().nullish()
+});
+
 export const zProblemDetails = z.object({
     type: z.string().nullish(),
     title: z.string().nullish(),
@@ -25,6 +38,66 @@ export const zProblemDetails = z.object({
     code: z.string().optional(),
     errors: z.record(z.string(), z.array(z.string())).optional()
 });
+
+export const zSourceAvailabilityDto = z.enum(['available', 'unavailable']);
+
+export const zSourceCategoryDto = z.enum([
+    'session_notes',
+    'preparation',
+    'characters_places',
+    'general_reference'
+]);
+
+export const zSourceOriginDto = z.enum(['file', 'paste']);
+
+export const zSourceProcessingStateDto = z.enum([
+    'queued',
+    'processing',
+    'failed'
+]);
+
+export const zSourceProcessingDto = z.object({
+    state: zSourceProcessingStateDto,
+    errorCode: z.string().nullable(),
+    attempts: z.union([
+        z.int().min(-2147483648, { error: 'Invalid value: Expected int32 to be >= -2147483648' }).max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+        z.string().regex(/^-?(?:0|[1-9]\d*)$/)
+    ])
+});
+
+export const zSourceDto = z.object({
+    id: z.string(),
+    campaignId: z.string(),
+    title: z.string(),
+    origin: zSourceOriginDto,
+    category: zSourceCategoryDto.nullable(),
+    knowledgeStatus: zKnowledgeStatusDto,
+    availability: zSourceAvailabilityDto,
+    lastPublishedAt: z.iso.datetime({ offset: true }).nullable(),
+    processing: zSourceProcessingDto.nullable(),
+    createdAt: z.iso.datetime({ offset: true }),
+    updatedAt: z.iso.datetime({ offset: true })
+});
+
+export const zPasteSourceBody = zPasteSourceRequest.nullable();
+
+export const zPasteSourcePath = z.object({
+    campaignId: z.string()
+});
+
+/**
+ * Accepted
+ */
+export const zPasteSourceResponse = zSourceDto;
+
+export const zListSourcesPath = z.object({
+    campaignId: z.string()
+});
+
+/**
+ * OK
+ */
+export const zListSourcesResponse = z.array(zSourceDto);
 
 /**
  * OK

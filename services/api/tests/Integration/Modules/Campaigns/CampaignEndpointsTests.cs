@@ -196,10 +196,7 @@ public sealed class CampaignEndpointsTests : IAsyncLifetime
         await _postgres.StartAsync();
         _factory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder => builder.UseSetting("ConnectionStrings:Campaigns", _postgres.GetConnectionString()));
-        await using var scope = _factory.Services.CreateAsyncScope();
-        var context = scope.ServiceProvider.GetRequiredService<CampaignsDbContext>();
-        await context.Database.EnsureDeletedAsync();
-        await context.Database.EnsureCreatedAsync();
+        await TestDatabase.MigrateAsync(_factory.Services);
         _client = _factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
     }
 
