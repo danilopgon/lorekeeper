@@ -8,7 +8,7 @@ public sealed class SourceVersion
         ContentHash = null!;
     }
 
-    private SourceVersion(Guid id, Source source, SourceText text, string? fileName, DateTimeOffset now)
+    private SourceVersion(Guid id, Source source, SourceText text, string? fileName, string? frontmatter, DateTimeOffset now)
     {
         Id = id;
         CampaignId = source.CampaignId;
@@ -16,6 +16,7 @@ public sealed class SourceVersion
         OriginalText = text.Value;
         ContentHash = text.ContentHash;
         FileName = fileName;
+        Frontmatter = frontmatter;
         CreatedAt = now;
     }
 
@@ -29,5 +30,15 @@ public sealed class SourceVersion
     public DateTimeOffset CreatedAt { get; private set; }
 
     public static SourceVersion Create(Source source, SourceText text, string? fileName, DateTimeOffset now) =>
-        new(Guid.NewGuid(), source, text, fileName, now.ToUniversalTime());
+        new(Guid.NewGuid(), source, text, fileName, frontmatter: null, now.ToUniversalTime());
+
+    /// <summary>A version from an uploaded file; Markdown keeps its YAML frontmatter, which is stored but never chunked.</summary>
+    public static SourceVersion FromFile(Source source, SourceText text, string fileName, SourceFormat format, DateTimeOffset now) =>
+        new(
+            Guid.NewGuid(),
+            source,
+            text,
+            fileName,
+            format == SourceFormat.Markdown ? Chunking.MarkdownSyntax.Frontmatter(text.Value) : null,
+            now.ToUniversalTime());
 }

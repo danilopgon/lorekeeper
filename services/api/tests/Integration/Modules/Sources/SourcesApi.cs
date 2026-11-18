@@ -3,6 +3,9 @@ using System.Net.Http.Json;
 using System.Text.Json.Nodes;
 using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,7 +28,7 @@ internal sealed class SourcesApi : IAsyncDisposable
 
     public IServiceProvider Services => _factory.Services;
 
-    public static async Task<SourcesApi> StartAsync(bool runWorker = true, Action<IServiceCollection>? configureServices = null)
+    public static async Task<SourcesApi> StartAsync(bool runWorker = true, Action<IServiceCollection>? configureServices = null, bool useKestrel = false)
     {
         var api = new SourcesApi();
         await api._postgres.StartAsync();
@@ -45,10 +48,21 @@ internal sealed class SourcesApi : IAsyncDisposable
             });
         });
 
+        if (useKestrel)
+        {
+            api._factory.UseKestrel(0);
+            api._factory.StartServer();
+        }
+
         await api._factory.Services.MigrateModuleDatabasesAsync();
-        api.Client = api._factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        api.Client = useKestrel
+            ? new HttpClient { BaseAddress = new Uri(KestrelAddress(api._factory.Services)) }
+            : api._factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
         return api;
     }
+
+    private static string KestrelAddress(IServiceProvider services) =>
+        services.GetRequiredService<IServer>().Features.GetRequiredFeature<IServerAddressesFeature>().Addresses.First();
 
     public async Task<string> CreateCampaignAsync(string name)
     {

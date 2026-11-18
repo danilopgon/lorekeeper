@@ -17,8 +17,11 @@ public sealed class ProcessSourceVersionHandler(ISourceRepository sources, TimeP
             return ProcessSourceVersionOutcome.Discarded;
         }
 
-        var chunks = PlainTextChunker.Chunk(work.Version.OriginalText)
-            .Select(draft => SourceChunk.Create(work.Version, draft));
+        var text = work.Version.OriginalText;
+        var drafts = SourceFormats.ForVersion(work.Version) == SourceFormat.Markdown
+            ? MarkdownChunker.Chunk(text)
+            : PlainTextChunker.Chunk(text);
+        var chunks = drafts.Select(draft => SourceChunk.Create(work.Version, draft));
         sources.ReplaceChunks(work, chunks);
 
         var now = timeProvider.GetUtcNow();

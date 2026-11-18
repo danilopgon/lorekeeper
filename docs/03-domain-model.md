@@ -93,7 +93,8 @@ Decided on 2026-11-11. Block 04A implements it; Campaign deletion stays out of s
 
 Chunking rules:
 
-- Markdown (`.md`, `.markdown`): every heading from `#` to `######` starts a chunk. A section longer than the configured limit (initially 2,000 characters) is split at paragraph boundaries. Fenced code blocks and tables are never split. Frontmatter is excluded.
+- Markdown (`.md`, `.markdown`): every ATX heading from `#` to `######` starts a chunk, and its chunks carry the path of open headings (a heading closes deeper or equal ones). An ATX heading has at most three leading spaces and a space or the end of the line after its `#`s, so `#hashtag` is not one; closing `#`s are not part of its text. Setext headings (`===`, `---` underlines) are not split points. A section longer than the configured limit (initially 2,000 characters, counted as Unicode scalars) is split at paragraph boundaries; chunks never join across a heading. Fenced code blocks (three or more backticks or tildes, closed by the same character at least as many times, or by the end of the section) and tables are never split, and headings inside a fence are ignored. Frontmatter is excluded from chunks but chunk line numbers still count it.
+- Frontmatter is YAML only when line 1 is `---` and a later line is `---` or `...`; the text between them is stored on the version. A Markdown file with nothing besides frontmatter and blank lines is rejected as `source_empty`.
 - Text (`.txt` and pasted text): split at paragraph boundaries with the same limit.
 - Content is never rewritten or normalised.
 

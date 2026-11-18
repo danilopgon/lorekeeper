@@ -11,7 +11,8 @@ public sealed class SourceApplicationBoundaryTests
         "Microsoft.EntityFrameworkCore",
         "Npgsql",
         "Api.Modules.Sources.Infrastructure",
-        "Api.Modules.Campaigns.Infrastructure"
+        "Api.Modules.Campaigns.Infrastructure",
+        "Microsoft.AspNetCore"
     ];
 
     [Fact]

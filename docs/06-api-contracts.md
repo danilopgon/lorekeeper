@@ -160,7 +160,7 @@ Ingestion is job-based (ADR-009) and progress streams over SSE (ADR-010). Rules 
 
 | Limit | Value |
 | --- | --- |
-| Accepted files | `.md`, `.markdown`, `.txt`, UTF-8 with optional BOM |
+| Accepted files | `.md`, `.markdown`, `.txt` (extension matched case-insensitively), UTF-8 with optional BOM |
 | Text per file or paste | 1 MiB (1,048,576 bytes) once encoded as UTF-8 |
 | Files per import request | 1–50 |
 | Import request body | 52 MiB, set explicitly on that endpoint (above Kestrel's 30 MB default) |
@@ -202,7 +202,7 @@ Lists non-removed sources, newest first. `200` with `SourceDto[]`.
 
 ### `POST /sources/content-matches`
 
-Answers which content hashes already exist in this campaign, for the import review. The browser computes each hash exactly as `03` defines `contentHash`.
+Answers which content hashes already exist in this campaign, for the import review. The browser computes each hash exactly as `03` defines `contentHash`. A hash matches any stored version (published or pending) of a non-removed source in this campaign; every matching source is listed, and hashes from other campaigns never match.
 
 ```json
 { "hashes": ["9f86d0…"] }
@@ -236,9 +236,9 @@ The server validates request shape first (ADR-011); a failure rejects the whole 
 }
 ```
 
-Request errors (`400`, nothing imported): `source_batch_empty`, `source_batch_too_large`, `source_metadata_invalid` (missing, unparsable or count mismatch). Body above 52 MiB: `413`.
+Request errors (`400`, nothing imported), checked in this order: `source_batch_empty`, `source_batch_too_large`, `source_metadata_invalid` (missing, not a JSON array of objects, a value of the wrong JSON type, or a count mismatch). A wrong string value such as an unknown category is a per-item error, not a request error. Body above 52 MiB: `413` with Problem Details and no `code`. Campaign errors come first, as on every Sources route.
 
-Per-item `errorCode`: `source_file_type_unsupported`, `source_too_large`, `source_encoding_invalid`, `source_empty`, `source_title_invalid`, `source_category_invalid`, `source_knowledge_status_invalid`.
+Per-item `errorCode`, the first failing check in this order: `source_file_type_unsupported`, `source_too_large` (more than 1 MiB of text plus an optional BOM; such a file is not read), `source_encoding_invalid`, `source_empty` (also a Markdown file with only frontmatter), `source_title_invalid`, `source_category_invalid`, `source_knowledge_status_invalid`. In a metadata entry, `category` and `knowledgeStatus` may be omitted (`null` and `unknown`). All accepted items are saved in one transaction.
 
 ### `POST /sources/pastes`
 
