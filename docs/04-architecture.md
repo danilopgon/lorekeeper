@@ -91,7 +91,7 @@ Command → Handler → Domain change → Module repository (owns SaveChanges)
 Query   → Handler → Module read interface → DTO projection
 ```
 
-- Commands express intent and enforce invariants. They load and save aggregates through a module-specific repository owned by Application and implemented with EF Core in Infrastructure, which also translates PostgreSQL errors into application results (ADR-008).
+- Commands express intent and enforce invariants. They load and save aggregates through a module-specific repository owned by Application and implemented with EF Core in Infrastructure, which also translates expected PostgreSQL errors into application results; unexpected ones propagate to the shared `unexpected_error` handler (ADR-008).
 - Queries use a module-specific read interface that returns purpose-built projections and never hydrates aggregates (ADR-008).
 - Validation has three homes (ADR-011): domain invariants in value objects, request shape in explicit FluentValidation validators, and state or existence rules in handlers.
 - A feature folder owns request, result, validation, handler and tests.

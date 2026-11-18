@@ -40,7 +40,7 @@ Use **Option D** in both Campaign and Sources.
 
 - **Commands** depend on a module-specific repository owned by Application, for example `ICampaignRepository` and `ISourceRepository`. Each exposes only the operations its aggregate needs (load by id within a campaign, add, save). There is no generic `IRepository<T>`.
 - **Queries** depend on a module-specific read interface, for example `ICampaignQueries` and `ISourceQueries`, which return DTOs or read models directly. They never hydrate aggregates.
-- **Infrastructure** implements both with the module's EF Core `DbContext`. The repository's save method owns `SaveChangesAsync`, the transaction for that unit of work and the translation of PostgreSQL errors (such as unique violations) into application results. Npgsql and EF exceptions do not reach Application.
+- **Infrastructure** implements both with the module's EF Core `DbContext`. The repository's save method owns `SaveChangesAsync`, the transaction for that unit of work and the translation of expected PostgreSQL errors (such as unique violations) into application results. Application never catches, inspects or references Npgsql or EF exceptions: an unexpected persistence failure propagates as an exception to the shared `unexpected_error` handler in `Api.Common.Presentation`, or to the job runner in background work (ADR-009).
 - **Campaign migrates first**, in its own PR before block 04A, with unchanged routes, payloads, `201 Location` and Problem Details codes.
 - Registration happens in each module (`CampaignsModule`, and the future Sources module).
 
