@@ -14,7 +14,10 @@ public sealed class SourceLines
 
     public int Count => _lines.Count;
 
-    public bool IsBlank(int lineNumber) => string.IsNullOrWhiteSpace(Content(_lines[lineNumber - 1]));
+    public bool IsBlank(int lineNumber) => string.IsNullOrWhiteSpace(Text(lineNumber));
+
+    /// <summary>The content of one line, without its line break.</summary>
+    public string Text(int lineNumber) => Content(_lines[lineNumber - 1]);
 
     /// <summary>The original text from the start of <paramref name="range"/>'s first line to the end of its last, without the final line break.</summary>
     public string Slice(LineRange range) => _text[_lines[range.Start - 1].Start.._lines[range.End - 1].End];

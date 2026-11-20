@@ -1,4 +1,5 @@
 using Api.Modules.Sources.Application;
+using Api.Modules.Sources.Application.FindContentMatches;
 using Api.Modules.Sources.Domain;
 using Api.SharedKernel;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +22,22 @@ public sealed class SourceQueries(SourcesDbContext dbContext) : ISourceQueries
     {
         var row = await Rows(Live(campaignId).Where(source => source.Id == sourceId)).SingleOrDefaultAsync(cancellationToken);
         return row?.ToDto();
+    }
+
+    public async Task<IReadOnlyList<ContentMatchDto>> FindContentMatchesAsync(Guid campaignId, IReadOnlyList<string> hashes, CancellationToken cancellationToken)
+    {
+        var rows = await (
+                from version in dbContext.Versions.AsNoTracking()
+                join source in Live(campaignId) on new { Id = version.SourceId, version.CampaignId } equals new { source.Id, source.CampaignId }
+                where version.CampaignId == campaignId && hashes.Contains(version.ContentHash)
+                orderby source.CreatedAt descending, source.Id
+                select new { version.ContentHash, source.Id, source.Title })
+            .ToListAsync(cancellationToken);
+
+        return rows
+            .DistinctBy(row => (row.ContentHash, row.Id))
+            .Select(row => new ContentMatchDto(row.ContentHash, CanonicalUuid.Format(row.Id), row.Title.Value))
+            .ToList();
     }
 
     private IQueryable<Source> Live(Guid campaignId) =>
