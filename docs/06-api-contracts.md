@@ -238,7 +238,7 @@ The server validates request shape first (ADR-011); a failure rejects the whole 
 
 Request errors (`400`, nothing imported), checked in this order: `source_batch_empty`, `source_batch_too_large`, `source_metadata_invalid` (missing, not a JSON array of objects, a value of the wrong JSON type, or a count mismatch). A wrong string value such as an unknown category is a per-item error, not a request error. Body above 52 MiB: `413` with Problem Details and no `code`. Campaign errors come first, as on every Sources route.
 
-Per-item `errorCode`, the first failing check in this order: `source_file_type_unsupported`, `source_too_large` (more than 1 MiB of text plus an optional BOM; such a file is not read), `source_encoding_invalid`, `source_empty` (also a Markdown file with only frontmatter), `source_title_invalid`, `source_category_invalid`, `source_knowledge_status_invalid`. In a metadata entry, `category` and `knowledgeStatus` may be omitted (`null` and `unknown`). All accepted items are saved in one transaction.
+Per-item `errorCode`, the first failing check in this order: `source_file_name_invalid` (a file name containing U+0000, which PostgreSQL cannot store), `source_file_type_unsupported`, `source_too_large` (more than 1 MiB of text plus an optional BOM; such a file is not read), `source_encoding_invalid`, `source_empty` (also a Markdown file with only frontmatter), `source_title_invalid`, `source_category_invalid`, `source_knowledge_status_invalid`. In a metadata entry, `category` and `knowledgeStatus` may be omitted (`null` and `unknown`). All accepted items are saved in one transaction.
 
 ### `POST /sources/pastes`
 

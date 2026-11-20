@@ -60,6 +60,31 @@ public sealed class ImportSourcesEndpointsTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task AFileNameWithANullCharacterRejectsOnlyThatFile()
+    {
+        var campaignId = await _api.CreateCampaignAsync("Ash Crown");
+        const string metadata = "[{\"title\":\"Buena\"},{\"title\":\"Mala\"}]";
+        var body = new StringContent(
+            "--frontera\r\n" +
+            "Content-Disposition: form-data; name=\"files\"; filename=\"buena.md\"\r\n\r\n# Buena\r\n" +
+            "--frontera\r\n" +
+            "Content-Disposition: form-data; name=\"files\"; filename*=UTF-8''mala%00.md\r\n\r\n# Mala\r\n" +
+            "--frontera\r\n" +
+            $"Content-Disposition: form-data; name=\"metadata\"\r\n\r\n{metadata}\r\n" +
+            "--frontera--\r\n",
+            Encoding.UTF8);
+        body.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data; boundary=frontera");
+
+        using var response = await _api.Client.PostAsync($"/api/campaigns/{campaignId}/sources/imports", body);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Accepted, await response.Content.ReadAsStringAsync());
+        var items = (await response.Content.ReadFromJsonAsync<JsonObject>())!["items"]!.AsArray();
+        items[0]!["outcome"]!.GetValue<string>().Should().Be("accepted");
+        items[1]!["errorCode"]!.GetValue<string>().Should().Be("source_file_name_invalid");
+        (await _api.ListAsync(campaignId)).Should().ContainSingle();
+    }
+
+    [Fact]
     public async Task EachFileIsAcceptedOrRejectedOnItsOwnAndAcceptedOnesBecomeAvailable()
     {
         var campaignId = await _api.CreateCampaignAsync("Ash Crown");

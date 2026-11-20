@@ -58,9 +58,14 @@ public sealed class ImportSourcesHandler(
         return new ImportSourcesResultDto(items);
     }
 
-    /// <summary>Checks one file in the documented order: type, size, encoding, emptiness, then metadata.</summary>
+    /// <summary>Checks one file in the documented order: name, type, size, encoding, emptiness, then metadata.</summary>
     private static Result<AcceptedSource> Accept(Guid campaignId, ImportFile file, ImportMetadataEntry metadata, DateTimeOffset now)
     {
+        if (!SourceFormats.IsStorableFileName(file.FileName))
+        {
+            return Error.Validation(SourceFormats.FileNameInvalidCode, "Source file name cannot be stored.");
+        }
+
         var format = SourceFormats.FromFileName(file.FileName);
         if (!format.IsSuccess)
         {

@@ -11,6 +11,7 @@ public enum SourceFormat
 public static class SourceFormats
 {
     public const string UnsupportedCode = "source_file_type_unsupported";
+    public const string FileNameInvalidCode = "source_file_name_invalid";
 
     /// <summary>Largest accepted upload: 1 MiB of text plus a 3-byte UTF-8 byte order mark.</summary>
     public const int MaxFileBytes = SourceText.MaxBytes + 3;
@@ -22,6 +23,9 @@ public static class SourceFormats
             ".txt" => SourceFormat.Text,
             _ => Error.Validation(UnsupportedCode, "Only .md, .markdown and .txt files are supported.")
         };
+
+    /// <summary>A client-supplied file name is stored as text, which in PostgreSQL cannot hold U+0000.</summary>
+    public static bool IsStorableFileName(string fileName) => !fileName.Contains((char)0);
 
     /// <summary>Pasted text and .txt files are plain text; only Markdown file names enable heading-aware chunking.</summary>
     public static SourceFormat ForVersion(SourceVersion version)
