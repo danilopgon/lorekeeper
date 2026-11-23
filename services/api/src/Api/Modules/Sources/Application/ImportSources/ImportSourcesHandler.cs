@@ -77,9 +77,9 @@ public sealed class ImportSourcesHandler(
         return new AcceptedSource(source, version, SourceIngestionJob.Create(version, now));
     }
 
-    private async Task<SourceDto> ReadBackAsync(Source source, CancellationToken cancellationToken) =>
-        await sourceQueries.GetAsync(source.CampaignId, source.Id, cancellationToken)
-        ?? throw new InvalidOperationException("An imported source must be readable after it is saved.");
+    /// <summary>Null when the source was removed between the save and this read; the item stays accepted (`06`).</summary>
+    private Task<SourceDto?> ReadBackAsync(Source source, CancellationToken cancellationToken) =>
+        sourceQueries.GetAsync(source.CampaignId, source.Id, cancellationToken);
 
     private sealed record AcceptedSource(Source Source, SourceVersion Version, SourceIngestionJob Job);
 }
@@ -94,7 +94,7 @@ public sealed record ImportSourcesResultDto(IReadOnlyList<ImportItemDto> Items);
 
 public sealed record ImportItemDto(int Index, string FileName, ImportOutcomeDto Outcome, SourceDto? Source, string? ErrorCode)
 {
-    public static ImportItemDto Accepted(int index, string fileName, SourceDto source) => new(index, fileName, ImportOutcomeDto.Accepted, source, null);
+    public static ImportItemDto Accepted(int index, string fileName, SourceDto? source) => new(index, fileName, ImportOutcomeDto.Accepted, source, null);
 
     public static ImportItemDto Rejected(int index, string fileName, string errorCode) => new(index, fileName, ImportOutcomeDto.Rejected, null, errorCode);
 }

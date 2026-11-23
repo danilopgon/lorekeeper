@@ -239,7 +239,7 @@ The server validates request shape first (ADR-011); a failure rejects the whole 
 
 Request errors (`400`, nothing imported), checked in this order: `source_batch_empty`, `source_batch_too_large`, `source_metadata_invalid` (missing, not a JSON array of objects, a value of the wrong JSON type, or a count mismatch). A wrong string value such as an unknown category is a per-item error, not a request error. Body above 52 MiB: `413` with Problem Details and no `code`. Campaign errors come first, as on every Sources route.
 
-Per-item `errorCode`, the first failing check in this order: `source_file_name_invalid` (a file name containing U+0000, which PostgreSQL cannot store), `source_file_type_unsupported`, `source_too_large` (more than 1 MiB of text plus an optional BOM; such a file is not read), `source_encoding_invalid`, `source_empty` (also a Markdown file with only frontmatter), `source_title_invalid`, `source_category_invalid`, `source_knowledge_status_invalid`. In a metadata entry, `category` and `knowledgeStatus` may be omitted (`null` and `unknown`). All accepted items are saved in one transaction.
+Per-item `errorCode`, the first failing check in this order: `source_file_name_invalid` (a file name containing U+0000, which PostgreSQL cannot store), `source_file_type_unsupported`, `source_too_large` (more than 1 MiB of text plus an optional BOM; such a file is not read), `source_encoding_invalid`, `source_empty` (also a Markdown file with only frontmatter), `source_title_invalid`, `source_category_invalid`, `source_knowledge_status_invalid`. In a metadata entry, `category` and `knowledgeStatus` may be omitted (`null` and `unknown`). All accepted items are saved in one transaction. An accepted item has `source: null` when that source was removed before the response was read.
 
 ### `POST /sources/pastes`
 
@@ -256,7 +256,7 @@ Explicit update. `multipart/form-data` with exactly one of a `file` part or a `t
 - `202` with `SourceDto` when a new version is queued. A previously failed pending version is discarded.
 - `200` with `SourceDto` when the content hash equals the published version's; nothing changes, and a failed pending version stays with its Reintentar action. A source with no published version always queues the new content, even when it equals the failed pending version.
 
-Checks, in this order: campaign; `400 source_id_invalid`; `400 source_content_part_invalid` (both or neither of `file` and `text`); `404 source_not_found` (also a removed source); content, with `source_file_name_invalid`, `source_file_type_unsupported`, `source_too_large`, `source_encoding_invalid` and `source_empty` as in `POST /sources/imports` for a file and as in `POST /sources/pastes` for text; `409 source_processing` (a version is `queued` or `processing`); then the identical-content `200`. Body above 2 MiB: `413` with Problem Details and no `code`.
+Checks, in this order: campaign; `400 source_id_invalid`; `400 source_content_part_invalid` (not exactly one part: both `file` and `text`, neither, or a repeated `file` or `text`); `404 source_not_found` (also a removed source); content, with `source_file_name_invalid`, `source_file_type_unsupported`, `source_too_large`, `source_encoding_invalid` and `source_empty` as in `POST /sources/imports` for a file and as in `POST /sources/pastes` for text; `409 source_processing` (a version is `queued` or `processing`); then the identical-content `200`. Body above 2 MiB: `413` with Problem Details and no `code`.
 
 ### `PATCH /sources/{sourceId}`
 

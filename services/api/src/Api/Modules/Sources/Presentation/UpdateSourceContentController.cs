@@ -33,15 +33,24 @@ public sealed class UpdateSourceContentController(ISender sender) : ControllerBa
     public async Task<ActionResult<SourceDto>> UpdateSourceContent(
         string campaignId,
         string sourceId,
-        [FromForm] UpdateSourceContentForm form,
+        [FromForm] UpdateSourceContentForm form, // Describes the parts for OpenAPI; the action reads the raw form.
         CancellationToken cancellationToken)
     {
-        var file = form.File is { } uploaded ? await UploadedFiles.ReadAsync(uploaded, cancellationToken) : null;
+        // The raw form keeps every part: model binding would join repeated text fields, keep only the first file
+        // and turn an empty text field into null.
+        var files = new List<UploadedFile>();
+        string[] texts = [];
+        if (Request.HasFormContentType)
+        {
+            foreach (var uploaded in Request.Form.Files.GetFiles(FileField))
+            {
+                files.Add(await UploadedFiles.ReadAsync(uploaded, cancellationToken));
+            }
 
-        // Model binding turns an empty text field into null; the raw form keeps it, so it is reported as empty text.
-        var text = Request.HasFormContentType && Request.Form.TryGetValue(TextField, out var values) ? values.ToString() : null;
+            texts = [.. Request.Form[TextField].Select(text => text ?? string.Empty)];
+        }
 
-        var result = await sender.Send(new UpdateSourceContentCommand(campaignId, sourceId, file, text), cancellationToken);
+        var result = await sender.Send(new UpdateSourceContentCommand(campaignId, sourceId, files, texts), cancellationToken);
 
         return result.Match<ActionResult<SourceDto>>(
             update => update.Queued ? Accepted(update.Source) : Ok(update.Source),

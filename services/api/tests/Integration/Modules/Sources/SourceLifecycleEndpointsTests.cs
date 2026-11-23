@@ -31,6 +31,7 @@ public sealed class SourceLifecycleEndpointsTests : IAsyncLifetime
     [Fact]
     public async Task AnUpdateKeepsThePublishedVersionUntilTheNewOneIsPublishedThenDeletesIt()
     {
+        var bystander = await PublishedBystanderAsync();
         var sourceId = await PublishedPasteAsync("Mirela guarda el puente.");
         var firstVersion = (await SourceRowAsync(sourceId)).PublishedVersionId;
 
@@ -46,12 +47,14 @@ public sealed class SourceLifecycleEndpointsTests : IAsyncLifetime
 
         await using var scope = _api.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<SourcesDbContext>();
-        var version = await db.Versions.SingleAsync();
+        var version = await db.Versions.SingleAsync(version => version.SourceId == Guid.Parse(sourceId));
         version.OriginalText.Should().Be("Mirela abandona el puente.");
-        (await db.Sources.SingleAsync()).PublishedVersionId.Should().Be(version.Id);
+        (await SourceRowAsync(sourceId)).PublishedVersionId.Should().Be(version.Id);
         version.Id.Should().NotBe(firstVersion!.Value);
-        (await db.Chunks.Select(chunk => chunk.SourceVersionId).Distinct().ToListAsync()).Should().Equal(version.Id);
-        (await db.Jobs.CountAsync()).Should().Be(1);
+        (await db.Chunks.Where(chunk => chunk.SourceVersionId != bystander.VersionId).Select(chunk => chunk.SourceVersionId).Distinct().ToListAsync())
+            .Should().Equal(version.Id);
+        (await db.Jobs.CountAsync(job => job.SourceVersionId == version.Id)).Should().Be(1);
+        await ShouldBeIntactAsync(bystander);
     }
 
     [Fact]
@@ -159,6 +162,12 @@ public sealed class SourceLifecycleEndpointsTests : IAsyncLifetime
         var sourceId = await PublishedPasteAsync("Texto.");
 
         using var both = await PutAsync(sourceId, Multipart(file: ("a.md", "# A"u8.ToArray()), text: "B"));
+        var twoTexts = Multipart(text: "A");
+        twoTexts.Add(new StringContent("B"), "text");
+        using var repeatedText = await PutAsync(sourceId, twoTexts);
+        var twoFiles = Multipart(file: ("a.md", "# A"u8.ToArray()));
+        twoFiles.Add(new ByteArrayContent("# B"u8.ToArray()), "file", "b.md");
+        using var repeatedFile = await PutAsync(sourceId, twoFiles);
         // A multipart body with no section at all is unreadable and gets the framework's 400 without `code`.
         var unrelatedField = Multipart();
         unrelatedField.Add(new StringContent("x"), "nota");
@@ -167,6 +176,8 @@ public sealed class SourceLifecycleEndpointsTests : IAsyncLifetime
         using var pdf = await PutAsync(sourceId, Multipart(file: ("mapa.pdf", "x"u8.ToArray())));
 
         await ShouldBeProblemAsync(both, HttpStatusCode.BadRequest, "source_content_part_invalid");
+        await ShouldBeProblemAsync(repeatedText, HttpStatusCode.BadRequest, "source_content_part_invalid");
+        await ShouldBeProblemAsync(repeatedFile, HttpStatusCode.BadRequest, "source_content_part_invalid");
         await ShouldBeProblemAsync(neither, HttpStatusCode.BadRequest, "source_content_part_invalid");
         await ShouldBeProblemAsync(emptyText, HttpStatusCode.BadRequest, "source_empty");
         await ShouldBeProblemAsync(pdf, HttpStatusCode.BadRequest, "source_file_type_unsupported");
@@ -239,6 +250,7 @@ public sealed class SourceLifecycleEndpointsTests : IAsyncLifetime
     [Fact]
     public async Task RemovalWinsOverProcessingAndLeavesOnlyATombstone()
     {
+        var bystander = await PublishedBystanderAsync();
         var sourceId = (await _api.PasteAsync(_campaignId, "Mirela", "Mirela guarda el puente."))["id"]!.GetValue<string>();
         ClaimedIngestionJob claimed;
         await using (var claimScope = _api.Services.CreateAsyncScope())
@@ -259,17 +271,16 @@ public sealed class SourceLifecycleEndpointsTests : IAsyncLifetime
         (await _api.ListAsync(_campaignId)).Should().BeEmpty();
         await using var scope = _api.Services.CreateAsyncScope();
         var verify = scope.ServiceProvider.GetRequiredService<SourcesDbContext>();
-        var tombstone = await verify.Sources.SingleAsync();
+        var tombstone = await SourceRowAsync(sourceId);
         tombstone.Should().BeEquivalentTo(new { PublishedVersionId = (Guid?)null, IsRemoved = true });
         tombstone.Title.Value.Should().Be("Mirela");
-        (await verify.Versions.CountAsync()).Should().Be(0);
-        (await verify.Chunks.CountAsync()).Should().Be(0);
-        (await verify.Jobs.CountAsync()).Should().Be(0);
+        await ShouldOnlyHoldTheBystanderAsync(verify, bystander);
     }
 
     [Fact]
     public async Task ARemovalWaitsForAPublicationHoldingTheLockThenRemovesWhatItPublished()
     {
+        var bystander = await PublishedBystanderAsync();
         var sourceId = (await _api.PasteAsync(_campaignId, "Mirela", "Mirela guarda el puente."))["id"]!.GetValue<string>();
         await using var workerScope = _api.Services.CreateAsyncScope();
         var claimed = (await new IngestionJobQueue(workerScope.ServiceProvider.GetRequiredService<SourcesDbContext>())
@@ -279,9 +290,9 @@ public sealed class SourceLifecycleEndpointsTests : IAsyncLifetime
         work.Should().NotBeNull("the worker now holds the source row lock");
 
         var removal = _api.Client.DeleteAsync(SourceUrl(sourceId));
-        var waited = await Task.WhenAny(removal, Task.Delay(TimeSpan.FromMilliseconds(500)));
+        await WaitUntilALockIsAwaitedAsync();
 
-        waited.Should().NotBeSameAs(removal, "the removal must wait for the lock");
+        removal.IsCompleted.Should().BeFalse("the removal is blocked on the source row lock");
         var outcome = await workerScope.ServiceProvider.GetRequiredService<ISender>().Send(new ProcessSourceVersionCommand(claimed));
         outcome.Value.Should().Be(ProcessSourceVersionOutcome.Published);
         using var removed = await removal;
@@ -289,10 +300,8 @@ public sealed class SourceLifecycleEndpointsTests : IAsyncLifetime
 
         await using var scope = _api.Services.CreateAsyncScope();
         var verify = scope.ServiceProvider.GetRequiredService<SourcesDbContext>();
-        (await verify.Sources.SingleAsync()).IsRemoved.Should().BeTrue();
-        (await verify.Versions.CountAsync()).Should().Be(0);
-        (await verify.Chunks.CountAsync()).Should().Be(0);
-        (await verify.Jobs.CountAsync()).Should().Be(0);
+        (await SourceRowAsync(sourceId)).IsRemoved.Should().BeTrue();
+        await ShouldOnlyHoldTheBystanderAsync(verify, bystander);
     }
 
     [Fact]
@@ -333,6 +342,51 @@ public sealed class SourceLifecycleEndpointsTests : IAsyncLifetime
         foreach (var response in new[] { put, patch, retry, delete })
         {
             await ShouldBeProblemAsync(response, HttpStatusCode.NotFound, "source_not_found");
+        }
+    }
+
+    private sealed record Bystander(Guid SourceId, Guid VersionId, int Chunks);
+
+    /// <summary>A published source in another campaign that no operation of these tests may touch.</summary>
+    private async Task<Bystander> PublishedBystanderAsync()
+    {
+        var greyMarch = await _api.CreateCampaignAsync("Grey March");
+        var sourceId = Guid.Parse((await _api.PasteAsync(greyMarch, "Reina gris", "Uno.\n\nDos."))["id"]!.GetValue<string>());
+        await RunWorkerAsync();
+        await using var scope = _api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<SourcesDbContext>();
+        var versionId = (await db.Sources.SingleAsync(source => source.Id == sourceId)).PublishedVersionId!.Value;
+        return new Bystander(sourceId, versionId, await db.Chunks.CountAsync(chunk => chunk.SourceVersionId == versionId));
+    }
+
+    private async Task ShouldBeIntactAsync(Bystander bystander)
+    {
+        await using var scope = _api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<SourcesDbContext>();
+        var source = await db.Sources.SingleAsync(source => source.Id == bystander.SourceId);
+        source.Should().BeEquivalentTo(new { PublishedVersionId = (Guid?)bystander.VersionId, IsRemoved = false });
+        (await db.Chunks.CountAsync(chunk => chunk.SourceVersionId == bystander.VersionId)).Should().Be(bystander.Chunks).And.BePositive();
+        (await db.Jobs.CountAsync(job => job.SourceVersionId == bystander.VersionId)).Should().Be(1);
+    }
+
+    private async Task ShouldOnlyHoldTheBystanderAsync(SourcesDbContext db, Bystander bystander)
+    {
+        (await db.Versions.Select(version => version.Id).ToListAsync()).Should().Equal(bystander.VersionId);
+        (await db.Chunks.AllAsync(chunk => chunk.SourceVersionId == bystander.VersionId)).Should().BeTrue();
+        (await db.Jobs.Select(job => job.SourceVersionId).ToListAsync()).Should().Equal(bystander.VersionId);
+        await ShouldBeIntactAsync(bystander);
+    }
+
+    /// <summary>The checkpoint for a race test: PostgreSQL reports a session waiting for a row lock.</summary>
+    private async Task WaitUntilALockIsAwaitedAsync()
+    {
+        await using var scope = _api.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<SourcesDbContext>();
+        var deadline = DateTime.UtcNow.AddSeconds(15);
+        while (await db.Database.SqlQueryRaw<int>("SELECT count(*)::int AS \"Value\" FROM pg_locks WHERE NOT granted").SingleAsync() == 0)
+        {
+            DateTime.UtcNow.Should().BeBefore(deadline, "the removal never reached the source lock");
+            await Task.Delay(20);
         }
     }
 

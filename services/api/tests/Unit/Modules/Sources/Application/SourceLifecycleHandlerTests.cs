@@ -42,7 +42,7 @@ public sealed class SourceLifecycleHandlerTests
     {
         var errors = new[]
         {
-            (await UpdateHandler().Handle(new UpdateSourceContentCommand(campaignId, sourceId, null, "Texto"), CancellationToken.None)).Error!,
+            (await UpdateHandler().Handle(new UpdateSourceContentCommand(campaignId, sourceId, [], ["Texto"]), CancellationToken.None)).Error!,
             (await EditHandler().Handle(new EditSourceCommand(campaignId, sourceId, null, null, null), CancellationToken.None)).Error!,
             (await RetryHandler().Handle(new RetrySourceCommand(campaignId, sourceId), CancellationToken.None)).Error!,
             (await RemoveHandler().Handle(new RemoveSourceCommand(campaignId, sourceId), CancellationToken.None)).Error!
@@ -64,6 +64,22 @@ public sealed class SourceLifecycleHandlerTests
 
         result.Error!.Code.Should().Be("source_content_part_invalid");
         await _repository.DidNotReceive().LockAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task RepeatedContentPartsAreRejected()
+    {
+        Lock();
+        var sourceId = _source.Id.ToString("D");
+
+        var texts = await UpdateHandler().Handle(new UpdateSourceContentCommand(CampaignId.ToString("D"), sourceId, [], ["A", "B"]), CancellationToken.None);
+        var files = await UpdateHandler().Handle(
+            new UpdateSourceContentCommand(CampaignId.ToString("D"), sourceId, [File("a.md", "# A"), File("b.md", "# B")], []),
+            CancellationToken.None);
+
+        texts.Error!.Code.Should().Be("source_content_part_invalid");
+        files.Error!.Code.Should().Be("source_content_part_invalid");
+        _repository.DidNotReceiveWithAnyArgs().AddVersion(default!, default!);
     }
 
     [Theory]
@@ -296,7 +312,7 @@ public sealed class SourceLifecycleHandlerTests
     }
 
     private UpdateSourceContentCommand Update(UploadedFile? file, string? text) =>
-        new(CampaignId.ToString("D"), _source.Id.ToString("D"), file, text);
+        new(CampaignId.ToString("D"), _source.Id.ToString("D"), file is null ? [] : [file], text is null ? [] : [text]);
 
     private EditSourceCommand Edit(FieldEdit? title = null, FieldEdit? category = null, FieldEdit? knowledgeStatus = null) =>
         new(CampaignId.ToString("D"), _source.Id.ToString("D"), title, category, knowledgeStatus);

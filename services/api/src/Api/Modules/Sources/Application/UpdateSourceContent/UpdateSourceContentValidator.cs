@@ -10,8 +10,8 @@ public sealed class UpdateSourceContentValidator : AbstractValidator<UpdateSourc
     public UpdateSourceContentValidator()
     {
         RuleFor(command => command)
-            .Must(command => (command.File is null) != (command.Text is null))
+            .Must(command => command.Files.Count + command.Texts.Count == 1)
             .WithErrorCode(ContentPartInvalidCode)
-            .WithMessage("Send exactly one of a file part or a text field.");
+            .WithMessage("Send exactly one part: a single file or a single text field.");
     }
 }

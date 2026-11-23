@@ -81,21 +81,21 @@ public sealed class UpdateSourceContentHandler(
 
     private static Result<NewContent> ReadContent(UpdateSourceContentCommand command)
     {
-        if (command.File is { } file)
+        if (command.Files is [var file])
         {
             var upload = SourceUpload.Read(file.FileName, file.Length, file.Content);
             return upload.IsSuccess ? new NewContent(upload.Value.Text, upload.Value) : upload.Error!.ForField("file");
         }
 
-        var text = SourceText.Create(command.Text);
+        var text = SourceText.Create(command.Texts.Single());
         return text.IsSuccess ? new NewContent(text.Value, Upload: null) : text.Error!.ForField("text");
     }
 
     private sealed record NewContent(SourceText Text, SourceUpload? Upload);
 }
 
-/// <summary>The validator requires exactly one of <see cref="File"/> and <see cref="Text"/>; an empty text field arrives as empty, not null.</summary>
-public sealed record UpdateSourceContentCommand(string CampaignId, string SourceId, UploadedFile? File, string? Text)
+/// <summary>Every `file` and `text` part of the request; the validator requires exactly one part in total.</summary>
+public sealed record UpdateSourceContentCommand(string CampaignId, string SourceId, IReadOnlyList<UploadedFile> Files, IReadOnlyList<string> Texts)
     : IRequest<Result<SourceContentUpdateDto>>;
 
 public sealed record SourceContentUpdateDto(SourceDto Source, bool Queued);
