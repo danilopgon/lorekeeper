@@ -78,14 +78,12 @@ public sealed class Source
         return true;
     }
 
-    /// <summary>Records that new content was queued as a pending version; the published version stays until it is replaced.</summary>
     public void ReceiveContentUpdate(DateTimeOffset now)
     {
         EnsureNotRemoved();
         UpdatedAt = now.ToUniversalTime();
     }
 
-    /// <summary>Turns the source into a tombstone that points at no version, so all its versions can be deleted.</summary>
     public void Remove(DateTimeOffset now)
     {
         EnsureNotRemoved();

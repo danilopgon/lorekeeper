@@ -12,8 +12,14 @@ public sealed class ProcessSourceVersionHandler(ISourceRepository sources, TimeP
     {
         var claim = command.Job;
         var work = await sources.GetProcessingWorkAsync(claim.CampaignId, claim.JobId, cancellationToken);
-        if (work is null || work.Source.IsRemoved || !IsCurrentClaim(work.Job, claim))
+        if (work is null)
         {
+            return ProcessSourceVersionOutcome.Discarded;
+        }
+
+        if (work.Source.IsRemoved || !IsCurrentClaim(work.Job, claim))
+        {
+            await sources.ReleaseAsync(cancellationToken);
             return ProcessSourceVersionOutcome.Discarded;
         }
 

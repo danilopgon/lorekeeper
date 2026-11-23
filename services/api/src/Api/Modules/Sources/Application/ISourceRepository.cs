@@ -27,6 +27,9 @@ public interface ISourceRepository
     void ReplaceChunks(SourceProcessingWork work, IEnumerable<SourceChunk> chunks);
 
     Task<SourceSaveOutcome> SaveChangesAsync(CancellationToken cancellationToken);
+
+    /// <summary>Ends a unit of work that writes nothing: discards pending changes and frees the source lock at once.</summary>
+    Task ReleaseAsync(CancellationToken cancellationToken);
 }
 
 public sealed record LockedSource(Source Source, PendingVersion? Pending, string? PublishedContentHash);

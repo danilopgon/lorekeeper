@@ -39,16 +39,19 @@ public sealed class UpdateSourceContentHandler(
         var content = ReadContent(command);
         if (!content.IsSuccess)
         {
+            await sources.ReleaseAsync(cancellationToken);
             return content.Error!;
         }
 
         if (locked.Pending?.Job.IsActive == true)
         {
+            await sources.ReleaseAsync(cancellationToken);
             return Error.Conflict(ProcessingCode, "The source already has a version waiting to be processed.");
         }
 
         if (locked.PublishedContentHash == content.Value.Text.ContentHash)
         {
+            await sources.ReleaseAsync(cancellationToken);
             return new SourceContentUpdateDto(await ReadBackAsync(key.Value, cancellationToken), Queued: false);
         }
 
@@ -89,9 +92,8 @@ public sealed class UpdateSourceContentHandler(
     private sealed record NewContent(SourceText Text, SourceUpload? Upload);
 }
 
-/// <summary>Exactly one of <see cref="File"/> and <see cref="Text"/> is set; <see cref="Text"/> is empty, not null, for an empty text field.</summary>
+/// <summary>The validator requires exactly one of <see cref="File"/> and <see cref="Text"/>; an empty text field arrives as empty, not null.</summary>
 public sealed record UpdateSourceContentCommand(string CampaignId, string SourceId, UploadedFile? File, string? Text)
     : IRequest<Result<SourceContentUpdateDto>>;
 
-/// <summary><see cref="Queued"/> is false when the content equals the published version's and nothing changed.</summary>
 public sealed record SourceContentUpdateDto(SourceDto Source, bool Queued);

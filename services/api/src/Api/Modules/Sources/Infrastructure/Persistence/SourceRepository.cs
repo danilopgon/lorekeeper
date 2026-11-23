@@ -21,6 +21,7 @@ public sealed class SourceRepository(SourcesDbContext dbContext) : ISourceReposi
         var source = await LockLiveSourceAsync(campaignId, sourceId, cancellationToken);
         if (source is null)
         {
+            await ReleaseAsync(cancellationToken);
             return null;
         }
 
@@ -79,12 +80,14 @@ public sealed class SourceRepository(SourcesDbContext dbContext) : ISourceReposi
         var source = await LockLiveSourceAsync(campaignId, sourceId.Value, cancellationToken);
         if (source is null)
         {
+            await ReleaseAsync(cancellationToken);
             return null;
         }
 
         var claimedJob = await dbContext.Jobs.SingleOrDefaultAsync(job => job.Id == jobId && job.CampaignId == campaignId, cancellationToken);
         if (claimedJob is null)
         {
+            await ReleaseAsync(cancellationToken);
             return null;
         }
 
@@ -124,6 +127,13 @@ public sealed class SourceRepository(SourcesDbContext dbContext) : ISourceReposi
         _deletesAfterSave.Clear();
         await EndTransactionAsync(commit: true, cancellationToken);
         return SourceSaveOutcome.Saved;
+    }
+
+    public async Task ReleaseAsync(CancellationToken cancellationToken)
+    {
+        _deletesAfterSave.Clear();
+        dbContext.ChangeTracker.Clear();
+        await EndTransactionAsync(commit: false, cancellationToken);
     }
 
     public async ValueTask DisposeAsync()

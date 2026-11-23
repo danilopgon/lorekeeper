@@ -29,6 +29,7 @@ public sealed class RetrySourceHandler(
 
         if (locked.Pending?.Job is not { State: IngestionJobState.Failed } failedJob)
         {
+            await sources.ReleaseAsync(cancellationToken);
             return Error.Conflict(RetryUnavailableCode, "The source has no failed version to retry.");
         }
 

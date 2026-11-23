@@ -42,7 +42,6 @@ public sealed class SourceIngestionJob
     public static SourceIngestionJob Create(SourceVersion version, DateTimeOffset now) =>
         new(Guid.NewGuid(), version, now.ToUniversalTime());
 
-    /// <summary>Queued or processing: the source cannot take another update until it finishes or fails.</summary>
     public bool IsActive => State is IngestionJobState.Queued or IngestionJobState.Processing;
 
     public void Succeed(DateTimeOffset now)
@@ -53,7 +52,6 @@ public sealed class SourceIngestionJob
         UpdatedAt = now.ToUniversalTime();
     }
 
-    /// <summary>A manual retry queues the same version again with a fresh set of automatic attempts.</summary>
     public void Requeue(DateTimeOffset now)
     {
         if (State != IngestionJobState.Failed)

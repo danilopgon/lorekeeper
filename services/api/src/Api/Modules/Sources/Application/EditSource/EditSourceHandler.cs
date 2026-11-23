@@ -50,6 +50,10 @@ public sealed class EditSourceHandler(
         {
             await sources.SaveChangesAsync(cancellationToken);
         }
+        else
+        {
+            await sources.ReleaseAsync(cancellationToken);
+        }
 
         return await sourceQueries.GetAsync(key.Value.CampaignId, key.Value.SourceId, cancellationToken)
             ?? throw new InvalidOperationException("An edited source must be readable.");

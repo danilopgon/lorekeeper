@@ -268,6 +268,34 @@ public sealed class SourceLifecycleEndpointsTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task ARemovalWaitsForAPublicationHoldingTheLockThenRemovesWhatItPublished()
+    {
+        var sourceId = (await _api.PasteAsync(_campaignId, "Mirela", "Mirela guarda el puente."))["id"]!.GetValue<string>();
+        await using var workerScope = _api.Services.CreateAsyncScope();
+        var claimed = (await new IngestionJobQueue(workerScope.ServiceProvider.GetRequiredService<SourcesDbContext>())
+            .ClaimNextAsync(DateTimeOffset.UtcNow, TimeSpan.FromMinutes(5), 3, CancellationToken.None))!;
+        var work = await workerScope.ServiceProvider.GetRequiredService<Api.Modules.Sources.Application.ISourceRepository>()
+            .GetProcessingWorkAsync(claimed.CampaignId, claimed.JobId, CancellationToken.None);
+        work.Should().NotBeNull("the worker now holds the source row lock");
+
+        var removal = _api.Client.DeleteAsync(SourceUrl(sourceId));
+        var waited = await Task.WhenAny(removal, Task.Delay(TimeSpan.FromMilliseconds(500)));
+
+        waited.Should().NotBeSameAs(removal, "the removal must wait for the lock");
+        var outcome = await workerScope.ServiceProvider.GetRequiredService<ISender>().Send(new ProcessSourceVersionCommand(claimed));
+        outcome.Value.Should().Be(ProcessSourceVersionOutcome.Published);
+        using var removed = await removal;
+        removed.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        await using var scope = _api.Services.CreateAsyncScope();
+        var verify = scope.ServiceProvider.GetRequiredService<SourcesDbContext>();
+        (await verify.Sources.SingleAsync()).IsRemoved.Should().BeTrue();
+        (await verify.Versions.CountAsync()).Should().Be(0);
+        (await verify.Chunks.CountAsync()).Should().Be(0);
+        (await verify.Jobs.CountAsync()).Should().Be(0);
+    }
+
+    [Fact]
     public async Task ARemovedSourceIsNotFoundForEveryLifecycleRoute()
     {
         var sourceId = await PublishedPasteAsync("Texto.");
