@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Api.Common.Presentation;
+using Api.Modules.Sources.Application;
 using Api.Modules.Sources.Application.ImportSources;
-using Api.Modules.Sources.Domain;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -31,27 +31,15 @@ public sealed class ImportSourcesController(ISender sender) : ControllerBase
         [FromForm] ImportSourcesForm form,
         CancellationToken cancellationToken)
     {
-        var files = new List<ImportFile>();
+        var files = new List<UploadedFile>();
         foreach (var file in form.Files ?? [])
         {
-            files.Add(await ReadAsync(file, cancellationToken));
+            files.Add(await UploadedFiles.ReadAsync(file, cancellationToken));
         }
 
         var result = await sender.Send(new ImportSourcesCommand(campaignId, files, ParseMetadata(form.Metadata)), cancellationToken);
 
         return result.Match<ActionResult<ImportSourcesResultDto>>(imported => Accepted(imported), error => error.ToProblem());
-    }
-
-    private static async Task<ImportFile> ReadAsync(IFormFile file, CancellationToken cancellationToken)
-    {
-        if (file.Length > SourceFormats.MaxFileBytes)
-        {
-            return new ImportFile(file.FileName, file.Length, Content: null);
-        }
-
-        using var buffer = new MemoryStream((int)file.Length);
-        await file.CopyToAsync(buffer, cancellationToken);
-        return new ImportFile(file.FileName, file.Length, buffer.ToArray());
     }
 
     /// <summary>Anything that is not a JSON array of entries becomes <c>null</c>, which the request validator rejects.</summary>

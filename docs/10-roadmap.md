@@ -9,7 +9,7 @@ Apply the blocking Definition of Ready in `08-quality-strategy.md` before every 
 ## Current focus
 
 - **Done:** Definition, 00, 01, DS, 02, #18.
-- **In progress:** 04A Sources (#41), started 2026-11-18. Part 1, pasted text through ingestion jobs, is #43. It reuses the persistence pattern #18 set for Campaign (ADR-008) and the result and layout patterns of #44 (ADR-012).
+- **In progress:** 04A Sources (#41), started 2026-11-18. Part 1, pasted text through ingestion jobs, is #43; part 2, file import, is #46; part 3, source lifecycle (update, edit, retry, removal), is in review. It reuses the persistence pattern #18 set for Campaign (ADR-008) and the result and layout patterns of #44 (ADR-012).
 - **Execution order after that:** 05A → 03 → 05B. 03 runs after 05A because the first useful version needs no AI.
 - **First useful version target:** 05A — the operator can import Markdown/text notes into a campaign and search them with source-backed fragments, without an LLM.
 

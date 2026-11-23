@@ -5,6 +5,7 @@ using Api.Modules.Sources.Application.ImportSources;
 using Api.Modules.Sources.Application.ListSources;
 using Api.Modules.Sources.Application.PasteSource;
 using Api.Modules.Sources.Application.ProcessSourceVersion;
+using Api.Modules.Sources.Application.UpdateSourceContent;
 using Api.Modules.Sources.Infrastructure.Persistence;
 using Api.Modules.Sources.Infrastructure.Ingestion;
 using FluentValidation;
@@ -30,6 +31,7 @@ public static class SourcesModule
         services.AddScoped<ISourceQueries, SourceQueries>();
         services.AddScoped<IValidator<ImportSourcesCommand>, ImportSourcesValidator>();
         services.AddScoped<IValidator<FindContentMatchesQuery>, FindContentMatchesValidator>();
+        services.AddScoped<IValidator<UpdateSourceContentCommand>, UpdateSourceContentValidator>();
 
         services.Configure<SourceIngestionOptions>(configuration.GetSection(SourceIngestionOptions.SectionName));
         services.AddScoped<IngestionJobQueue>();

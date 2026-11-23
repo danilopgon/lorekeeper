@@ -2,7 +2,6 @@ using System.Text.Json.Serialization;
 using Api.Modules.Campaigns.Application;
 using Api.Modules.Campaigns.Domain;
 using Api.Modules.Sources.Domain;
-using Api.Modules.Sources.Domain.Chunking;
 using Api.SharedKernel;
 using FluentValidation;
 using MediatR;
@@ -59,33 +58,12 @@ public sealed class ImportSourcesHandler(
     }
 
     /// <summary>Checks one file in the documented order: name, type, size, encoding, emptiness, then metadata.</summary>
-    private static Result<AcceptedSource> Accept(Guid campaignId, ImportFile file, ImportMetadataEntry metadata, DateTimeOffset now)
+    private static Result<AcceptedSource> Accept(Guid campaignId, UploadedFile file, ImportMetadataEntry metadata, DateTimeOffset now)
     {
-        if (!SourceFormats.IsStorableFileName(file.FileName))
+        var upload = SourceUpload.Read(file.FileName, file.Length, file.Content);
+        if (!upload.IsSuccess)
         {
-            return Error.Validation(SourceFormats.FileNameInvalidCode, "Source file name cannot be stored.");
-        }
-
-        var format = SourceFormats.FromFileName(file.FileName);
-        if (!format.IsSuccess)
-        {
-            return format.Error!;
-        }
-
-        if (file.Length > SourceFormats.MaxFileBytes || file.Content is null)
-        {
-            return Error.Validation(SourceText.TooLargeCode, "Source file is larger than 1 MiB.");
-        }
-
-        var text = SourceText.Decode(file.Content);
-        if (!text.IsSuccess)
-        {
-            return text.Error!;
-        }
-
-        if (format.Value == SourceFormat.Markdown && !MarkdownChunker.HasBody(text.Value.Value))
-        {
-            return Error.Validation(SourceText.EmptyCode, "Markdown file has no content besides its frontmatter.");
+            return upload.Error!;
         }
 
         var parsed = SourceMetadata.Parse(metadata.Title, metadata.Category, metadata.KnowledgeStatus);
@@ -95,7 +73,7 @@ public sealed class ImportSourcesHandler(
         }
 
         var source = Source.Create(campaignId, parsed.Value, SourceOrigin.File, now);
-        var version = SourceVersion.FromFile(source, text.Value, file.FileName, format.Value, now);
+        var version = SourceVersion.FromFile(source, upload.Value, now);
         return new AcceptedSource(source, version, SourceIngestionJob.Create(version, now));
     }
 
@@ -106,13 +84,10 @@ public sealed class ImportSourcesHandler(
     private sealed record AcceptedSource(Source Source, SourceVersion Version, SourceIngestionJob Job);
 }
 
-/// <summary>An uploaded file already read by Presentation; <see cref="Content"/> is null when the file was too large to read.</summary>
-public sealed record ImportFile(string FileName, long Length, byte[]? Content);
-
 public sealed record ImportMetadataEntry(string? Title, string? Category, string? KnowledgeStatus);
 
 /// <summary><see cref="Metadata"/> is null when the metadata part is missing or is not a JSON array of entries.</summary>
-public sealed record ImportSourcesCommand(string CampaignId, IReadOnlyList<ImportFile> Files, IReadOnlyList<ImportMetadataEntry>? Metadata)
+public sealed record ImportSourcesCommand(string CampaignId, IReadOnlyList<UploadedFile> Files, IReadOnlyList<ImportMetadataEntry>? Metadata)
     : IRequest<Result<ImportSourcesResultDto>>;
 
 public sealed record ImportSourcesResultDto(IReadOnlyList<ImportItemDto> Items);

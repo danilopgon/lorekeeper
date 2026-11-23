@@ -33,12 +33,12 @@ public sealed class SourceVersion
         new(Guid.NewGuid(), source, text, fileName, frontmatter: null, now.ToUniversalTime());
 
     /// <summary>A version from an uploaded file; Markdown keeps its YAML frontmatter, which is stored but never chunked.</summary>
-    public static SourceVersion FromFile(Source source, SourceText text, string fileName, SourceFormat format, DateTimeOffset now) =>
+    public static SourceVersion FromFile(Source source, SourceUpload upload, DateTimeOffset now) =>
         new(
             Guid.NewGuid(),
             source,
-            text,
-            fileName,
-            format == SourceFormat.Markdown ? Chunking.MarkdownSyntax.Frontmatter(text.Value) : null,
+            upload.Text,
+            upload.FileName,
+            upload.Format == SourceFormat.Markdown ? Chunking.MarkdownSyntax.Frontmatter(upload.Text.Value) : null,
             now.ToUniversalTime());
 }

@@ -16,6 +16,12 @@ export const zContentMatchesRequest = z.object({
     hashes: z.array(z.string()).nullable()
 });
 
+export const zEditSourceRequest = z.object({
+    title: z.string().nullish(),
+    category: z.string().nullish(),
+    knowledgeStatus: z.string().nullish()
+});
+
 export const zIFormFile = z.string();
 
 export const zImportOutcomeDto = z.enum(['accepted', 'rejected']);
@@ -112,6 +118,28 @@ export const zFindContentMatchesPath = z.object({
  */
 export const zFindContentMatchesResponse = zContentMatchesDto;
 
+export const zRemoveSourcePath = z.object({
+    campaignId: z.string(),
+    sourceId: z.string()
+});
+
+/**
+ * No Content
+ */
+export const zRemoveSourceResponse = z.void();
+
+export const zEditSourceBody = zEditSourceRequest.nullable();
+
+export const zEditSourcePath = z.object({
+    campaignId: z.string(),
+    sourceId: z.string()
+});
+
+/**
+ * OK
+ */
+export const zEditSourceResponse = zSourceDto;
+
 export const zImportSourcesBody = z.object({
     files: z.array(zIFormFile).optional(),
     metadata: z.string().optional()
@@ -137,6 +165,16 @@ export const zPasteSourcePath = z.object({
  */
 export const zPasteSourceResponse = zSourceDto;
 
+export const zRetrySourcePath = z.object({
+    campaignId: z.string(),
+    sourceId: z.string()
+});
+
+/**
+ * Accepted
+ */
+export const zRetrySourceResponse = zSourceDto;
+
 export const zListSourcesPath = z.object({
     campaignId: z.string()
 });
@@ -145,3 +183,18 @@ export const zListSourcesPath = z.object({
  * OK
  */
 export const zListSourcesResponse = z.array(zSourceDto);
+
+export const zUpdateSourceContentBody = z.object({
+    file: zIFormFile.optional(),
+    text: z.string().optional()
+});
+
+export const zUpdateSourceContentPath = z.object({
+    campaignId: z.string(),
+    sourceId: z.string()
+});
+
+/**
+ * OK
+ */
+export const zUpdateSourceContentResponse = zSourceDto;

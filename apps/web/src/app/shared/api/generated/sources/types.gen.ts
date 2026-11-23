@@ -18,6 +18,12 @@ export type ContentMatchesRequest = {
     hashes: null | Array<string>;
 };
 
+export type EditSourceRequest = {
+    title?: null | string;
+    category?: null | string;
+    knowledgeStatus?: null | string;
+};
+
 export type IFormFile = Blob | File;
 
 export type ImportItemDto = {
@@ -114,6 +120,70 @@ export type FindContentMatchesResponses = {
 
 export type FindContentMatchesResponse = FindContentMatchesResponses[keyof FindContentMatchesResponses];
 
+export type RemoveSourceData = {
+    body?: never;
+    path: {
+        campaignId: string;
+        sourceId: string;
+    };
+    query?: never;
+    url: '/api/campaigns/{campaignId}/sources/{sourceId}';
+};
+
+export type RemoveSourceErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type RemoveSourceError = RemoveSourceErrors[keyof RemoveSourceErrors];
+
+export type RemoveSourceResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type RemoveSourceResponse = RemoveSourceResponses[keyof RemoveSourceResponses];
+
+export type EditSourceData = {
+    body?: null | EditSourceRequest;
+    path: {
+        campaignId: string;
+        sourceId: string;
+    };
+    query?: never;
+    url: '/api/campaigns/{campaignId}/sources/{sourceId}';
+};
+
+export type EditSourceErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type EditSourceError = EditSourceErrors[keyof EditSourceErrors];
+
+export type EditSourceResponses = {
+    /**
+     * OK
+     */
+    200: SourceDto;
+};
+
+export type EditSourceResponse = EditSourceResponses[keyof EditSourceResponses];
+
 export type ImportSourcesData = {
     body: {
         files?: Array<IFormFile>;
@@ -183,6 +253,42 @@ export type PasteSourceResponses = {
 
 export type PasteSourceResponse = PasteSourceResponses[keyof PasteSourceResponses];
 
+export type RetrySourceData = {
+    body?: never;
+    path: {
+        campaignId: string;
+        sourceId: string;
+    };
+    query?: never;
+    url: '/api/campaigns/{campaignId}/sources/{sourceId}/retry';
+};
+
+export type RetrySourceErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type RetrySourceError = RetrySourceErrors[keyof RetrySourceErrors];
+
+export type RetrySourceResponses = {
+    /**
+     * Accepted
+     */
+    202: SourceDto;
+};
+
+export type RetrySourceResponse = RetrySourceResponses[keyof RetrySourceResponses];
+
 export type ListSourcesData = {
     body?: never;
     path: {
@@ -213,3 +319,50 @@ export type ListSourcesResponses = {
 };
 
 export type ListSourcesResponse = ListSourcesResponses[keyof ListSourcesResponses];
+
+export type UpdateSourceContentData = {
+    body: {
+        file?: IFormFile;
+        text?: string;
+    };
+    path: {
+        campaignId: string;
+        sourceId: string;
+    };
+    query?: never;
+    url: '/api/campaigns/{campaignId}/sources/{sourceId}/content';
+};
+
+export type UpdateSourceContentErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+    /**
+     * Payload Too Large
+     */
+    413: ProblemDetails;
+};
+
+export type UpdateSourceContentError = UpdateSourceContentErrors[keyof UpdateSourceContentErrors];
+
+export type UpdateSourceContentResponses = {
+    /**
+     * OK
+     */
+    200: SourceDto;
+    /**
+     * Accepted
+     */
+    202: SourceDto;
+};
+
+export type UpdateSourceContentResponse = UpdateSourceContentResponses[keyof UpdateSourceContentResponses];

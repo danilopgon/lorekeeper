@@ -112,7 +112,10 @@ State `queued` → `processing` → `succeeded` or `failed`, with attempt count 
 - **Update** is an explicit operation on an existing source. If the new text has the same `contentHash` as the published version, nothing changes.
 - **Duplicates:** an import whose `contentHash` matches a non-removed source in the same campaign is flagged during review and excluded by default; the operator may import it anyway. Hashes are never compared across campaigns.
 - **Removal wins over processing.** Removing a source sets `removedAt` and excludes it from retrieval in one transaction. A job that later finds the source removed discards its work. The same transaction deletes the source's versions, chunks and jobs, leaving a tombstone with `id`, `campaignId`, `title` and `removedAt` so later citations can report that the source is no longer available.
-- **No overlapping updates.** An update is refused while the source has a version queued or processing; the operator waits for it to finish or fail.
+- **No overlapping updates.** An update is refused while the source has a version queued or processing; the operator waits for it to finish or fail. A source has at most one pending version: an update discards a failed one.
+- **One writer per source.** Update, metadata edit, retry, removal and publication lock the source row (`SELECT … FOR UPDATE`) for their whole transaction before touching its versions or jobs, so they serialise per source and two concurrent updates cannot both queue a version.
+- An update may bring a file to a pasted source or text to a file source. `origin` records how the source was created and never changes; a version keeps a file name only when it came from a file.
+- A manual retry queues the same failed version again with its attempt count reset to 0.
 - Editing `title`, `category` or `knowledgeStatus` does not create a version or reprocess content.
 - Knowledge status never asserts player knowledge, and an unknown status is never presented as confirmed canon.
 

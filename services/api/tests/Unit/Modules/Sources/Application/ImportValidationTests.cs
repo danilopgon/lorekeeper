@@ -1,4 +1,5 @@
 using System.Text;
+using Api.Modules.Sources.Application;
 using Api.Modules.Sources.Application.FindContentMatches;
 using Api.Modules.Sources.Application.ImportSources;
 using Api.Modules.Sources.Domain;
@@ -8,7 +9,7 @@ namespace Unit.Modules.Sources.Application;
 
 public sealed class ImportValidationTests
 {
-    private static readonly ImportFile File = new("a.md", 3, Encoding.UTF8.GetBytes("# A"));
+    private static readonly UploadedFile File = new("a.md", 3, Encoding.UTF8.GetBytes("# A"));
     private static readonly ImportMetadataEntry Entry = new("A", null, null);
 
     [Fact]
