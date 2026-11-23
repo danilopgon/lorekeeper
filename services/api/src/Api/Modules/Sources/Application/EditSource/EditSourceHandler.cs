@@ -55,8 +55,7 @@ public sealed class EditSourceHandler(
             await sources.ReleaseAsync(cancellationToken);
         }
 
-        return await sourceQueries.GetAsync(key.Value.CampaignId, key.Value.SourceId, cancellationToken)
-            ?? throw new InvalidOperationException("An edited source must be readable.");
+        return await sourceQueries.ReadBackAsync(key.Value, cancellationToken);
     }
 
     /// <summary>Unlike a new source, where an absent status means `unknown`, an explicit null in an edit is invalid (`06`).</summary>

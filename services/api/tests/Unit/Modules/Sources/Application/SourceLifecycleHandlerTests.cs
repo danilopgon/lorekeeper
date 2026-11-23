@@ -244,6 +244,23 @@ public sealed class SourceLifecycleHandlerTests
     }
 
     [Fact]
+    public async Task ARemovalCommittedBeforeTheResponseIsReadAnswersNotFound()
+    {
+        Lock(pending: Pending("Fallida", IngestionJobState.Failed), publishedText: "Viejo");
+        _queries.GetAsync(CampaignId, _source.Id, Arg.Any<CancellationToken>()).Returns((SourceDto?)null);
+        var sourceId = _source.Id.ToString("D");
+
+        var errors = new[]
+        {
+            (await UpdateHandler().Handle(Update(null, "Nuevo"), CancellationToken.None)).Error!,
+            (await EditHandler().Handle(Edit(title: new FieldEdit("Otra")), CancellationToken.None)).Error!,
+            (await RetryHandler().Handle(new RetrySourceCommand(CampaignId.ToString("D"), sourceId), CancellationToken.None)).Error!
+        };
+
+        errors.Select(error => error.Code).Should().AllBe("source_not_found");
+    }
+
+    [Fact]
     public async Task RemovalLeavesATombstoneAndDeletesEveryVersion()
     {
         var published = SourceVersion.Create(_source, SourceText.Create("texto").Value, null, _time.GetUtcNow());

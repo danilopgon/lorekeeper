@@ -52,7 +52,7 @@ public sealed class UpdateSourceContentHandler(
         if (locked.PublishedContentHash == content.Value.Text.ContentHash)
         {
             await sources.ReleaseAsync(cancellationToken);
-            return new SourceContentUpdateDto(await ReadBackAsync(key.Value, cancellationToken), Queued: false);
+            return await RespondAsync(key.Value, queued: false, cancellationToken);
         }
 
         var source = locked.Source;
@@ -70,7 +70,13 @@ public sealed class UpdateSourceContentHandler(
         sources.AddVersion(version, SourceIngestionJob.Create(version, now));
         await sources.SaveChangesAsync(cancellationToken);
 
-        return new SourceContentUpdateDto(await ReadBackAsync(key.Value, cancellationToken), Queued: true);
+        return await RespondAsync(key.Value, queued: true, cancellationToken);
+    }
+
+    private async Task<Result<SourceContentUpdateDto>> RespondAsync(SourceKey key, bool queued, CancellationToken cancellationToken)
+    {
+        var source = await sourceQueries.ReadBackAsync(key, cancellationToken);
+        return source.IsSuccess ? new SourceContentUpdateDto(source.Value, queued) : source.Error!;
     }
 
     private static Result<NewContent> ReadContent(UpdateSourceContentCommand command)
@@ -84,10 +90,6 @@ public sealed class UpdateSourceContentHandler(
         var text = SourceText.Create(command.Text);
         return text.IsSuccess ? new NewContent(text.Value, Upload: null) : text.Error!.ForField("text");
     }
-
-    private async Task<SourceDto> ReadBackAsync(SourceKey key, CancellationToken cancellationToken) =>
-        await sourceQueries.GetAsync(key.CampaignId, key.SourceId, cancellationToken)
-        ?? throw new InvalidOperationException("An updated source must be readable.");
 
     private sealed record NewContent(SourceText Text, SourceUpload? Upload);
 }

@@ -154,7 +154,7 @@ No body.
 
 ## Sources (block 04A)
 
-Ingestion is job-based (ADR-009) and progress streams over SSE (ADR-010). Rules and invariants live in `03`. Every route below is under `/api/campaigns/{campaignId}/sources` and returns `campaign_id_invalid` (400) or `campaign_not_found` (404) like `GET /api/campaigns/{campaignId}`. A `sourceId` from another campaign is reported as `source_not_found`.
+Ingestion is job-based (ADR-009) and progress streams over SSE (ADR-010). Rules and invariants live in `03`. Every route below is under `/api/campaigns/{campaignId}/sources` and returns `campaign_id_invalid` (400) or `campaign_not_found` (404) like `GET /api/campaigns/{campaignId}`. A `sourceId` from another campaign is reported as `source_not_found`. If a removal commits between an update, edit or retry and the reading of its response, that request also answers `404 source_not_found`, although its change was saved before the removal.
 
 ### Limits
 

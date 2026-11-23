@@ -30,4 +30,13 @@ public static class SourceRoute
         var source = SourceIdParser.Parse(sourceId);
         return source.IsSuccess ? new SourceKey(campaign.Value, source.Value) : source.Error!;
     }
+
+    /// <summary>
+    /// Reads the response after the source lock is released, so a removal that commits in between makes it
+    /// <c>source_not_found</c> rather than an unexpected error.
+    /// </summary>
+    public static async Task<Result<SourceDto>> ReadBackAsync(this ISourceQueries queries, SourceKey key, CancellationToken cancellationToken) =>
+        await queries.GetAsync(key.CampaignId, key.SourceId, cancellationToken) is { } source
+            ? source
+            : SourceIdParser.NotFound;
 }

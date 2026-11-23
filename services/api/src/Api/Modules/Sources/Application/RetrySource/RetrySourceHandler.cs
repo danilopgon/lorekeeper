@@ -36,8 +36,7 @@ public sealed class RetrySourceHandler(
         failedJob.Requeue(timeProvider.GetUtcNow());
         await sources.SaveChangesAsync(cancellationToken);
 
-        return await sourceQueries.GetAsync(key.Value.CampaignId, key.Value.SourceId, cancellationToken)
-            ?? throw new InvalidOperationException("A retried source must be readable.");
+        return await sourceQueries.ReadBackAsync(key.Value, cancellationToken);
     }
 }
 
