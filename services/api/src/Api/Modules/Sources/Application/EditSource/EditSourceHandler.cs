@@ -1,4 +1,3 @@
-using Api.Modules.Campaigns.Application;
 using Api.Modules.Sources.Domain;
 using Api.SharedKernel;
 using MediatR;
@@ -6,14 +5,14 @@ using MediatR;
 namespace Api.Modules.Sources.Application.EditSource;
 
 public sealed class EditSourceHandler(
-    ICampaignQueries campaigns,
+    SourceLookup lookup,
     ISourceRepository sources,
     ISourceQueries sourceQueries,
     TimeProvider timeProvider) : IRequestHandler<EditSourceCommand, Result<SourceDto>>
 {
     public async Task<Result<SourceDto>> Handle(EditSourceCommand command, CancellationToken cancellationToken)
     {
-        var key = await SourceRoute.ResolveAsync(campaigns, command.CampaignId, command.SourceId, cancellationToken);
+        var key = await lookup.FindSourceKeyAsync(command.CampaignId, command.SourceId, cancellationToken);
         if (!key.IsSuccess)
         {
             return key.Error!;
@@ -34,13 +33,13 @@ public sealed class EditSourceHandler(
             return Error.InvalidFields("Source metadata is invalid.", errors);
         }
 
-        var locked = await sources.LockAsync(key.Value.CampaignId, key.Value.SourceId, cancellationToken);
-        if (locked is null)
+        var locked = await sources.LockExistingAsync(key.Value, cancellationToken);
+        if (!locked.IsSuccess)
         {
-            return SourceIdParser.NotFound;
+            return locked.Error!;
         }
 
-        var source = locked.Source;
+        var source = locked.Value.Source;
         var edited = new SourceMetadata(
             title?.Value ?? source.Title,
             category is null ? source.Category : category.Value,

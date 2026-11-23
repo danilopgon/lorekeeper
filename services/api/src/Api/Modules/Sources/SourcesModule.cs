@@ -29,6 +29,7 @@ public static class SourcesModule
         services.TryAddSingleton(TimeProvider.System);
         services.AddScoped<ISourceRepository, SourceRepository>();
         services.AddScoped<ISourceQueries, SourceQueries>();
+        services.AddScoped<SourceLookup>();
         services.AddScoped<IValidator<ImportSourcesCommand>, ImportSourcesValidator>();
         services.AddScoped<IValidator<FindContentMatchesQuery>, FindContentMatchesValidator>();
         services.AddScoped<IValidator<UpdateSourceContentCommand>, UpdateSourceContentValidator>();

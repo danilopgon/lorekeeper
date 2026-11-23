@@ -31,12 +31,7 @@ public sealed class ImportSourcesController(ISender sender) : ControllerBase
         [FromForm] ImportSourcesForm form,
         CancellationToken cancellationToken)
     {
-        var files = new List<UploadedFile>();
-        foreach (var file in form.Files ?? [])
-        {
-            files.Add(await UploadedFiles.ReadAsync(file, cancellationToken));
-        }
-
+        var files = await UploadedFiles.ReadAllAsync(form.Files ?? [], cancellationToken);
         var result = await sender.Send(new ImportSourcesCommand(campaignId, files, ParseMetadata(form.Metadata)), cancellationToken);
 
         return result.Match<ActionResult<ImportSourcesResultDto>>(imported => Accepted(imported), error => error.ToProblem());

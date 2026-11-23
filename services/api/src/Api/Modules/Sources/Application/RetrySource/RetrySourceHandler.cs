@@ -1,4 +1,3 @@
-using Api.Modules.Campaigns.Application;
 using Api.Modules.Sources.Domain;
 using Api.SharedKernel;
 using MediatR;
@@ -6,7 +5,7 @@ using MediatR;
 namespace Api.Modules.Sources.Application.RetrySource;
 
 public sealed class RetrySourceHandler(
-    ICampaignQueries campaigns,
+    SourceLookup lookup,
     ISourceRepository sources,
     ISourceQueries sourceQueries,
     TimeProvider timeProvider) : IRequestHandler<RetrySourceCommand, Result<SourceDto>>
@@ -15,19 +14,19 @@ public sealed class RetrySourceHandler(
 
     public async Task<Result<SourceDto>> Handle(RetrySourceCommand command, CancellationToken cancellationToken)
     {
-        var key = await SourceRoute.ResolveAsync(campaigns, command.CampaignId, command.SourceId, cancellationToken);
+        var key = await lookup.FindSourceKeyAsync(command.CampaignId, command.SourceId, cancellationToken);
         if (!key.IsSuccess)
         {
             return key.Error!;
         }
 
-        var locked = await sources.LockAsync(key.Value.CampaignId, key.Value.SourceId, cancellationToken);
-        if (locked is null)
+        var locked = await sources.LockExistingAsync(key.Value, cancellationToken);
+        if (!locked.IsSuccess)
         {
-            return SourceIdParser.NotFound;
+            return locked.Error!;
         }
 
-        if (locked.Pending?.Job is not { State: IngestionJobState.Failed } failedJob)
+        if (locked.Value.Pending?.Job is not { State: IngestionJobState.Failed } failedJob)
         {
             await sources.ReleaseAsync(cancellationToken);
             return Error.Conflict(RetryUnavailableCode, "The source has no failed version to retry.");

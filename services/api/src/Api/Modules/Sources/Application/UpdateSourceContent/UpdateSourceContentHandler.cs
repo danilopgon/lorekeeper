@@ -1,4 +1,3 @@
-using Api.Modules.Campaigns.Application;
 using Api.Modules.Sources.Domain;
 using Api.SharedKernel;
 using FluentValidation;
@@ -8,7 +7,7 @@ namespace Api.Modules.Sources.Application.UpdateSourceContent;
 
 public sealed class UpdateSourceContentHandler(
     IValidator<UpdateSourceContentCommand> validator,
-    ICampaignQueries campaigns,
+    SourceLookup lookup,
     ISourceRepository sources,
     ISourceQueries sourceQueries,
     TimeProvider timeProvider) : IRequestHandler<UpdateSourceContentCommand, Result<SourceContentUpdateDto>>
@@ -18,22 +17,21 @@ public sealed class UpdateSourceContentHandler(
     /// <summary>Checks in the order documented in `06`: route, shape, existence, content, overlap, then identical content.</summary>
     public async Task<Result<SourceContentUpdateDto>> Handle(UpdateSourceContentCommand command, CancellationToken cancellationToken)
     {
-        var key = await SourceRoute.ResolveAsync(campaigns, command.CampaignId, command.SourceId, cancellationToken);
+        var key = await lookup.FindSourceKeyAsync(command.CampaignId, command.SourceId, cancellationToken);
         if (!key.IsSuccess)
         {
             return key.Error!;
         }
 
-        var shape = await validator.ValidateAsync(command, cancellationToken);
-        if (!shape.IsValid)
+        if (await validator.ShapeErrorAsync(command, cancellationToken) is { } shapeError)
         {
-            return Error.Validation(shape.Errors[0].ErrorCode, shape.Errors[0].ErrorMessage);
+            return shapeError;
         }
 
-        var locked = await sources.LockAsync(key.Value.CampaignId, key.Value.SourceId, cancellationToken);
-        if (locked is null)
+        var locked = await sources.LockExistingAsync(key.Value, cancellationToken);
+        if (!locked.IsSuccess)
         {
-            return SourceIdParser.NotFound;
+            return locked.Error!;
         }
 
         var content = ReadContent(command);
@@ -43,25 +41,25 @@ public sealed class UpdateSourceContentHandler(
             return content.Error!;
         }
 
-        if (locked.Pending?.Job.IsActive == true)
+        if (locked.Value.Pending?.Job.IsActive == true)
         {
             await sources.ReleaseAsync(cancellationToken);
             return Error.Conflict(ProcessingCode, "The source already has a version waiting to be processed.");
         }
 
-        if (locked.PublishedContentHash == content.Value.Text.ContentHash)
+        if (locked.Value.PublishedContentHash == content.Value.Text.ContentHash)
         {
             await sources.ReleaseAsync(cancellationToken);
             return await RespondAsync(key.Value, queued: false, cancellationToken);
         }
 
-        var source = locked.Source;
+        var source = locked.Value.Source;
         var now = timeProvider.GetUtcNow();
         var version = content.Value.Upload is { } upload
             ? SourceVersion.FromFile(source, upload, now)
             : SourceVersion.Create(source, content.Value.Text, fileName: null, now);
 
-        if (locked.Pending is { } failed)
+        if (locked.Value.Pending is { } failed)
         {
             sources.DeleteVersion(source.CampaignId, failed.Version.Id);
         }

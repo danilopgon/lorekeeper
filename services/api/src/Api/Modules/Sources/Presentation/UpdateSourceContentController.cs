@@ -36,25 +36,27 @@ public sealed class UpdateSourceContentController(ISender sender) : ControllerBa
         [FromForm] UpdateSourceContentForm form, // Describes the parts for OpenAPI; the action reads the raw form.
         CancellationToken cancellationToken)
     {
-        // The raw form keeps every part: model binding would join repeated text fields, keep only the first file
-        // and turn an empty text field into null.
-        var files = new List<UploadedFile>();
-        string[] texts = [];
-        if (Request.HasFormContentType)
-        {
-            foreach (var uploaded in Request.Form.Files.GetFiles(FileField))
-            {
-                files.Add(await UploadedFiles.ReadAsync(uploaded, cancellationToken));
-            }
-
-            texts = [.. Request.Form[TextField].Select(text => text ?? string.Empty)];
-        }
-
+        var (files, texts) = await ReadContentPartsAsync(cancellationToken);
         var result = await sender.Send(new UpdateSourceContentCommand(campaignId, sourceId, files, texts), cancellationToken);
 
         return result.Match<ActionResult<SourceDto>>(
             update => update.Queued ? Accepted(update.Source) : Ok(update.Source),
             error => error.ToProblem());
+    }
+
+    /// <summary>
+    /// Every `file` and `text` part of the raw form: model binding would join repeated text fields, keep only the
+    /// first file and turn an empty text field into null.
+    /// </summary>
+    private async Task<(IReadOnlyList<UploadedFile> Files, IReadOnlyList<string> Texts)> ReadContentPartsAsync(CancellationToken cancellationToken)
+    {
+        if (!Request.HasFormContentType)
+        {
+            return ([], []);
+        }
+
+        var files = await UploadedFiles.ReadAllAsync(Request.Form.Files.GetFiles(FileField), cancellationToken);
+        return (files, [.. Request.Form[TextField].Select(text => text ?? string.Empty)]);
     }
 
     public sealed class UpdateSourceContentForm

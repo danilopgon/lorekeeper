@@ -1,6 +1,4 @@
 using System.Text.Json.Serialization;
-using Api.Modules.Campaigns.Application;
-using Api.Modules.Campaigns.Domain;
 using Api.Modules.Sources.Domain;
 using Api.SharedKernel;
 using FluentValidation;
@@ -10,28 +8,22 @@ namespace Api.Modules.Sources.Application.ImportSources;
 
 public sealed class ImportSourcesHandler(
     IValidator<ImportSourcesCommand> validator,
-    ICampaignQueries campaigns,
+    SourceLookup lookup,
     ISourceRepository sources,
     ISourceQueries sourceQueries,
     TimeProvider timeProvider) : IRequestHandler<ImportSourcesCommand, Result<ImportSourcesResultDto>>
 {
     public async Task<Result<ImportSourcesResultDto>> Handle(ImportSourcesCommand command, CancellationToken cancellationToken)
     {
-        var campaignId = CampaignIdParser.Parse(command.CampaignId);
+        var campaignId = await lookup.FindCampaignAsync(command.CampaignId, cancellationToken);
         if (!campaignId.IsSuccess)
         {
             return campaignId.Error!;
         }
 
-        if (await campaigns.GetByIdAsync(campaignId.Value, cancellationToken) is null)
+        if (await validator.ShapeErrorAsync(command, cancellationToken) is { } shapeError)
         {
-            return CampaignIdParser.NotFound;
-        }
-
-        var shape = await validator.ValidateAsync(command, cancellationToken);
-        if (!shape.IsValid)
-        {
-            return Error.Validation(shape.Errors[0].ErrorCode, shape.Errors[0].ErrorMessage);
+            return shapeError;
         }
 
         var now = timeProvider.GetUtcNow();

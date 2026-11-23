@@ -317,13 +317,13 @@ public sealed class SourceLifecycleHandlerTests
     private EditSourceCommand Edit(FieldEdit? title = null, FieldEdit? category = null, FieldEdit? knowledgeStatus = null) =>
         new(CampaignId.ToString("D"), _source.Id.ToString("D"), title, category, knowledgeStatus);
 
-    private UpdateSourceContentHandler UpdateHandler() => new(new UpdateSourceContentValidator(), _campaigns, _repository, _queries, _time);
+    private UpdateSourceContentHandler UpdateHandler() => new(new UpdateSourceContentValidator(), new SourceLookup(_campaigns), _repository, _queries, _time);
 
-    private EditSourceHandler EditHandler() => new(_campaigns, _repository, _queries, _time);
+    private EditSourceHandler EditHandler() => new(new SourceLookup(_campaigns), _repository, _queries, _time);
 
-    private RetrySourceHandler RetryHandler() => new(_campaigns, _repository, _queries, _time);
+    private RetrySourceHandler RetryHandler() => new(new SourceLookup(_campaigns), _repository, _queries, _time);
 
-    private RemoveSourceHandler RemoveHandler() => new(_campaigns, _repository, _time);
+    private RemoveSourceHandler RemoveHandler() => new(new SourceLookup(_campaigns), _repository, _time);
 
     private SourceDto Dto() => new(
         _source.Id.ToString("D"),

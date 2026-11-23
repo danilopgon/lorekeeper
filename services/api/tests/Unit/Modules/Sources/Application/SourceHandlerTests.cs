@@ -79,7 +79,7 @@ public sealed class SourceHandlerTests
     [InlineData("11111111-1111-1111-1111-111111111111", "campaign_not_found")]
     public async Task ListRequiresAnExistingCampaign(string campaignId, string expected)
     {
-        var result = await new ListSourcesHandler(_campaigns, _queries).Handle(new ListSourcesQuery(campaignId), CancellationToken.None);
+        var result = await new ListSourcesHandler(new SourceLookup(_campaigns), _queries).Handle(new ListSourcesQuery(campaignId), CancellationToken.None);
 
         result.Error!.Code.Should().Be(expected);
         await _queries.DidNotReceiveWithAnyArgs().ListAsync(default, default);
@@ -91,7 +91,7 @@ public sealed class SourceHandlerTests
         IReadOnlyList<SourceDto> sources = [SourceDtoFor(Guid.NewGuid())];
         _queries.ListAsync(CampaignId, Arg.Any<CancellationToken>()).Returns(sources);
 
-        var result = await new ListSourcesHandler(_campaigns, _queries).Handle(new ListSourcesQuery(CampaignId.ToString("D")), CancellationToken.None);
+        var result = await new ListSourcesHandler(new SourceLookup(_campaigns), _queries).Handle(new ListSourcesQuery(CampaignId.ToString("D")), CancellationToken.None);
 
         result.Value.Should().BeSameAs(sources);
     }
@@ -134,7 +134,7 @@ public sealed class SourceHandlerTests
         outcome.Should().Be(ProcessSourceVersionOutcome.Discarded);
     }
 
-    private PasteSourceHandler PasteHandler() => new(_campaigns, _repository, _queries, _time);
+    private PasteSourceHandler PasteHandler() => new(new SourceLookup(_campaigns), _repository, _queries, _time);
 
     [Fact]
     public async Task AStaleClaimIsDiscardedWithoutTouchingChunksOrPublication()
