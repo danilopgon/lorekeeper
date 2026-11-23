@@ -2,6 +2,24 @@
 
 import * as z from 'zod';
 
+export const zContentMatchDto = z.object({
+    hash: z.string(),
+    sourceId: z.string(),
+    title: z.string()
+});
+
+export const zContentMatchesDto = z.object({
+    matches: z.array(zContentMatchDto)
+});
+
+export const zContentMatchesRequest = z.object({
+    hashes: z.array(z.string()).nullable()
+});
+
+export const zIFormFile = z.string();
+
+export const zImportOutcomeDto = z.enum(['accepted', 'rejected']);
+
 export const zKnowledgeStatusDto = z.enum([
     'unknown',
     'preparation',
@@ -67,6 +85,46 @@ export const zSourceDto = z.object({
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true })
 });
+
+export const zImportItemDto = z.object({
+    index: z.union([
+        z.int().min(-2147483648, { error: 'Invalid value: Expected int32 to be >= -2147483648' }).max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+        z.string().regex(/^-?(?:0|[1-9]\d*)$/)
+    ]),
+    fileName: z.string(),
+    outcome: zImportOutcomeDto,
+    source: zSourceDto.nullable(),
+    errorCode: z.string().nullable()
+});
+
+export const zImportSourcesResultDto = z.object({
+    items: z.array(zImportItemDto)
+});
+
+export const zFindContentMatchesBody = zContentMatchesRequest.nullable();
+
+export const zFindContentMatchesPath = z.object({
+    campaignId: z.string()
+});
+
+/**
+ * OK
+ */
+export const zFindContentMatchesResponse = zContentMatchesDto;
+
+export const zImportSourcesBody = z.object({
+    files: z.array(zIFormFile).optional(),
+    metadata: z.string().optional()
+});
+
+export const zImportSourcesPath = z.object({
+    campaignId: z.string()
+});
+
+/**
+ * Accepted
+ */
+export const zImportSourcesResponse = zImportSourcesResultDto;
 
 export const zPasteSourceBody = zPasteSourceRequest.nullable();
 

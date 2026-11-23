@@ -4,6 +4,36 @@ export type ClientOptions = {
     baseUrl: `${string}://${string}` | (string & {});
 };
 
+export type ContentMatchDto = {
+    hash: string;
+    sourceId: string;
+    title: string;
+};
+
+export type ContentMatchesDto = {
+    matches: Array<ContentMatchDto>;
+};
+
+export type ContentMatchesRequest = {
+    hashes: null | Array<string>;
+};
+
+export type IFormFile = Blob | File;
+
+export type ImportItemDto = {
+    index: number | string;
+    fileName: string;
+    outcome: ImportOutcomeDto;
+    source: null | SourceDto;
+    errorCode: null | string;
+};
+
+export type ImportOutcomeDto = 'accepted' | 'rejected';
+
+export type ImportSourcesResultDto = {
+    items: Array<ImportItemDto>;
+};
+
 export type KnowledgeStatusDto = 'unknown' | 'preparation' | 'occurred';
 
 export type PasteSourceRequest = {
@@ -52,6 +82,75 @@ export type SourceProcessingDto = {
 };
 
 export type SourceProcessingStateDto = 'queued' | 'processing' | 'failed';
+
+export type FindContentMatchesData = {
+    body?: null | ContentMatchesRequest;
+    path: {
+        campaignId: string;
+    };
+    query?: never;
+    url: '/api/campaigns/{campaignId}/sources/content-matches';
+};
+
+export type FindContentMatchesErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type FindContentMatchesError = FindContentMatchesErrors[keyof FindContentMatchesErrors];
+
+export type FindContentMatchesResponses = {
+    /**
+     * OK
+     */
+    200: ContentMatchesDto;
+};
+
+export type FindContentMatchesResponse = FindContentMatchesResponses[keyof FindContentMatchesResponses];
+
+export type ImportSourcesData = {
+    body: {
+        files?: Array<IFormFile>;
+        metadata?: string;
+    };
+    path: {
+        campaignId: string;
+    };
+    query?: never;
+    url: '/api/campaigns/{campaignId}/sources/imports';
+};
+
+export type ImportSourcesErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+    /**
+     * Payload Too Large
+     */
+    413: ProblemDetails;
+};
+
+export type ImportSourcesError = ImportSourcesErrors[keyof ImportSourcesErrors];
+
+export type ImportSourcesResponses = {
+    /**
+     * Accepted
+     */
+    202: ImportSourcesResultDto;
+};
+
+export type ImportSourcesResponse = ImportSourcesResponses[keyof ImportSourcesResponses];
 
 export type PasteSourceData = {
     body?: null | PasteSourceRequest;

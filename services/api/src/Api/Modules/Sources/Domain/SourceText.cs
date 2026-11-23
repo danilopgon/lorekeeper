@@ -56,5 +56,21 @@ public sealed record SourceText
         return new SourceText(text, Hash(bytes));
     }
 
+    /// <summary>Decodes an uploaded file as strict UTF-8, then applies the same rules as <see cref="Create"/>.</summary>
+    public static Result<SourceText> Decode(ReadOnlySpan<byte> utf8)
+    {
+        string decoded;
+        try
+        {
+            decoded = StrictUtf8.GetString(utf8);
+        }
+        catch (DecoderFallbackException)
+        {
+            return Error.Validation(EncodingInvalidCode, "Source file is not valid UTF-8.");
+        }
+
+        return Create(decoded);
+    }
+
     private static string Hash(byte[] utf8) => Convert.ToHexStringLower(SHA256.HashData(utf8));
 }
