@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Refined by:** ADR-012 (handlers turn repository outcomes into typed `Error`s); persistence code lives in `Infrastructure/Persistence/` (`04`).
+**Amended 2026-11-23:** a Sources unit of work may start before the save. `ISourceRepository` lock methods open the transaction and lock the source row (`SELECT … FOR UPDATE`); the same transaction then holds the reads, the tracked changes and the version deletions that run after `SaveChangesAsync`, and the save commits it. A handler that ends without writing calls the repository's release method, which rolls back and frees the lock. This serialises update, edit, retry, removal and publication per source (`03`). Optimistic concurrency was not enough on its own: two updates insert different rows and touch no common token, and a removal must stop a publication that already read its job.
 **Date:** 2026-11-11
 **Area:** backend
 

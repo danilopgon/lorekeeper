@@ -1,6 +1,4 @@
 using System.Text.RegularExpressions;
-using Api.Modules.Campaigns.Application;
-using Api.Modules.Campaigns.Domain;
 using Api.SharedKernel;
 using FluentValidation;
 using MediatR;
@@ -9,26 +7,20 @@ namespace Api.Modules.Sources.Application.FindContentMatches;
 
 public sealed class FindContentMatchesHandler(
     IValidator<FindContentMatchesQuery> validator,
-    ICampaignQueries campaigns,
+    SourceLookup lookup,
     ISourceQueries sources) : IRequestHandler<FindContentMatchesQuery, Result<ContentMatchesDto>>
 {
     public async Task<Result<ContentMatchesDto>> Handle(FindContentMatchesQuery query, CancellationToken cancellationToken)
     {
-        var campaignId = CampaignIdParser.Parse(query.CampaignId);
+        var campaignId = await lookup.FindCampaignAsync(query.CampaignId, cancellationToken);
         if (!campaignId.IsSuccess)
         {
             return campaignId.Error!;
         }
 
-        if (await campaigns.GetByIdAsync(campaignId.Value, cancellationToken) is null)
+        if (await validator.ShapeErrorAsync(query, cancellationToken) is { } shapeError)
         {
-            return CampaignIdParser.NotFound;
-        }
-
-        var shape = await validator.ValidateAsync(query, cancellationToken);
-        if (!shape.IsValid)
-        {
-            return Error.Validation(shape.Errors[0].ErrorCode, shape.Errors[0].ErrorMessage);
+            return shapeError;
         }
 
         var matches = await sources.FindContentMatchesAsync(campaignId.Value, query.Hashes!.Distinct().ToList(), cancellationToken);

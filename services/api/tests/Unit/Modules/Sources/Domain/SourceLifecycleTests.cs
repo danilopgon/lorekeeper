@@ -69,6 +69,56 @@ public sealed class SourceLifecycleTests
         IngestionRetryPolicy.AfterUnexpectedFailure().Should().Be(IngestionFailureOutcome.Fail("source_processing_failed"));
     }
 
+    [Fact]
+    public void EditingWithTheCurrentMetadataChangesNothing()
+    {
+        var source = NewSource(Guid.NewGuid());
+
+        var changed = source.Edit(SourceMetadata.Parse("Sesión 3", null, null).Value, Now.AddMinutes(1));
+
+        changed.Should().BeFalse();
+        source.UpdatedAt.Should().Be(Now.ToUniversalTime());
+    }
+
+    [Fact]
+    public void EditingReplacesTheMetadataAndTouchesTheSource()
+    {
+        var source = NewSource(Guid.NewGuid());
+        var later = Now.AddMinutes(1);
+
+        var changed = source.Edit(SourceMetadata.Parse("Sesión 4", "session_notes", "occurred").Value, later);
+
+        changed.Should().BeTrue();
+        source.Should().BeEquivalentTo(new { Category = SourceCategory.SessionNotes, KnowledgeStatus = KnowledgeStatus.Occurred, UpdatedAt = later });
+        source.Title.Value.Should().Be("Sesión 4");
+    }
+
+    [Fact]
+    public void RemovingLeavesATombstoneThatPointsAtNoVersionAndCannotChange()
+    {
+        var source = NewSource(Guid.NewGuid());
+        source.Publish(SourceVersion.Create(source, SourceText.Create("texto").Value, null, Now), Now);
+        var later = Now.AddMinutes(1);
+
+        source.Remove(later);
+
+        source.Should().BeEquivalentTo(new { RemovedAt = later, PublishedVersionId = (Guid?)null, IsRemoved = true });
+        source.Title.Value.Should().Be("Sesión 3");
+        ((Action)(() => source.Remove(later))).Should().Throw<InvalidOperationException>();
+        ((Action)(() => source.ReceiveContentUpdate(later))).Should().Throw<InvalidOperationException>();
+        ((Action)(() => source.Edit(SourceMetadata.Parse("Otra", null, null).Value, later))).Should().Throw<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void OnlyAFailedJobCanBeRequeued()
+    {
+        var source = NewSource(Guid.NewGuid());
+        var job = SourceIngestionJob.Create(SourceVersion.Create(source, SourceText.Create("texto").Value, null, Now), Now);
+
+        ((Action)(() => job.Requeue(Now))).Should().Throw<InvalidOperationException>();
+        job.IsActive.Should().BeTrue();
+    }
+
     private static Source NewSource(Guid campaignId) =>
         Source.Create(campaignId, SourceMetadata.Parse("Sesión 3", null, null).Value, SourceOrigin.Paste, Now);
 }

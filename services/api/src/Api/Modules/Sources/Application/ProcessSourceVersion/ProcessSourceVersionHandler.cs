@@ -12,8 +12,14 @@ public sealed class ProcessSourceVersionHandler(ISourceRepository sources, TimeP
     {
         var claim = command.Job;
         var work = await sources.GetProcessingWorkAsync(claim.CampaignId, claim.JobId, cancellationToken);
-        if (work is null || work.Source.IsRemoved || !IsCurrentClaim(work.Job, claim))
+        if (work is null)
         {
+            return ProcessSourceVersionOutcome.Discarded;
+        }
+
+        if (work.Source.IsRemoved || !IsCurrentClaim(work.Job, claim))
+        {
+            await sources.ReleaseAsync(cancellationToken);
             return ProcessSourceVersionOutcome.Discarded;
         }
 
@@ -24,23 +30,31 @@ public sealed class ProcessSourceVersionHandler(ISourceRepository sources, TimeP
         var chunks = drafts.Select(draft => SourceChunk.Create(work.Version, draft));
         sources.ReplaceChunks(work, chunks);
 
+        var supersededVersionId = work.Source.PublishedVersionId;
         var now = timeProvider.GetUtcNow();
         work.Source.Publish(work.Version, now);
         work.Job.Succeed(now);
+        if (supersededVersionId is { } superseded && superseded != work.Version.Id)
+        {
+            sources.DeleteVersion(work.Source.CampaignId, superseded);
+        }
 
         return await sources.SaveChangesAsync(cancellationToken) == SourceSaveOutcome.Saved
             ? ProcessSourceVersionOutcome.Published
             : ProcessSourceVersionOutcome.Discarded;
     }
 
-    /// <summary>A worker whose lease expired and was reclaimed must not touch the job's later attempt or its publication.</summary>
+    /// <summary>
+    /// A worker whose lease expired and was reclaimed must not touch the job's later attempt or its publication.
+    /// The lease is compared too because a manual retry restarts the attempt count.
+    /// </summary>
     private static bool IsCurrentClaim(SourceIngestionJob job, ClaimedIngestionJob claim) =>
-        job.State == IngestionJobState.Processing && job.Attempts == claim.Attempts;
+        job.State == IngestionJobState.Processing && job.Attempts == claim.Attempts && job.LeaseExpiresAt == claim.LeaseExpiresAt;
 }
 
 public sealed record ProcessSourceVersionCommand(ClaimedIngestionJob Job) : IRequest<Result<ProcessSourceVersionOutcome>>;
 
-public sealed record ClaimedIngestionJob(Guid JobId, Guid CampaignId, Guid SourceVersionId, int Attempts);
+public sealed record ClaimedIngestionJob(Guid JobId, Guid CampaignId, Guid SourceVersionId, int Attempts, DateTimeOffset LeaseExpiresAt);
 
 public enum ProcessSourceVersionOutcome
 {

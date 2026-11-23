@@ -1,5 +1,3 @@
-using Api.Modules.Campaigns.Application;
-using Api.Modules.Campaigns.Domain;
 using Api.Modules.Sources.Domain;
 using Api.SharedKernel;
 using MediatR;
@@ -7,22 +5,17 @@ using MediatR;
 namespace Api.Modules.Sources.Application.PasteSource;
 
 public sealed class PasteSourceHandler(
-    ICampaignQueries campaigns,
+    SourceLookup lookup,
     ISourceRepository sources,
     ISourceQueries sourceQueries,
     TimeProvider timeProvider) : IRequestHandler<PasteSourceCommand, Result<SourceDto>>
 {
     public async Task<Result<SourceDto>> Handle(PasteSourceCommand command, CancellationToken cancellationToken)
     {
-        var campaignId = CampaignIdParser.Parse(command.CampaignId);
+        var campaignId = await lookup.FindCampaignAsync(command.CampaignId, cancellationToken);
         if (!campaignId.IsSuccess)
         {
             return campaignId.Error!;
-        }
-
-        if (await campaigns.GetByIdAsync(campaignId.Value, cancellationToken) is null)
-        {
-            return CampaignIdParser.NotFound;
         }
 
         var metadata = SourceMetadata.Parse(command.Title, command.Category, command.KnowledgeStatus);

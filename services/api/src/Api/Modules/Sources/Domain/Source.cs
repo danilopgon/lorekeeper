@@ -60,4 +60,45 @@ public sealed class Source
         LastPublishedAt = utcNow;
         UpdatedAt = utcNow;
     }
+
+    /// <summary>Applies edited metadata; returns false, leaving <see cref="UpdatedAt"/> untouched, when nothing differs.</summary>
+    public bool Edit(SourceMetadata metadata, DateTimeOffset now)
+    {
+        EnsureNotRemoved();
+
+        if (Title == metadata.Title && Category == metadata.Category && KnowledgeStatus == metadata.KnowledgeStatus)
+        {
+            return false;
+        }
+
+        Title = metadata.Title;
+        Category = metadata.Category;
+        KnowledgeStatus = metadata.KnowledgeStatus;
+        UpdatedAt = now.ToUniversalTime();
+        return true;
+    }
+
+    public void ReceiveContentUpdate(DateTimeOffset now)
+    {
+        EnsureNotRemoved();
+        UpdatedAt = now.ToUniversalTime();
+    }
+
+    public void Remove(DateTimeOffset now)
+    {
+        EnsureNotRemoved();
+
+        var utcNow = now.ToUniversalTime();
+        RemovedAt = utcNow;
+        PublishedVersionId = null;
+        UpdatedAt = utcNow;
+    }
+
+    private void EnsureNotRemoved()
+    {
+        if (IsRemoved)
+        {
+            throw new InvalidOperationException("A removed source cannot change.");
+        }
+    }
 }

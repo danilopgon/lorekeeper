@@ -26,12 +26,13 @@ public sealed class IngestionJobQueue(SourcesDbContext dbContext)
                 ORDER BY next_attempt_at
                 LIMIT 1
                 FOR UPDATE SKIP LOCKED)
-            RETURNING id AS "JobId", campaign_id AS "CampaignId", source_version_id AS "SourceVersionId", attempts AS "Attempts"
+            RETURNING id AS "JobId", campaign_id AS "CampaignId", source_version_id AS "SourceVersionId", attempts AS "Attempts",
+                lease_expires_at AS "LeaseExpiresAt"
             """).ToListAsync(cancellationToken);
 
         return claimed.Count == 0
             ? null
-            : new ClaimedIngestionJob(claimed[0].JobId, claimed[0].CampaignId, claimed[0].SourceVersionId, claimed[0].Attempts);
+            : new ClaimedIngestionJob(claimed[0].JobId, claimed[0].CampaignId, claimed[0].SourceVersionId, claimed[0].Attempts, claimed[0].LeaseExpiresAt);
     }
 
     /// <summary>A worker that crashed on its last attempt leaves the job processing; reclaiming it would exceed the retry limit.</summary>
@@ -60,9 +61,10 @@ public sealed class IngestionJobQueue(SourcesDbContext dbContext)
                 error_code = {outcome.ErrorCode},
                 updated_at = {now}
             WHERE id = {job.JobId} AND campaign_id = {job.CampaignId} AND state = 'processing' AND attempts = {job.Attempts}
+                AND lease_expires_at = {job.LeaseExpiresAt}
             """,
             cancellationToken);
     }
 
-    private sealed record ClaimedRow(Guid JobId, Guid CampaignId, Guid SourceVersionId, int Attempts);
+    private sealed record ClaimedRow(Guid JobId, Guid CampaignId, Guid SourceVersionId, int Attempts, DateTimeOffset LeaseExpiresAt);
 }
